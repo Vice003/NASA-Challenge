@@ -35,9 +35,13 @@ FEATURES = {
 TERRAIN = {"slope_p50", "slope_p90", "relief"}
 PIXEL = {"Moon": 100, "Mars": 463}
 RADIUS_KM = {"Moon": 1737.4, "Mars": 3389.5}
-TARGET_IDS = {"shackleton_rim": "Moon", "shackleton_psr": "Moon", "jezero": "Mars", "arcadia": "Mars"}
-SIZE_KM = {"shackleton_rim": (8, 25), "shackleton_psr": (1, 40), "jezero": (5, 20), "arcadia": (10, 30)}
-TARGET_FIELDS = {"body", "name", "center_lat", "center_lon", "region_geojson", "region_notes", "features"}
+import re
+ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{1,40}$")  # freie Ziel-IDs (Plan, Aenderung 14.11. 18:30)
+BODIES = {"Moon", "Mars"}
+SIZE_KM = (5, 30)  # Seitenlaenge des Zielpolygons
+COORD_QUALITY = {"verified", "approx", "unverified"}
+TARGET_FIELDS = {"body", "name", "category", "center_lat", "center_lon", "coord_quality", "site_source",
+                 "region_geojson", "region_notes", "features"}
 FIELDS = {"value", "p10", "p90", "unit", "pixel_m", "body_percentile", "source", "reliability", "notes"}
 RELIABILITY = {"A", "B", "C"}
 
@@ -50,7 +54,7 @@ def num(x):
     return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
 
 
-def check_polygon(where, g, body, tid):
+def check_polygon(where, g, body):
     if g is None:
         warn(f"{where} region_geojson fehlt noch (Polygon des Zielorts, 10-20 km)")
         return
@@ -82,7 +86,7 @@ def check_polygon(where, g, body, tid):
     ew = math.radians(dlon) * r * math.cos(math.radians(sum(lats) / len(lats)))
     if abs(sum(lats) / len(lats)) > 85:
         ew = ns  # nahe dem Pol ist die Laengenausdehnung nicht aussagekraeftig
-    lo_km, hi_km = SIZE_KM[tid]
+    lo_km, hi_km = SIZE_KM
     size = max(ns, ew)
     if not lo_km <= size <= hi_km:
         err(f"{where} Polygon ist ca. {ns:.1f} x {ew:.1f} km; erwartet {lo_km}-{hi_km} km (Plan, Abschnitt 3)")
@@ -106,21 +110,26 @@ def main(path):
     summary = {}
     for tid, t in targets.items():
         where = f"[{tid}]"
-        if tid not in TARGET_IDS:
-            err(f"{where} unbekannte Ziel-ID. Erlaubt: {', '.join(TARGET_IDS)}")
+        if not ID_PATTERN.match(tid):
+            err(f"{where} Ziel-ID nur Kleinbuchstaben, Ziffern, _ (2-41 Zeichen)")
             continue
         extra = set(t) - TARGET_FIELDS
         if extra:
             err(f"{where} unbekannte Felder {sorted(extra)}")
         body = t.get("body")
-        if body != TARGET_IDS[tid]:
-            err(f"{where} body muss '{TARGET_IDS[tid]}' sein, ist '{body}'")
+        if body not in BODIES:
+            err(f"{where} body muss Moon oder Mars sein, ist '{body}'")
+        cq = t.get("coord_quality")
+        if cq is not None and cq not in COORD_QUALITY:
+            err(f"{where} coord_quality muss verified, approx oder unverified sein")
+        elif cq in ("approx", "unverified"):
+            warn(f"{where} Koordinaten {cq}: Ergebnis nur als Naeherung verwenden")
         lat, lon = t.get("center_lat"), t.get("center_lon")
         if not num(lat) or not -90 <= lat <= 90:
             err(f"{where} center_lat fehlt oder liegt ausserhalb -90..90")
         if not num(lon) or not 0 <= lon <= 360:
             err(f"{where} center_lon fehlt oder liegt nicht in Ost 0..360")
-        check_polygon(where, t.get("region_geojson"), body, tid)
+        check_polygon(where, t.get("region_geojson"), body)
 
         feats = t.get("features", {})
         filled, missing = [], []
@@ -178,7 +187,7 @@ def main(path):
 
 def report(summary):
     for tid, (filled, missing) in summary.items():
-        print(f"{tid:15s} {len(filled):2d} Werte gesetzt, {len(missing):2d} offen"
+        print(f"{tid:28s} {len(filled):2d} Werte gesetzt, {len(missing):2d} offen"
               + (f": {', '.join(missing)}" if missing else ""))
     print()
     for m in errors:

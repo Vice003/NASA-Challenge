@@ -23,6 +23,12 @@ jede Erdzelle (ca. 5 km) mit diesen Werten. Prüfen im Repo-Wurzelordner:
 | `jezero` | Mars | Landestelle/Delta im Krater | ca. 10 × 10 km |
 | `arcadia` | Mars | eisreiche Ebene | ca. 20 × 20 km |
 
+
+**Seit 14.11. 18:30: freie Ziel-IDs.** Erlaubt ist jede ID aus Kleinbuchstaben, Ziffern und `_`, mit Pflichtfeld `body`
+und optional `category`, `coord_quality` (`verified`/`approx`/`unverified`) und `site_source`. `planetary/targets.json`
+enthält derzeit **27 Orte** aus der Ortsliste des Mond/Mars-Teams, automatisch berechnet mit `planetary/compute_targets.py`
+(Mars 10 × 10 km, Mond 15 × 15 km; Artemis-Regionen auf den am besten beleuchteten Ausschnitt innerhalb 12 km verschoben).
+
 Ein Zielort ist ein Ort, an dem gelandet oder gebaut würde, keine ganze Region. Kraterrand und Kältefalle,
 Kraterboden und Umland gehören in getrennte Zielorte.
 

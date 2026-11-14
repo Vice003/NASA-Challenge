@@ -28,9 +28,13 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from categories import TARGETS as PROFILES, _weighted_pct, classify, mark_known, top_sites, ENV_CLASSES  # noqa: E402
 
-# Ziel-ID (VERARBEITUNGSPLAN.md, Abschnitt 3) -> Gewichtsprofil aus categories.py
-PROFILE_OF = {"shackleton_rim": "mond_suedpol", "shackleton_psr": "mond_suedpol",
-              "jezero": "mars_aequatorial", "arcadia": "mars_eis_mittelbreiten"}
+def profile_for(target):
+    """Gewichtsprofil aus categories.py nach Koerper und Kategorie (freie Ziel-IDs, Aenderung 14.11. 18:30)."""
+    if target.get("body") == "Moon":
+        return "mond_suedpol"
+    cat = (target.get("category") or "").lower()
+    icy = "ice" in cat or "eis" in cat or abs(target.get("center_lat") or 0) >= 35
+    return "mars_eis_mittelbreiten" if icy else "mars_aequatorial"
 
 # Merkmal -> (Methode, Dimension, Erdspalte bzw. Funktion)
 FEATURES = {
@@ -109,7 +113,7 @@ def load_targets(path):
 def _earth_values(df, key, feat):
     how = FEATURES[key][2]
     if how == "baseline":
-        col = TERRAIN_COLS.get((key, int(feat.get("baseline_m") or 0)))
+        col = TERRAIN_COLS.get((key, int(feat.get("pixel_m") or 0)))  # Schema 2: pixel_m (100 Mond, 463 Mars)
         return (df[col] if col in df else None), col
     if callable(how):
         v = how(df)
@@ -128,7 +132,7 @@ def _wquantile(x, w, qs):
 def score_target(df, target, verbose=True):
     """Bewertung aller Zeilen von df fuer ein Ziel aus targets.json."""
     w = pd.Series(np.cos(np.radians(df["lat"].to_numpy())), index=df.index)
-    prof = PROFILES[PROFILE_OF[target["id"]]]
+    prof = PROFILES[profile_for(target)]
     rank_ok = ranking_mask(df)
     ref = reference_mask(df)
     out = pd.DataFrame(index=df.index)

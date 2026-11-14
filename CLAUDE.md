@@ -226,7 +226,8 @@ Python: rasterio, xarray, numpy, scipy, pyproj, earthaccess. Große Rohdaten nic
 - [ ] Korrekturen 5, 6, 9–12 aus dem Plan; Ergänzungen Permafrost, UV, Erreichbarkeit
 - [x] Schnittstelle Mond/Mars (`planetary/`, Schema 2, Verlässlichkeit A/B/C), gemeinsamer Code (`common/`)
 - [x] Abgleich mit dem Mond/Mars-Team: `REQUIREMENTS_COMPARISON.md` (Mert) und `RESPONSE_REQUIREMENTS.md` (Vicente)
-- [ ] Zielpolygone (10–20 km) festlegen und `planetary/targets.json` füllen (Mond/Mars-Team, M1)
+- [x] `planetary/targets.json` mit 27 Orten (automatisch, `planetary/compute_targets.py`, von Vicente wegen M1).
+      Offen: Mars-Albedo (OMEGA), Staub (TES), Bodeneis (GRS), Mond-Orte nördlich 85° S ohne Diviner, genauere Koordinaten (Gale liegt auf dem Zentralberg, Haworth im Schatten)
 - [ ] Antwort auf die offenen Vorschläge (siehe oben)
 - [ ] Copernicus-Data-Space-Konto (nur für Sentinel-1 nötig)
 - [ ] Ranking, Kontrollen, `results/` für die Karte
