@@ -12,11 +12,29 @@ This is the coarse first pipeline (`scripts/`). The team's fine pipeline (about 
 
 ## Target sites
 
-| Target | Location | Why |
+14 targets, following the Moon and Mars team's list (`data_scripts/FAVORITES_AND_PARAMETERS.md`, branch `Mars_and_Moon`).
+
+| Target | Location | Role |
 |---|---|---|
-| Mars, Arcadia Planitia | 40° N, 200° E | flat plain with near-surface ice |
-| Mars, Jezero Crater | 18.4° N, 77.5° E | Perseverance landing site |
-| Moon, South Pole (Shackleton) | 89.7° S | Artemis region |
+| Mars, Arcadia Planitia | 40.0° N, 200.0° E | base candidate with shallow ice |
+| Mars, Deuteronilus Mensae | 44.9° N, 24.5° E | base candidate with shallow ice |
+| Mars, Jezero Crater | 18.4° N, 77.5° E | rover landing site, for comparison |
+| Mars, Gale Crater | 4.6° S, 137.4° E | rover landing site, for comparison |
+| Moon, Peak near Cabeus B | 83.5° S, 300.0° E | Artemis candidate region |
+| Moon, Haworth | 86.8° S, 337.4° E | Artemis candidate region |
+| Moon, Malapert Massif | 86.0° S, 359.8° E | Artemis candidate region |
+| Moon, Mons Mouton Plateau | 85.4° S, 31.7° E | Artemis candidate region |
+| Moon, Mons Mouton | 84.6° S, 29.0° E | Artemis candidate region |
+| Moon, Nobile Rim 1 | 85.4° S, 37.4° E | Artemis candidate region |
+| Moon, Nobile Rim 2 | 84.0° S, 60.0° E | Artemis candidate region |
+| Moon, de Gerlache Rim 2 | 88.2° S, 295.4° E | Artemis candidate region |
+| Moon, Slater Plain | 87.5° S, 124.5° E | Artemis candidate region |
+| Moon, Shackleton rim | 89.7° S, 129.8° E | south pole reference site |
+
+The centres of the nine Artemis regions are **approximate**. NASA has published their names and maps
+(October 2024), not coordinates; the centres here follow the named features. Each region is about 15 km
+across, smaller than one cell of this pipeline, so neighbouring regions get almost the same fingerprint.
+Measured polygons belong in `planetary/targets.json`.
 
 ## Dimensions
 
@@ -55,20 +73,26 @@ are comparable.
 
 ## Result (default weights)
 
-| Target | Best match | Points | Known analog check |
-|---|---|---|---|
-| Mars, Arcadia Planitia | Kunlun Mountains, northern Tibet | 69 | Qaidam Basin ahead of nearly all land (above 99.5%), Haughton Crater above 93% |
-| Mars, Jezero Crater | Tibesti Mountains, Chad | 73 | Atacama above 99%, Death Valley above 93% |
-| Moon, South Pole | Ellesmere Island, Canada | 66 | Svalbard and Haughton Crater above 99% |
+| Target | Best match | Points | New in top 20 | Top 20 kept |
+|---|---|---|---|---|
+| Mars, Arcadia Planitia | Kunlun Mountains, China | 69 | 19 | 92% |
+| Mars, Deuteronilus Mensae | Kunlun Mountains, China | 78 | 19 | 91% |
+| Mars, Jezero Crater | Tibesti Mountains, Chad | 73 | 18 | 95% |
+| Mars, Gale Crater | Atacama Desert, Chile | 71 | 18 | 94% |
+| Moon, all ten sites | Ellesmere Island, Canada | 63–67 | 17–19 | 91–96% |
 
-Checks (`python scripts/rank.py out`, also shown in the map):
+"New in top 20": regions outside the radius of every known analog. "Top 20 kept": share of the top 20
+regions found again when every weight varies by ±25% (mean of 100 random runs).
 
-| Check | Arcadia | Jezero | Moon |
-|---|---|---|---|
-| Humid, vegetated land: mean rank (should be low) | 17% | 37% | 23% |
-| Top 20 regions kept when all weights vary by ±25% (mean of 200 runs) | 91% | 95% | 91% |
-| Same, worst run | 45% | 85% | 80% |
-| Top 20 regions outside every known analog | 19 | 18 | 19 |
+All ten lunar sites lead to the same region. They share the same estimated temperature, ice and albedo
+values and differ only in terrain and sun elevation, and at 18.5 km the terrain differences are too
+small to change the order. Telling the Artemis regions apart needs the fine pipeline and measured
+Diviner and LOLA values.
+
+Known analogs as a check (`python scripts/rank.py out`, also shown in the map): the Atacama ranks above
+99% of the land for Jezero and Gale, the Qaidam Basin above 99.5% for Arcadia and 83% for Deuteronilus,
+Haughton Crater and Svalbard above 99% for every lunar site. Humid, vegetated land ranks at 17% (ice
+sites), 35–37% (rover sites) and 21–23% (Moon) on average; it should be low.
 
 The method is not told which sites are known analogs. The list of known sites is the team's
 (`vicente/scoring/categories.py`).

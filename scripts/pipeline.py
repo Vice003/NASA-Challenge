@@ -101,9 +101,9 @@ def patch_metrics(coeffs, radius_km, lat0, lon0, n=9):
     c = int(h)
     return float(sl[c-1:c+2, c-1:c+2].mean()), float(z[c-2:c+3, c-2:c+3].std())
 
-mars = pysh.SHCoeffs.from_file(f'{D}/MarsTopo719.shape', lmax=719)
-mars.coeffs[:, 0, 0] = 0; mars.coeffs[0, 2, 0] = 0          # drop mean radius and flattening
-mars = pysh.SHCoeffs.from_array(mars.coeffs[:, :576, :576])   # band-limit to the 18.5 km half wavelength
+mars_sh = pysh.SHCoeffs.from_file(f'{D}/MarsTopo719.shape', lmax=719)
+mars_sh.coeffs[:, 0, 0] = 0; mars_sh.coeffs[0, 2, 0] = 0    # drop mean radius and flattening
+mars_sh = pysh.SHCoeffs.from_array(mars_sh.coeffs[:, :576, :576])   # band-limit to the 18.5 km half wavelength
 moon_grid = xr.open_dataset(f'{D}/moon_topo.nc').topography.values[:-1, :-1]
 moon = pysh.SHGrid.from_array(moon_grid).expand()
 moon = pysh.SHCoeffs.from_array(moon.coeffs[:, :296, :296]); moon.coeffs[:, 0, 0] = 0
@@ -114,13 +114,31 @@ moon = pysh.SHCoeffs.from_array(moon.coeffs[:, :296, :296]); moon.coeffs[:, 0, 0
 # None = no usable target value; the dimension is then not scored for that target.
 MARS_SRC = dict(slope='M', relief='M', sun='C', prec='C', ndvi='C', temp='L', press='L', ice='L', ati='E', albedo='E', dust='E')
 MOON_SRC = dict(slope='M', relief='M', sun='C', prec='C', ndvi='C', press='C', dust='C', temp='E', ice='L', albedo='E', ati='E')
+MARS_EST = dict(MARS_SRC, temp='E', press='E')   # sites where even temperature and pressure are my rough values
+def mars(id, name, lat, lon, kind, src=MARS_SRC, **v):
+    v.setdefault('prec', 0); v.setdefault('ndvi', 0); v.setdefault('dust', 0.5); v['sun'] = min(90, 90 - abs(lat) + 25.19)
+    return dict(id=id, body='Mars', name=name, lat=lat, lon=lon, kind=kind, approx=False, R=3389.5, co=mars_sh, src=src, v=v)
+def moonsite(id, name, lat, lon, approx=True, kind='Artemis candidate region'):
+    v = dict(temp=-170, prec=0, ndvi=0, press=1e-9, ice=1, ati=None, albedo=0.15, dust=0, sun=90 - abs(lat) + 1.54)
+    return dict(id=id, body='Moon', name=name, lat=lat, lon=lon % 360, kind=kind, approx=approx, R=1737.4, co=moon, src=MOON_SRC, v=v)
+ICE, ROVER = 'Base candidate with shallow ice', 'Rover landing site, for comparison'
+# Lunar region centres are approximate: NASA has published names and maps of the nine regions (Oct 2024), not
+# coordinates. Centres follow the named features and the 2022 region list; Slater Plain from Wueller et al. 2026.
 TARGETS = [
-  dict(id='arcadia', body='Mars', name='Arcadia Planitia', lat=40.0, lon=200.0, R=3389.5, co=mars, src=MARS_SRC,
-       v=dict(temp=-70, prec=0, ndvi=0, press=8.5, ice=1, ati=(1 - 0.25) / 60, albedo=0.25, dust=0.5, sun=min(90, 90 - 40 + 25.19))),
-  dict(id='jezero', body='Mars', name='Jezero Crater', lat=18.44, lon=77.45, R=3389.5, co=mars, src=MARS_SRC,
-       v=dict(temp=-55, prec=0, ndvi=0, press=7.5, ice=0, ati=(1 - 0.17) / 75, albedo=0.17, dust=0.5, sun=90.0)),
-  dict(id='shackleton', body='Moon', name='South Pole (Shackleton)', lat=-89.67, lon=129.8, R=1737.4, co=moon, src=MOON_SRC,
-       v=dict(temp=-170, prec=0, ndvi=0, press=1e-9, ice=1, ati=None, albedo=0.15, dust=0, sun=90 - 89.67 + 1.54)),
+  mars('arcadia', 'Arcadia Planitia', 40.0, 200.0, ICE, temp=-70, press=8.5, ice=1, ati=(1 - 0.25) / 60, albedo=0.25),
+  mars('deuteronilus', 'Deuteronilus Mensae', 44.9, 24.5, ICE, src=MARS_EST, temp=-65, press=8.0, ice=1, ati=(1 - 0.20) / 60, albedo=0.20),
+  mars('jezero', 'Jezero Crater', 18.44, 77.45, ROVER, temp=-55, press=7.5, ice=0, ati=(1 - 0.17) / 75, albedo=0.17),
+  mars('gale', 'Gale Crater', -4.59, 137.44, ROVER, temp=-50, press=8.4, ice=0, ati=(1 - 0.20) / 75, albedo=0.20),
+  moonsite('cabeus_b', 'Peak near Cabeus B', -83.5, -60.0),
+  moonsite('haworth', 'Haworth', -86.8, -22.6),
+  moonsite('malapert', 'Malapert Massif', -85.99, -0.23),
+  moonsite('mouton_plateau', 'Mons Mouton Plateau', -85.4, 31.7),
+  moonsite('mouton', 'Mons Mouton', -84.6, 29.0),
+  moonsite('nobile_1', 'Nobile Rim 1', -85.4, 37.4),
+  moonsite('nobile_2', 'Nobile Rim 2', -84.0, 60.0),
+  moonsite('de_gerlache_2', 'de Gerlache Rim 2', -88.2, -64.6),
+  moonsite('slater', 'Slater Plain', -87.5, 124.5),
+  moonsite('shackleton', 'Shackleton rim', -89.67, 129.8, approx=False, kind='South pole reference site'),
 ]
 w = np.cos(np.radians(lat2))[:, None] * np.ones((NR // 2, NC // 2))
 for t in TARGETS:

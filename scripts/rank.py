@@ -42,8 +42,10 @@ def is_known(o):
         if dist(lat[o], lon[o], la, lo) <= r: return name
     return None
 
-POS = dict(arcadia=['Qaidam Basin, China', 'Haughton Crater, Devon Island'], jezero=['Atacama (Yungay), Chile', 'Death Valley'],
-           shackleton=['Haughton Crater, Devon Island', 'Svalbard (AMASE)'])
+def positives(t):   # known analogs that should rank high for this kind of target
+    if t['body'] == 'Moon': return ['Haughton Crater, Devon Island', 'Svalbard (AMASE)']
+    if 'ice' in t['kind']: return ['Qaidam Basin, China', 'Haughton Crater, Devon Island']
+    return ['Atacama (Yungay), Chile', 'Death Valley']
 ndvi_i, prec_i = dims.index('ndvi'), dims.index('prec')
 def phys(n, dm): lo_, hi_ = d['rng'][dm]; return lo_ + feat[:, n] / 254 * (hi_ - lo_)
 humid = (phys(ndvi_i, 'ndvi') > 0.5) & (10 ** phys(prec_i, 'prec') - 10 > 800) & (feat[:, ndvi_i] != 255)
@@ -55,16 +57,16 @@ for t in d['targets']:
         k = is_known(o)
         print(f"{sc[o]:5.1f} {lat[o]:7.2f} {lon[o]:8.2f} {('known: ' + k if k else 'NEW'):34.34s} {d['labels'][lab[o]][:46]:46s}", ' '.join('  -' if np.isnan(x) else f'{x * 100:3.0f}' for x in S[o]))
     pos = []
-    for name in POS[t['id']]:
+    for name in positives(t):
         k = next(x for x in d['known'] if x[0] == name); dd = dist(k[1], k[2], lat, lon); c = dd.argmin()
         if dd[c] > 100: pos.append(dict(site=name, covered=False)); continue
         dimp = {dm: float(pct_of(np.where(np.isnan(S[:, n]), np.nan, S[:, n]))[c]) for n, dm in enumerate(dims) if w[n] > 0 and not np.isnan(S[c, n])}
         bd = max(dimp, key=dimp.get)
         pos.append(dict(site=name, covered=True, total_pct=float(pc[c]), best_dim=bd, best_dim_pct=dimp[bd]))
     neg = float(np.average(pc[humid], weights=area[humid]))
-    # robustness: +-25 % on every weight, 200 draws; share of the baseline top 20 found again within 500 km
+    # robustness: +-25 % on every weight, 100 draws; share of the baseline top 20 found again within 500 km
     keep = []
-    for _ in range(200):
+    for _ in range(100):
         t2 = top(score(S, w * rng.uniform(0.75, 1.25, len(w))))
         keep.append(np.mean([min(dist(lat[b], lon[b], lat[x], lon[x]) for x in t2) <= 500 for b in best]))
     controls[t['id']] = dict(positive=pos, negative_humid_mean_pct=neg, robustness_top20_kept=float(np.mean(keep)),
@@ -73,3 +75,7 @@ for t in d['targets']:
     print(f"negative (humid, vegetated cells) mean percentile: {neg:.0f} | top 20 kept under +-25 % weights: mean {np.mean(keep) * 100:.0f} %, min {np.min(keep) * 100:.0f} % | new among top 20: {controls[t['id']]['new_in_top20']}")
 controls['humid_cells'] = int(humid.sum()); controls['cells'] = int(len(lat))
 json.dump(controls, open(f'{O}/controls.json', 'w'), indent=1)
+print('\n| Target | Best match | Points | New in top 20 | Top 20 kept |\n|---|---|---|---|---|')
+for t in d['targets']:
+    S = sims(t); sc = score(S, default_w(t)); o = top(sc, 1)[0]; c = controls[t['id']]
+    print(f"| {t['body']}, {t['name']} | {d['labels'][lab[o]]} | {sc[o]:.0f} | {c['new_in_top20']} | {c['robustness_top20_kept'] * 100:.0f}% |")

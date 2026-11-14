@@ -90,6 +90,8 @@ td .bar{width:100%;min-width:60px}
 .checks b{display:block;font:700 22px/1.1 var(--display);font-variant-numeric:tabular-nums;margin-bottom:2px}
 .checks small{color:var(--muted);display:block}
 .dim input:disabled{opacity:.35}
+#target-select{width:100%;font:500 14.5px var(--body);padding:9px 10px;border:1px solid var(--accent);border-radius:4px;background:var(--panel);color:var(--ink)}
+.tinfo{margin:0;font-size:12.5px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -163,6 +165,7 @@ td .bar{width:100%;min-width:60px}
     <li>Cells are about 37 km wide and the terrain baseline is 18.5 km. That describes landscape types, not landing sites.</li>
     <li>Albedo, thermal inertia and dust are measured with different instruments on each body. Their target values are rough estimates until measured TES, OMEGA and Diviner values replace them, and they should then be compared by rank.</li>
     <li>The lunar temperature target is a rough estimate. Because nothing on Earth comes close, it changes the score but not the order.</li>
+    <li>The nine Artemis regions are each about 15 km across, smaller than one cell here. Their centres are approximate, and neighbouring regions such as Mons Mouton, its plateau and Nobile Rim 1 get almost the same fingerprint at this resolution. All lunar sites share the same estimated temperature, ice and albedo values and differ only in terrain and sun elevation.</li>
     <li>Mineralogy and the subsurface, such as lava tubes, are not included.</li>
     <li>Gravity, vacuum, radiation and the thin CO₂ atmosphere cannot be reproduced anywhere on Earth.</li>
   </ul>
@@ -312,13 +315,15 @@ function lists(){
   C.positive.forEach(function(p){if(!p.covered){box('–',p.site,'known analog, not covered at this resolution');return;}
     box(fmt(p.total_pct,0)+'%',p.site,'Known analog: ranks above this share of the land. Best dimension: '+META[p.best_dim].name+' ('+fmt(p.best_dim_pct,0)+'%).');});
   box(fmt(C.negative_humid_mean_pct,0)+'%','Humid, vegetated land','Counter-check: should rank low. Mean rank of '+fmt(D.controls.humid_cells,0)+' cells with NDVI above 0.5 and over 800 mm of rain.');
-  box(fmt(C.robustness_top20_kept*100,0)+'%','Top 20 kept','When every weight is varied by ±25% (200 random runs). Worst run: '+fmt(C.robustness_top20_kept_min*100,0)+'%.');
+  box(fmt(C.robustness_top20_kept*100,0)+'%','Top 20 kept','When every weight is varied by ±25% (100 random runs). Worst run: '+fmt(C.robustness_top20_kept_min*100,0)+'%.');
   box(C.new_in_top20+' of 20','New sites','Top 20 regions outside the radius of every known analog.');
 }
 function controls(){
-  var tg=document.getElementById('targets');tg.textContent='';
-  D.targets.forEach(function(T,n){var b=el('button');b.type='button';b.setAttribute('aria-pressed',n===state.t);b.appendChild(el('span',null,T.body+' · '+T.name));
-    b.appendChild(el('small',null,fmt(Math.abs(T.lat),1)+'° '+(T.lat>=0?'N':'S')));b.onclick=function(){state.t=n;state.w=defW(T);state.sel=-1;controls();update(true);};tg.appendChild(b);});
+  var tg=document.getElementById('targets'),T0=D.targets[state.t];tg.textContent='';
+  var sel=el('select');sel.id='target-select';sel.setAttribute('aria-label','Target site');
+  ['Mars','Moon'].forEach(function(body){var og=el('optgroup');og.label=body;D.targets.forEach(function(T,n){if(T.body!==body)return;var o=el('option',null,T.name);o.value=n;if(n===state.t)o.selected=true;og.appendChild(o);});sel.appendChild(og);});
+  sel.onchange=function(){state.t=+sel.value;state.w=defW(D.targets[state.t]);state.sel=-1;controls();update(true);};tg.appendChild(sel);
+  tg.appendChild(el('p','tinfo',T0.kind+' · '+fmt(Math.abs(T0.lat),1)+'° '+(T0.lat>=0?'N':'S')+', '+fmt(T0.lon,1)+'° E'+(T0.approx?' (approximate centre: NASA has published the region names, not coordinates)':'')));
   var dm=document.getElementById('dims'),T=D.targets[state.t];dm.textContent='';
   DIMS.forEach(function(k,d){var r=el('div','dim'),l=el('label',null,META[k].name);l.htmlFor='w-'+k;
     if(T.f[k]!=null)l.appendChild(el('span','tag'+(T.src[k]==='E'?' e':''),SRC[T.src[k]]));r.appendChild(l);r.appendChild(el('div','tv',fval(k,T.raw[k])));
