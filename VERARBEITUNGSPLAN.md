@@ -140,3 +140,4 @@ Karte & Story (C)   web/, index.html    ◄── liest nur results/
 |---|---|---|
 | 14.11. 13:30 | Erste Fassung; 100-km-Zielgebiete verworfen, feine Rasterung beschlossen | Vicente |
 | 14.11. 14:30 | Korrekturen 4, 7, 8, 15 umgesetzt. Testorte der Umgebungsklassen: 13 von 14 richtig (Hajar wird als dunkles Gestein erkannt: Semail-Ophiolith, geologisch zutreffend). Dry Valleys bei 5 km nicht auflösbar (MOD10CM meldet überall Dauerschnee), als Datengrenze vermerkt | Vicente |
+| 14.11. 16:00 | `common/terrain.py`: beim Vergröbern um nicht ganzzahlige Faktoren wird vorher gemittelt (vorher nur abgetastet; im Test 3,44° statt 3° bei 30 m kleinräumigem Relief). Neuer Selbsttest. Erd-Gelände bei 100/463 m: `vicente/earth/dem_baselines.py` | Vicente |
