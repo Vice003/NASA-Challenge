@@ -51,8 +51,8 @@ Eintrag in `F_raw`, `TR` und `RNG` sowie einen Zielwert in `TARGETS`.
 Pipeline. Mit den LOLA/MOLA-Zielwerten sind sie deshalb nicht vergleichbar; sie dienen nur der Beschreibung
 von Kandidaten (z. B. „wie viel landefreundliche Fläche hat die Zelle“).
 
-Stand der Dateien: Temperatur, NDVI und Ereignistage fehlen noch in `derived/`, die Läufe rechnen noch.
-`modis_dtr.npz`, `modis_ndvi.npz`, `lst_*`, `ati` und `dust_*_days` kommen mit dem nächsten Push.
+Stand der Dateien: Nur die Ereignistage (`dust_event_days`, `dust_storm_days`, `wind_storm_days`) fehlen noch, der Lauf rechnet.
+
 
 ## Mond- und Mars-Zielsignaturen
 
@@ -116,5 +116,7 @@ setzen beim letzten Zwischenstand wieder an. Die Ergebnisse landen in `data/eart
 ## Stand 14.11.2026
 
 - Fertig: Albedo/Landbedeckung, Schnee, MERRA-2 Monatswerte, MERRA-2 Niederschlag, IMERG
-- Läuft: Temperatur 2003–2024, NDVI, Höhenmodell, MERRA-2 Ereignistage
-- Offen: Abgleich der Klassenschwellen an den Testorten, Permafrost
+- Fertig: Temperatur 2003–2024, NDVI, Höhenmodell GLO-90 global
+- Läuft: MERRA-2 Ereignistage
+- Testorte der Umgebungsklassen: 13 von 14 richtig
+- Offen: Gelände bei 100/463 m mit common/terrain.py, Korrekturen 5, 6, 9–12 aus VERARBEITUNGSPLAN.md

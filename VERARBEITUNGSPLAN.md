@@ -121,21 +121,22 @@ Karte & Story (C)   web/, index.html    ◄── liest nur results/
 | 1 | 100-km-Zielgebiete mischen Landschaften (Kraterrand + Kältefalle, Kraterboden + Umland) | Median beschreibt kein reales Gelände | Zielorte 10–20 km (Abschnitt 3) | B1, B2 |
 | 2 | Neigung auf Erde und Ziel unterschiedlich berechnet (Kugelfunktionen 18,5 km, 90-m-Pixel, „463 m“ ohne Methode) | Werte nicht vergleichbar | eine Funktion `common/terrain.py`, feste Pixelgrößen | A |
 | 3 | Vorbelegte Mondwerte wirken unplausibel: Mitteltemperatur 103 K und Tagesgang 150 K für einen **beleuchteten** Polkamm; am Pol steht die Sonne fast am Horizont, der Tagesgang ist klein | falsche Zielsignatur | aus Diviner neu bestimmen, Kamm und Kältefalle getrennt | B1 |
-| 4 | Kahl-Regel NDVI < 0,12 stuft den Atacama-Kern (NDVI 0,124, heller Boden) als bewachsen ein | Fehlklassifikation genau der wichtigsten Orte | kahl = NDVI-Jahresmaximum < 0,15 **oder** MODIS-Klasse „barren“ ≥ 50 % | A |
+| 4 | Kahl-Regel NDVI < 0,12 stuft den Atacama-Kern (NDVI 0,124, heller Boden) als bewachsen ein | Fehlklassifikation genau der wichtigsten Orte | kahl = NDVI-Jahresmaximum < 0,15 **oder** MODIS-Klasse „barren“ ≥ 50 % | A · **erledigt 14:30** |
 | 5 | NDVI-Mittel in Schneegebieten durch Schneemonate gedrückt (Island 0,045, Haughton 0,024) | Vegetation unterschätzt | NDVI nur über schneefreie Monate mitteln | A |
 | 6 | Luftdruck aus MERRA-2 (55 km) per nächstem Nachbarn: Gebirge und Täler in einer Zelle gleich | Druck bis über 100 hPa falsch | MERRA-2-Druck mit DEM-Höhe auf 0,05° umrechnen | A |
-| 7 | Rang-Abgleich bildet Erd-Perzentile über alle Landzellen, Mars-Perzentile über reine Wüste | Verteilungen nicht vergleichbar | Erd-Referenz nur vegetations- und eisfreies Land | A |
-| 8 | Eisschilde nicht aus dem Ranking ausgeschlossen (Antarktis-Plateau führt Mars-Listen an) | sinnlose Spitzenplätze | Maske Eisschild/Gletscher vor dem Ranking | A |
+| 7 | Rang-Abgleich bildet Erd-Perzentile über alle Landzellen, Mars-Perzentile über reine Wüste | Verteilungen nicht vergleichbar | Erd-Referenz nur vegetations- und eisfreies Land | A · **erledigt 14:30** |
+| 8 | Eisschilde nicht aus dem Ranking ausgeschlossen (Antarktis-Plateau führt Mars-Listen an) | sinnlose Spitzenplätze | Maske Eisschild/Gletscher vor dem Ranking | A · **erledigt 14:30** |
 | 9 | ATI in Schnee- und Feuchtgebieten physikalisch bedeutungslos | Störwerte | ATI nur bei Tagesgang > 5 K, schneefrei, vegetationsfrei | A |
 | 10 | Bodeneis-Proxy aus Temperatur (Team-Formel) | grob | ESA-CCI-Permafrost 0,05° ergänzen | A |
 | 11 | Zwei Listen bekannter Analoga (50-km-Puffer vs. Radien), zwei Scorings | widersprüchliche Ergebnisse | eine Liste `data/known_analogs.csv`, eine Metrik (Abschnitt 5) | A, Scoring |
 | 12 | Zwei Tagesgang-Definitionen (Aqua Tag − Nacht vs. max − min aus 4 Zeiten) | Werte nicht austauschbar | max − min aus Terra+Aqua für alle | A |
 | 13 | Längengrade gemischt (Mars 0…360 Ost, Erde −180…180) | Ziele an falscher Stelle | Konvention Abschnitt 2, Prüfskript prüft Bereich | B1, B2 |
 | 14 | MERRA-2-Dimensionen (Staub, Wind) nur ca. 55 km aufgelöst | regionale, keine lokalen Werte | als Kontext gewichten (Abschnitt 5), in der Story so benennen | Scoring, C |
-| 15 | Höchster Sonnenstand wurde „direkt“ verglichen, die Erde erreicht die ca. 1,5° am Mond-Südpol aber nie (Minimum ca. 23,4° an den Polen). Ein Anteil „Sonne über Horizont“ hilft nicht: über das Jahr ist er auf der ganzen Erde etwa 50 % | Dimension falsch skaliert | Methode „Richtung“: je flacher der höchste Sonnenstand, desto besser | Scoring |
+| 15 | Höchster Sonnenstand wurde „direkt“ verglichen, die Erde erreicht die ca. 1,5° am Mond-Südpol aber nie (Minimum ca. 23,4° an den Polen). Ein Anteil „Sonne über Horizont“ hilft nicht: über das Jahr ist er auf der ganzen Erde etwa 50 % | Dimension falsch skaliert | Methode „Richtung“: je flacher der höchste Sonnenstand, desto besser | Scoring · **erledigt 14:30** |
 
 ## 10. Änderungen an diesem Plan
 
 | Datum | Änderung | Abgestimmt mit |
 |---|---|---|
 | 14.11. 13:30 | Erste Fassung; 100-km-Zielgebiete verworfen, feine Rasterung beschlossen | Vicente |
+| 14.11. 14:30 | Korrekturen 4, 7, 8, 15 umgesetzt. Testorte der Umgebungsklassen: 13 von 14 richtig (Hajar wird als dunkles Gestein erkannt: Semail-Ophiolith, geologisch zutreffend). Dry Valleys bei 5 km nicht auflösbar (MOD10CM meldet überall Dauerschnee), als Datengrenze vermerkt | Vicente |

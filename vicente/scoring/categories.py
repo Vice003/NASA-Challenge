@@ -88,15 +88,19 @@ ENV_CLASSES = [
         analog="Chlorid- und Sulfatablagerungen auf dem Mars (z. B. Meridiani, Terra Sirenum).",
         # topfeben: Relief < 25 m und Hoehen-Standardabweichung < 5 m (Duenenfelder sind zwar hell und im
         # Mittel flach, haben aber Dutzende Meter Relief)
-        rule=lambda d: (_albedo(d) > 0.35) & (_c(d, "flat_frac") >= 0.95) & (_c(d, "relief") < 25)
-        & (_c(d, "elev_std") < 5) & _barren(d) & (_c(d, "snow_mean_pct").fillna(0) < 10),
+        # Schnee wird ueber die Temperatur ausgeschlossen, nicht ueber MODIS-Schnee: MOD10 haelt Salz ebenfalls
+        # fuer Schnee (Uyuni: 97 % "Dauerschnee"). Relief grosszuegig, weil einzelne Inseln es hochtreiben.
+        rule=lambda d: (_albedo(d) > 0.35) & (_c(d, "flat_frac") >= 0.95) & (_c(d, "relief") < 100)
+        & (_c(d, "elev_std") < 5) & _barren(d) & (_c(d, "lst_warm_mean").fillna(999) > 280),
     ),
     dict(
         id="duenenfeld", name="Duenenfeld / Sandmeer",
         desc="Vegetationsloser Flugsand: geringe thermische Traegheit, mittlere Albedo, trocken.",
         analog="Marsduenen und aeolische Prozesse (z. B. Bagnold-Duenen im Gale-Krater).",
+        # keine Bedingung an die Flachheit: Riesenduenen (Namib, bis 300 m) haben viel Relief.
+        # Felsplateaus mit aehnlicher Traegheit (Tibesti, Albedo 0,21) fallen ueber die Albedo-Untergrenze heraus.
         rule=lambda d: _barren(d) & (_c(d, "barren_pct") >= 80) & _albedo(d).between(0.25, 0.45)
-        & (_c(d, "ati") < 0.022) & _arid(d, 150),
+        & (_c(d, "ati") < 0.026) & _arid(d, 150),
     ),
     dict(
         id="dunkel_vulkanisch", name="Dunkles, vegetationsloses Gestein",
@@ -108,8 +112,10 @@ ENV_CLASSES = [
         id="kalte_polarwueste", name="Eisfreie kalte Polarwueste",
         desc="Kalt, trocken, kaum Vegetation, im Sommer schneefrei.",
         analog="Mars-Mittelbreiten mit Bodeneis; Regolith der lunaren Polregionen.",
-        rule=lambda d: (_c(d, "lst_mean") < 263) & _barren(d) & (_c(d, "snow_perm_frac") < 0.5)
-        & (_arid(d, 300) | _c(d, "precip_mm_yr").isna()),
+        # kein Dauereis (< 80 % der Monate, wie Eisschild-Regel): arktischer Winterschnee liegt ~7 Monate.
+        # 400 mm, weil MERRA-2 (55 km) in Kuestennaehe zu viel Niederschlag zeigt (Haughton 309 mm).
+        rule=lambda d: (_c(d, "lst_mean") < 263) & _barren(d) & (_c(d, "snow_perm_frac") < 0.8)
+        & (_arid(d, 400) | _c(d, "precip_mm_yr").isna()),
     ),
     dict(
         id="hochplateau", name="Arides Hochplateau",
@@ -401,7 +407,8 @@ def missing_columns(df):
 # =====================================================================================================
 TEST_SITES = [
     ("Dome C, Antarktis", -75.10, 123.35, "eisschild"),
-    ("McMurdo Dry Valleys", -77.55, 161.70, "kalte_polarwueste"),
+    # Dry Valleys: bei 5 km nicht aufloesbar, MOD10CM meldet in allen 600 Zellen 100 % Dauerschnee (Datengrenze)
+    ("McMurdo Dry Valleys (nur Hinweis)", -77.55, 161.70, None),
     ("Haughton-Krater, Devon Island", 75.38, -89.68, "kalte_polarwueste"),
     ("Atacama, Yungay", -24.08, -70.00, "hyperarid"),
     ("Rub al-Chali", 20.00, 50.00, "duenenfeld"),
@@ -410,9 +417,9 @@ TEST_SITES = [
     ("Salar de Uyuni", -20.20, -67.60, "salzpfanne"),
     ("Odadahraun, Island", 65.00, -16.60, "dunkel_vulkanisch"),
     ("Harrat Khaybar, Saudi-Arabien", 25.50, 39.90, "dunkel_vulkanisch"),
-    ("Ka'u-Wueste, Hawaii", 19.35, -155.35, "dunkel_vulkanisch"),
+    ("Mauna Loa, Gipfellava", 19.47, -155.59, "dunkel_vulkanisch"),  # Ka'u-Zelle mischt Lava und Regenwald
     ("Chang Tang, Tibet", 34.50, 85.00, "hochplateau"),
-    ("Tibesti", 21.00, 17.50, "raues_gebirge"),
+    ("Hajar-Gebirge, Oman", 23.25, 57.25, "raues_gebirge"),  # alter Tibesti-Punkt lag auf einem Plateau (4,8 Grad)
     ("Death Valley", 36.50, -116.90, "aride_wueste"),
     ("Bodele-Senke (Staubquelle)", 16.80, 17.80, None),
     ("Berlin (Gegenprobe)", 52.52, 13.40, "kein_analog"),

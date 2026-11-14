@@ -73,7 +73,8 @@ def ranking_mask(df):
     """
     c = lambda k: df[k] if k in df else pd.Series(np.nan, index=df.index)
     water = c("water_pct") > 50
-    ice = (c("snow_perm_frac") >= 0.8) | (c("snow_ice_pct") >= 60)
+    # Eis nur, wo es auch im waermsten Monat kalt bleibt: MODIS haelt Salzpfannen fuer Schnee (Uyuni)
+    ice = ((c("snow_perm_frac") >= 0.8) | (c("snow_ice_pct") >= 60)) & (c("lst_warm_mean").fillna(0) < 280)
     lc = c("landcover").isin(EXCLUDED_LC)
     return ~(water | ice | lc)
 
