@@ -1,0 +1,9 @@
+pyshtools
+xarray
+netCDF4
+rdata
+pyshp
+shapely
+scipy
+numpy
+pyhdf

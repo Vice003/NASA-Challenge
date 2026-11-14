@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Analog-Finder</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* layout: controls rail left, map as the main object, ranked results and profile below */
+:root{
+  --bg:#eef0f3; --panel:#ffffff; --ink:#16202c; --muted:#5b6878; --line:#d3d9e0; --sea:#dfe4ea;
+  --accent:#b4441c; --ramp-lo:#f6e7dc; --ramp-mid:#e0895a; --ramp-hi:#6d1f08; --nodata:#c9d0d8;
+  --display:"Archivo","Helvetica Neue",Arial,sans-serif; --body:"IBM Plex Sans","Segoe UI",Arial,sans-serif; --mono:"IBM Plex Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#10151c; --panel:#18202a; --ink:#e6ebf1; --muted:#9aa7b6; --line:#2c3846; --sea:#0b0f14;
+  --accent:#f08a5d; --ramp-lo:#2a2320; --ramp-mid:#b4552c; --ramp-hi:#ffd3b0; --nodata:#27313d; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#10151c; --panel:#18202a; --ink:#e6ebf1; --muted:#9aa7b6; --line:#2c3846; --sea:#0b0f14;
+  --accent:#f08a5d; --ramp-lo:#2a2320; --ramp-mid:#b4552c; --ramp-hi:#ffd3b0; --nodata:#27313d; color-scheme:dark; }
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.5 var(--body)}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 56px;display:flex;flex-direction:column;gap:20px}
+header h1{font:700 30px/1.1 var(--display);margin:0 0 6px;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:70ch}
+h2{font:700 15px/1.2 var(--display);margin:0 0 10px;text-transform:uppercase;letter-spacing:.06em}
+.grid{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;align-items:start}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.grid,.two{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px}
+.targets{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.targets button{font:500 14px var(--body);text-align:left;padding:9px 12px;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--ink);cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.targets button small{color:var(--muted);font:400 12px var(--mono)}
+.targets button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 3px 0 0 var(--accent);font-weight:600}
+button:focus-visible,input:focus-visible,canvas:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dim{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;padding:8px 0;border-top:1px solid var(--line)}
+.dim label{font-weight:500;font-size:13.5px}
+.dim .tv{font:400 12.5px var(--mono);color:var(--muted);text-align:right;white-space:nowrap}
+.dim input{grid-column:1/2;width:100%;accent-color:var(--accent);margin:2px 0}
+.dim .wv{font:400 12.5px var(--mono);color:var(--muted);text-align:right}
+.hint{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+.mapbox{position:relative}
+canvas#map{width:100%;display:block;border-radius:4px;background:var(--sea);cursor:crosshair;touch-action:none}
+.mapbar{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-top:10px}
+.legend{display:flex;align-items:center;gap:8px;font:400 12.5px var(--mono);color:var(--muted)}
+.legend i{display:block;width:160px;height:10px;border-radius:2px;background:linear-gradient(90deg,var(--ramp-lo),var(--ramp-mid),var(--ramp-hi))}
+.keys{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+.keys span::before{content:"";display:inline-block;vertical-align:-1px;margin-right:5px}
+.keys .k1::before{width:9px;height:9px;border-radius:50%;border:2px solid var(--ink);background:var(--panel)}
+.keys .k2::before{width:7px;height:7px;transform:rotate(45deg);border:1.5px solid var(--ink)}
+.zoom{display:flex;gap:4px}
+.zoom button,.toggle{font:500 13px var(--body);border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:4px;padding:4px 10px;cursor:pointer}
+.toggle{display:inline-flex;gap:6px;align-items:center}
+#tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;padding:5px 8px;border-radius:4px;white-space:nowrap;display:none;z-index:2}
+ol.hits{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+ol.hits li{border-top:1px solid var(--line)}
+ol.hits button{width:100%;display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:10px;align-items:baseline;text-align:left;background:transparent;border:0;color:var(--ink);padding:9px 4px;cursor:pointer;font:inherit}
+ol.hits button:hover{background:var(--bg)}
+ol.hits .n{font:500 13px var(--mono);color:var(--muted)}
+ol.hits .s{font:500 15px var(--mono);font-variant-numeric:tabular-nums}
+ol.hits small{display:block;color:var(--muted);font-size:12.5px}
+.prof h3{font:700 19px/1.2 var(--display);margin:0;text-wrap:balance}
+.prof .meta{font:400 12.5px var(--mono);color:var(--muted);margin:2px 0 12px}
+.big{font:700 34px/1 var(--display);font-variant-numeric:tabular-nums}
+.big small{font:400 13px var(--body);color:var(--muted);margin-left:6px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px}
+.row .v{font:400 12.5px var(--mono);color:var(--muted)}
+.row .p{font:500 13.5px var(--mono);text-align:right;font-variant-numeric:tabular-nums;grid-row:1/3;grid-column:2;align-self:center}
+.bar{grid-column:1;height:6px;background:var(--bg);border-radius:0 3px 3px 0;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:0 3px 3px 0}
+.breaks{margin:12px 0 0;padding:10px 12px;border-left:3px solid var(--accent);background:var(--bg);font-size:13.5px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-weight:500;color:var(--muted);font-size:12.5px;padding:4px 6px 6px 0}
+td{padding:6px 6px 6px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+td .bar{width:100%;min-width:60px}
+.tw{overflow-x:auto}
+.method p,.method li{max-width:72ch}
+.method ul{margin:6px 0 12px;padding-left:18px}
+.method h3{font:700 14px var(--display);margin:14px 0 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Analog-Finder</h1>
+  <p>Wo auf der Erde sieht es einem Landeplatz auf Mond oder Mars am ähnlichsten? Die Karte vergleicht 143.306 Landzellen (je 20 Bogenminuten, rund 37 km) in neun Dimensionen mit dem Fingerabdruck des Zielorts.</p>
+</header>
+
+<div class="grid">
+  <section class="panel" aria-label="Zielort und Gewichte">
+    <h2>Zielort</h2>
+    <div class="targets" id="targets"></div>
+    <h2>Fingerabdruck und Gewichte</h2>
+    <div id="dims"></div>
+    <p class="hint">Rechts steht der Zielwert. Der Regler legt fest, wie stark die Dimension zählt (0 = aus). Hangneigung und Relief sind aus MOLA- und LOLA-Höhendaten gemessen, die übrigen Zielwerte sind gerundete Literaturwerte.</p>
+  </section>
+
+  <section class="panel">
+    <h2 id="maptitle">Ähnlichkeit</h2>
+    <div class="mapbox">
+      <canvas id="map" tabindex="0" aria-label="Weltkarte der Ähnlichkeit. Die Trefferliste darunter enthält dieselben Ergebnisse als Text."></canvas>
+      <div id="tip"></div>
+    </div>
+    <div class="mapbar">
+      <div class="legend"><span id="lmin"></span><i></i><span id="lmax"></span><span>Punkte von 100</span></div>
+      <div class="keys"><span class="k1">Top-Treffer</span><span class="k2">bekanntes Analog</span></div>
+      <div class="zoom"><button id="zin" aria-label="Hineinzoomen">+</button><button id="zout" aria-label="Herauszoomen">−</button><button id="zreset">Ganze Erde</button></div>
+    </div>
+    <p class="hint">Klick wählt eine Zelle, Ziehen verschiebt die Karte. Gletscher, Eisschelfe und Meer sind ausgeblendet.</p>
+  </section>
+</div>
+
+<div class="two">
+  <section class="panel">
+    <h2>Top-Treffer</h2>
+    <label class="toggle"><input type="checkbox" id="hide"> Bekannte Analoge ausblenden (300 km Umkreis)</label>
+    <ol class="hits" id="hits"></ol>
+    <p class="hint">Treffer liegen mindestens 500 km auseinander, damit nicht eine Region die Liste füllt.</p>
+  </section>
+  <section class="panel prof" id="prof" aria-live="polite"></section>
+</div>
+
+<section class="panel">
+  <h2>Gegenprobe mit bekannten Analogen</h2>
+  <p class="hint" style="margin:0 0 10px">Die Methode kennt diese Orte nicht. Landen etablierte Analoge für den gewählten Zielort weit oben, ist das Ranking plausibel.</p>
+  <div class="tw"><table id="known"><thead><tr><th>Ort</th><th class="num">Punkte</th><th class="num">besser als</th><th style="width:35%">Anteil der Landfläche</th></tr></thead><tbody></tbody></table></div>
+</section>
+
+<section class="panel method">
+  <h2>Methode und Grenzen</h2>
+  <p>Für jede Dimension gilt: 100 Punkte heißt identisch mit dem Zielort, 0 Punkte heißt so unähnlich wie die unähnlichste Landfläche der Erde (2. bis 98. Perzentil). Die Gesamtnote ist das gewichtete Mittel. Liegt der Zielwert außerhalb dessen, was die Erde bietet, erreicht keine Zelle 100 Punkte. Das ist gewollt: Bei Temperatur und Luftdruck zeigt die Zahl, wie weit die Analogie trägt.</p>
+  <h3>Daten</h3>
+  <ul>
+    <li>Erde, Gelände: ETOPO1 (NOAA), 10 Bogenminuten. Hangneigung über 18,5 km Basis, Relief als Höhenstreuung über rund 90 km.</li>
+    <li>Mars, Gelände: MOLA-Kugelfunktionsmodell MarsTopo719, auf dieselbe Wellenlänge wie die Erddaten begrenzt, Abplattung entfernt.</li>
+    <li>Mond, Gelände: LOLA-Topografie, 10 Bogenminuten, ebenso bandbegrenzt.</li>
+    <li>Erde, Klima: WorldClim 2.1, Jahresmitteltemperatur und Jahresniederschlag (1970 bis 2000).</li>
+    <li>Erde, Vegetation: NASA MODIS/Terra MOD13C2 (Version 061), NDVI-Jahresmittel aus allen zwölf Monaten 2023. Fehlende Werte auf Land gelten als vegetationsfrei.</li>
+    <li>Erde, Tag-Nacht-Hub: NASA MODIS/Terra MOD11C3 (Version 061), alle zwölf Monate 2023. Jahresmittel der Differenz zwischen Tag- und Nachtüberflug (etwa 10:30 und 22:30 Uhr Ortszeit). Der wahre Tageshub ist größer, die Zielwerte für Mond und Mars sind grobe Schätzungen.</li>
+    <li>Luftdruck aus der Höhe (Standardatmosphäre), Sonnenstand aus Breite und Achsneigung, Bodeneis als Permafrost-Schätzung aus der Jahresmitteltemperatur.</li>
+    <li>Gletscher, Eisschelfe, Regions- und Ländernamen: Natural Earth.</li>
+  </ul>
+  <h3>Was dieser Prototyp nicht kann</h3>
+  <ul>
+    <li>Die Basis von 18,5 km beschreibt Landschaftstypen, keine Landeplätze. Für Rover-Hänge braucht es Höhenmodelle im Meterbereich.</li>
+    <li>Es fehlen Mineralogie (EMIT, ASTER), Staub (MERRA-2) und Untergrund wie Lavaröhren. Das sind die nächsten Dimensionen.</li>
+    <li>Bodeneis ist eine Schätzung aus der Temperatur und deshalb mit ihr gekoppelt. Eine echte Permafrostkarte wäre besser.</li>
+    <li>Schwerkraft, Vakuum, Strahlung und die dünne CO₂-Atmosphäre lassen sich auf der Erde nirgends nachbilden.</li>
+  </ul>
+</section>
+</div>
+
+<script type="application/json" id="data">/*DATA*/</script>
+<script>
+(function(){
+"use strict";
+var D=JSON.parse(document.getElementById('data').textContent);
+var NR=D.nr,NC=D.nc,DIMS=D.dims,ND=DIMS.length;
+function b64(s){var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+var maskB=b64(D.mask),feat=b64(D.feat),labB=b64(D.lab);
+var cellOf=new Int32Array(NR*NC).fill(-1),rows=[],cols=[];
+for(var g=0,n=0;g<NR*NC;g++){if(maskB[g>>3]&(128>>(g&7))){cellOf[g]=n++;rows.push((g/NC)|0);cols.push(g%NC);}}
+var N=rows.length,lat=new Float32Array(N),lon=new Float32Array(N),area=new Float32Array(N);
+for(var i=0;i<N;i++){lat[i]=90-(rows[i]+.5)*180/NR;lon[i]=-180+(cols[i]+.5)*360/NC;area[i]=Math.cos(lat[i]*Math.PI/180);}
+function label(i){return D.labels[labB[2*i]|(labB[2*i+1]<<8)];}
+var META={
+ slope:{name:'Hangneigung',unit:'°',inv:function(v){return Math.pow(10,v)-.01;},dig:2},
+ relief:{name:'Relief',unit:' m',inv:function(v){return Math.pow(10,v)-1;},dig:0},
+ sun:{name:'Höchster Sonnenstand',unit:'°',inv:function(v){return v;},dig:0},
+ temp:{name:'Jahresmitteltemperatur',unit:' °C',inv:function(v){return v;},dig:0},
+ prec:{name:'Jahresniederschlag',unit:' mm',inv:function(v){return Math.max(0,Math.pow(10,v)-10);},dig:0},
+ ndvi:{name:'Vegetation (NDVI)',unit:'',inv:function(v){return v;},dig:2},
+ press:{name:'Luftdruck',unit:' hPa',inv:function(v){return Math.pow(10,v);},dig:0},
+ ice:{name:'Bodeneis (Schätzung)',unit:'',inv:function(v){return v;},dig:1},
+ dtr:{name:'Tag-Nacht-Hub (MODIS)',unit:' K',inv:function(v){return v;},dig:0}
+};
+function fmt(x,d){return x.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fval(k,x){var m=META[k];if(k==='press'&&x<1e-3)return 'praktisch 0 hPa';if(k==='ice')return x>=.75?'ja':x<=.25?'nein':'teilweise';var d=m.dig;if(k==='press'&&x<100)d=1;return fmt(x,d)+m.unit;}
+var KNOWN=[['Atacama (Yungay), Chile',-24.1,-69.9],['Haughton-Krater, Devon Island',75.4,-89.8],['McMurdo-Trockentäler, Antarktis',-77.5,162],['Askja, Island',65.05,-16.75],['Mauna Loa (HI-SEAS), Hawaii',19.6,-155.5],['MDRS Hanksville, Utah',38.4,-110.8],['Death Valley, USA',36.5,-117],['Río Tinto, Spanien',37.7,-6.55],['Spitzbergen (AMASE)',79,14],['Pilbara, Australien',-21.5,119],['Danakil, Äthiopien',14.24,40.3],['Qaidam-Becken, China',37.5,94],['Lanzarote, Spanien',29,-13.7],['Ramon-Krater, Negev',30.6,34.8],['Namib, Namibia',-24.5,15.5],['SP Crater bei Flagstaff, USA',35.4,-111.5],['Erfoud, Marokko',31.4,-4.2]];
+function dist(a,b,c,d){var r=Math.PI/180,x=Math.sin(a*r)*Math.sin(c*r)+Math.cos(a*r)*Math.cos(c*r)*Math.cos((d-b)*r);return 6371*Math.acos(Math.max(-1,Math.min(1,x)));}
+KNOWN.forEach(function(k){var best=-1,bd=1e9;for(var i=0;i<N;i++){if(Math.abs(lat[i]-k[1])>2)continue;var d=dist(k[1],k[2],lat[i],lon[i]);if(d<bd){bd=d;best=i;}}k[3]=best;});
+
+var state={t:0,w:DIMS.map(function(){return 1;}),sel:-1,hide:false};
+var score=new Float32Array(N),pct=new Float32Array(N),order=new Uint32Array(N),lut=[],hits=[],smin=0,smax=1;
+function sim(i,d){return lut[d][feat[i*ND+d]];}
+function compute(){
+  var T=D.targets[state.t];lut=[];
+  DIMS.forEach(function(k,d){var a=new Float32Array(256),lo=D.rng[k][0],hi=D.rng[k][1];for(var q=0;q<256;q++){var v=lo+q/255*(hi-lo);a[q]=Math.max(0,Math.min(1,1-Math.abs(v-T.f[k])/T.span[k]));}lut.push(a);});
+  var ws=state.w.reduce(function(a,b){return a+b;},0)||1;
+  for(var i=0;i<N;i++){var s=0,o=i*ND;for(var d=0;d<ND;d++)s+=state.w[d]*lut[d][feat[o+d]];score[i]=100*s/ws;order[i]=i;}
+  order.sort(function(a,b){return score[b]-score[a];});
+  var tot=0;for(i=0;i<N;i++)tot+=area[i];
+  var acc=0;for(i=N-1;i>=0;i--){acc+=area[order[i]];pct[order[i]]=100*(acc-area[order[i]])/tot;}
+  smax=score[order[0]];smin=score[order[Math.floor(N*.98)]];
+  hits=[];
+  for(i=0;i<N&&hits.length<8;i++){var c=order[i],ok=true;
+    if(state.hide)for(var k=0;k<KNOWN.length&&ok;k++)if(dist(lat[c],lon[c],KNOWN[k][1],KNOWN[k][2])<300)ok=false;
+    for(var h=0;h<hits.length&&ok;h++)if(dist(lat[c],lon[c],lat[hits[h]],lon[hits[h]])<500)ok=false;
+    if(ok)hits.push(c);}
+}
+
+/* ---------- map */
+var cv=document.getElementById('map'),ctx=cv.getContext('2d'),off=document.createElement('canvas');off.width=NC;off.height=NR;
+var octx=off.getContext('2d'),img=octx.createImageData(NC,NR),view={x:0,y:0,z:1},W=0,H=0;
+function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function rgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function paint(){
+  var a=rgb(tok('--ramp-lo')),b=rgb(tok('--ramp-mid')),c=rgb(tok('--ramp-hi')),ramp=new Uint8Array(256*3);
+  for(var q=0;q<256;q++){var t=q/255,p=t<.5?a:b,r=t<.5?b:c,u=t<.5?t*2:(t-.5)*2;for(var j=0;j<3;j++)ramp[q*3+j]=p[j]+(r[j]-p[j])*u;}
+  var px=img.data;px.fill(0);
+  for(var i=0;i<N;i++){var q2=Math.max(0,Math.min(255,Math.round(255*(score[i]-smin)/(smax-smin||1)))),o=(rows[i]*NC+cols[i])*4;px[o]=ramp[q2*3];px[o+1]=ramp[q2*3+1];px[o+2]=ramp[q2*3+2];px[o+3]=255;}
+  octx.putImageData(img,0,0);
+}
+function size(){var r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;W=r.width;H=W/2;cv.style.height=H+'px';cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+function clampView(){view.z=Math.max(1,Math.min(16,view.z));var vw=NC/view.z,vh=NR/view.z;view.x=Math.max(0,Math.min(NC-vw,view.x));view.y=Math.max(0,Math.min(NR-vh,view.y));}
+function toXY(la,lo){var gx=(lo+180)/360*NC,gy=(90-la)/180*NR;return [(gx-view.x)*view.z*W/NC,(gy-view.y)*view.z*H/NR];}
+function draw(){
+  clampView();ctx.clearRect(0,0,W,H);ctx.imageSmoothingEnabled=false;
+  ctx.drawImage(off,view.x,view.y,NC/view.z,NR/view.z,0,0,W,H);
+  var ink=tok('--ink'),pan=tok('--panel');
+  ctx.lineWidth=1.5;ctx.strokeStyle=ink;
+  KNOWN.forEach(function(k){var p=toXY(k[1],k[2]);ctx.save();ctx.translate(p[0],p[1]);ctx.rotate(Math.PI/4);ctx.strokeRect(-3.5,-3.5,7,7);ctx.restore();});
+  ctx.font='600 11px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';
+  hits.forEach(function(c,n){var p=toXY(lat[c],lon[c]);ctx.beginPath();ctx.arc(p[0],p[1],9,0,7);ctx.fillStyle=pan;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=ink;ctx.stroke();ctx.fillStyle=ink;ctx.fillText(n+1,p[0],p[1]+.5);});
+  if(state.sel>=0){var s=toXY(lat[state.sel],lon[state.sel]);ctx.lineWidth=2;ctx.strokeStyle=tok('--accent');ctx.beginPath();ctx.arc(s[0],s[1],14,0,7);ctx.stroke();}
+}
+function cellAt(ev){var r=cv.getBoundingClientRect(),gx=view.x+(ev.clientX-r.left)/W*NC/view.z,gy=view.y+(ev.clientY-r.top)/H*NR/view.z;
+  var c0=Math.floor(gx),r0=Math.floor(gy),best=-1,bd=9;
+  for(var dy=-2;dy<=2;dy++)for(var dx=-2;dx<=2;dx++){var rr=r0+dy,cc=c0+dx;if(rr<0||rr>=NR||cc<0||cc>=NC)continue;var c=cellOf[rr*NC+cc];if(c<0)continue;var d=dx*dx+dy*dy;if(d<bd){bd=d;best=c;}}
+  return bd<=(view.z>=3?0:4)?best:-1;}
+var drag=null,tip=document.getElementById('tip');
+cv.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y,moved:false};cv.setPointerCapture(e.pointerId);});
+cv.addEventListener('pointermove',function(e){
+  if(drag){var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4)drag.moved=true;if(drag.moved){view.x=drag.vx-dx/W*NC/view.z;view.y=drag.vy-dy/H*NR/view.z;draw();}tip.style.display='none';return;}
+  var c=cellAt(e);if(c<0){tip.style.display='none';return;}
+  var r=cv.getBoundingClientRect();tip.textContent=label(c)+' · '+fmt(score[c],1)+' Punkte';tip.style.display='block';
+  var x=e.clientX-r.left+12;if(x+tip.offsetWidth>W)x=e.clientX-r.left-tip.offsetWidth-12;tip.style.left=x+'px';tip.style.top=(e.clientY-r.top+12)+'px';});
+cv.addEventListener('pointerup',function(e){if(drag&&!drag.moved){var c=cellAt(e);if(c>=0)select(c,false);}drag=null;});
+cv.addEventListener('pointerleave',function(){tip.style.display='none';});
+function zoom(f,cx,cy){var gx=view.x+cx*NC/view.z,gy=view.y+cy*NR/view.z;view.z=Math.max(1,Math.min(16,view.z*f));view.x=gx-cx*NC/view.z;view.y=gy-cy*NR/view.z;draw();}
+document.getElementById('zin').onclick=function(){zoom(2,.5,.5);};
+document.getElementById('zout').onclick=function(){zoom(.5,.5,.5);};
+document.getElementById('zreset').onclick=function(){view={x:0,y:0,z:1};draw();};
+cv.addEventListener('dblclick',function(e){var r=cv.getBoundingClientRect();zoom(2,(e.clientX-r.left)/W,(e.clientY-r.top)/H);});
+
+/* ---------- panels */
+function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.textContent=h;return e;}
+function coords(i){return fmt(Math.abs(lat[i]),1)+'° '+(lat[i]>=0?'N':'S')+', '+fmt(Math.abs(lon[i]),1)+'° '+(lon[i]>=0?'O':'W');}
+function select(c,center){state.sel=c;if(center){view.z=Math.max(view.z,4);view.x=cols[c]-NC/view.z/2;view.y=rows[c]-NR/view.z/2;}draw();profile();}
+function profile(){
+  var p=document.getElementById('prof'),c=state.sel,T=D.targets[state.t];p.textContent='';
+  p.appendChild(el('h2',null,'Profil der gewählten Zelle'));
+  if(c<0){p.appendChild(el('p','hint','Noch keine Zelle gewählt.'));return;}
+  p.appendChild(el('h3',null,label(c)));p.appendChild(el('div','meta',coords(c)));
+  var b=el('div','big',fmt(score[c],1));b.appendChild(el('small',null,'Punkte, besser als '+fmt(Math.min(pct[c],99.9),pct[c]>99?1:0)+' % der Landfläche'));p.appendChild(b);
+  var weak=[];
+  DIMS.forEach(function(k,d){var s=100*sim(c,d),lo=D.rng[k][0],hi=D.rng[k][1],v=META[k].inv(lo+feat[c*ND+d]/255*(hi-lo));
+    var r=el('div','row');r.appendChild(el('div',null,META[k].name));r.appendChild(el('div','p',fmt(s,0)));
+    var bar=el('div','bar'),f=el('i');f.style.width=s+'%';bar.appendChild(f);r.appendChild(bar);
+    r.appendChild(el('div','v','Erde '+fval(k,v)+' · '+T.name+' '+fval(k,T.raw[k])));p.appendChild(r);
+    if(s<40)weak.push(META[k].name);});
+  var br=el('div','breaks');br.textContent=(weak.length?'Hier bricht die Analogie: '+weak.join(', ')+'. ':'Keine Dimension unter 40 Punkten. ')+'Schwerkraft, Vakuum und Strahlung fehlen an jedem Ort der Erde.';p.appendChild(br);
+}
+function lists(){
+  var T=D.targets[state.t],ol=document.getElementById('hits');ol.textContent='';
+  hits.forEach(function(c,n){var li=el('li'),b=el('button');b.type='button';b.appendChild(el('span','n',n+1));
+    var mid=el('span'),best=0,worst=0;for(var d=1;d<ND;d++){if(state.w[d]>0&&sim(c,d)>sim(c,best))best=d;if(state.w[d]>0&&sim(c,d)<sim(c,worst))worst=d;}
+    mid.appendChild(document.createTextNode(label(c)));mid.appendChild(el('small',null,coords(c)+' · schwächste Dimension: '+META[DIMS[worst]].name));
+    b.appendChild(mid);b.appendChild(el('span','s',fmt(score[c],1)));b.onclick=function(){select(c,true);};li.appendChild(b);ol.appendChild(li);});
+  var tb=document.querySelector('#known tbody');tb.textContent='';
+  KNOWN.slice().sort(function(a,b){return score[b[3]]-score[a[3]];}).forEach(function(k){var tr=el('tr'),c=k[3];
+    tr.appendChild(el('td',null,k[0]));tr.appendChild(el('td','num',fmt(score[c],1)));tr.appendChild(el('td','num',fmt(pct[c],0)+' %'));
+    var td=el('td'),bar=el('div','bar'),f=el('i');f.style.width=pct[c]+'%';bar.appendChild(f);td.appendChild(bar);tr.appendChild(td);
+    tr.style.cursor='pointer';tr.onclick=function(){select(c,true);};tb.appendChild(tr);});
+  document.getElementById('maptitle').textContent='Ähnlichkeit zu '+T.body+' · '+T.name;
+  document.getElementById('lmin').textContent='≤ '+fmt(smin,0);document.getElementById('lmax').textContent=fmt(smax,0);
+}
+function controls(){
+  var tg=document.getElementById('targets');tg.textContent='';
+  D.targets.forEach(function(T,n){var b=el('button');b.type='button';b.setAttribute('aria-pressed',n===state.t);b.appendChild(el('span',null,T.body+' · '+T.name));
+    b.appendChild(el('small',null,fmt(Math.abs(T.lat),1)+'° '+(T.lat>=0?'N':'S')));b.onclick=function(){state.t=n;state.sel=-1;controls();update(true);};tg.appendChild(b);});
+  var dm=document.getElementById('dims'),T=D.targets[state.t];dm.textContent='';
+  DIMS.forEach(function(k,d){var r=el('div','dim'),l=el('label',null,META[k].name);l.htmlFor='w-'+k;r.appendChild(l);r.appendChild(el('div','tv',fval(k,T.raw[k])));
+    var inp=el('input');inp.type='range';inp.min=0;inp.max=3;inp.step=.5;inp.value=state.w[d];inp.id='w-'+k;var wv=el('div','wv','×'+fmt(state.w[d],1));
+    inp.oninput=function(){state.w[d]=+inp.value;wv.textContent='×'+fmt(state.w[d],1);update(false);};r.appendChild(inp);r.appendChild(wv);dm.appendChild(r);});
+}
+var raf=0;
+function update(pick){cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){compute();if(pick||state.sel<0)state.sel=hits[0];paint();draw();lists();profile();});}
+document.getElementById('hide').onchange=function(e){state.hide=e.target.checked;update(true);};
+window.addEventListener('resize',function(){size();draw();});
+function retheme(){paint();draw();}
+if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',retheme);
+new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+size();controls();compute();state.sel=hits[0];paint();draw();lists();profile();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+# MODIS-Rohdaten und andere Eingangsdaten (siehe README)
+*.hdf
+*.nc4
+data/raw/
+out/
+__pycache__/
