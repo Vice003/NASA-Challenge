@@ -1,7 +1,7 @@
 # Analog Finder
 
 Where on Earth looks most like a landing site on the Moon or Mars?
-The Analog Finder compares 143,306 land cells on Earth (20 arcminutes each, about 37 km)
+The Analog Finder compares 101,580 land cells on Earth (20 arcminutes each, about 37 km)
 with the fingerprint of a target site across nine dimensions and ranks them by similarity.
 
 `index.html` is the finished interactive map. It needs no server: open the file in a browser.
@@ -36,19 +36,20 @@ weighted mean, and the weights can be changed in the map. Where a target value l
 Earth offers, no cell reaches 100 points, so the number shows how far the analogy holds.
 
 The terrain of all three bodies is limited to the same wavelength (18.5 km) so that slope and
-relief are comparable. Glaciers, ice shelves and sea are hidden.
+relief are comparable. Sea, glaciers and ice shelves are hidden, and so are cells that are more than
+half water, forest, cropland or urban (MODIS MCD12C1). That filter removes 31% of the ice-free land cells.
 
 Cross-check: the method does not know the established analog sites. For Jezero the Atacama comes
-out first, and for the lunar south pole Haughton Crater and the McMurdo Dry Valleys rank above
-99 to 100% of the land area.
+out first, and for the lunar south pole Haughton Crater and Svalbard rank above 99% of the land
+area. The McMurdo Dry Valleys are not covered: at 37 km the cell is mostly ice.
 
 ## Result (all weights equal)
 
 | Target | Best match | Points |
 |---|---|---|
-| Mars, Arcadia Planitia | Kunlun Mountains, northern Tibet | 66 |
+| Mars, Arcadia Planitia | Kunlun Mountains, northern Tibet | 65 |
 | Mars, Jezero Crater | Atacama | 73 |
-| Moon, South Pole | Victoria Land (Antarctica) and Ellesmere Island | 57 |
+| Moon, South Pole | Ellesmere Island | 57 |
 
 ## Limits
 
@@ -72,18 +73,19 @@ python scripts/rank.py out                          # ranking and cross-check in
 python scripts/build_page.py web/template.html out/data.json index.html
 ```
 
-The raw MODIS data (24 files, about 1.7 GB) is not in the repo. To rebuild the layers in
-`data/derived`, download the products `MYD11C3` and `MOD13C2` (version 061, all months of 2023)
+The raw MODIS data (25 files, about 3 GB) is not in the repo. To rebuild the layers in
+`data/derived`, download the products `MYD11C3`, `MOD13C2` (version 061, all months of 2023) and `MCD12C1` (2023)
 through [Earthdata Search](https://search.earthdata.nasa.gov/) into one folder and run:
 
 ```bash
 python scripts/modis_lst.py  FOLDER_WITH_HDF data/raw   # day-night swing  -> modis_dtr.npz
 python scripts/modis_ndvi.py FOLDER_WITH_HDF data/raw   # annual mean NDVI -> modis_ndvi.npz
+python scripts/modis_landcover.py FOLDER_WITH_HDF data/raw   # land cover shares -> modis_landcover.npz
 ```
 
 ## Data sources
 
-- NASA MODIS/Aqua MYD11C3 and MODIS/Terra MOD13C2, version 061 (LP DAAC)
+- NASA MODIS/Aqua MYD11C3, MODIS/Terra MOD13C2 and MODIS MCD12C1, version 061 (LP DAAC)
 - LOLA topography of the Moon, 10 arcminutes (fatiando-data)
 - MOLA spherical harmonic model MarsTopo719 (SHTOOLS example data)
 - ETOPO1 (NOAA), 10 arcminutes (fatiando-data)

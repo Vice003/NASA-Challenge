@@ -85,7 +85,7 @@ td .bar{width:100%;min-width:60px}
 <div class="wrap">
 <header>
   <h1>Analog-Finder</h1>
-  <p>Where on Earth looks most like a landing site on the Moon or Mars? The map compares 143,306 land cells (20 arcminutes each, about 37 km) with the fingerprint of the target site across nine dimensions.</p>
+  <p>Where on Earth looks most like a landing site on the Moon or Mars? The map compares 101,580 land cells (20 arcminutes each, about 37 km) with the fingerprint of the target site across nine dimensions.</p>
 </header>
 
 <div class="grid">
@@ -108,7 +108,7 @@ td .bar{width:100%;min-width:60px}
       <div class="keys"><span class="k1">Top match</span><span class="k2">Known analog</span></div>
       <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zreset">Whole Earth</button></div>
     </div>
-    <p class="hint">Click to select a cell, drag to move the map. Glaciers, ice shelves and sea are hidden.</p>
+    <p class="hint">Click to select a cell, drag to move the map. Sea, ice, forest, farmland and cities are hidden.</p>
   </section>
 </div>
 
@@ -140,6 +140,7 @@ td .bar{width:100%;min-width:60px}
     <li>Earth, vegetation: NASA MODIS/Terra MOD13C2 (version 061), annual mean NDVI from all twelve months of 2023. Missing values on land count as bare.</li>
     <li>Earth, day-night swing: NASA MODIS/Aqua MYD11C3 (version 061), all twelve months of 2023. Annual mean of the difference between the day and night overpass (about 13:30 and 01:30 local time, close to the daily maximum and minimum). The target values for the Moon and Mars are rough estimates.</li>
     <li>Air pressure from elevation (standard atmosphere), sun elevation from latitude and axial tilt, ground ice as a permafrost estimate from mean annual temperature.</li>
+    <li>Earth, land cover filter: NASA MODIS MCD12C1 (version 061, 2023). Cells that are more than half water, forest, cropland or urban are removed, which drops 31% of the ice-free land cells.</li>
     <li>Glaciers, ice shelves, region and country names: Natural Earth.</li>
   </ul>
   <h3>What this prototype cannot do</h3>
@@ -180,7 +181,7 @@ function fmt(x,d){return x.toLocaleString('en-US',{minimumFractionDigits:d,maxim
 function fval(k,x){var m=META[k];if(k==='press'&&x<1e-3)return 'practically 0 hPa';if(k==='ice')return x>=.75?'yes':x<=.25?'no':'partly';var d=m.dig;if(k==='press'&&x<100)d=1;return fmt(x,d)+m.unit;}
 var KNOWN=[['Atacama (Yungay), Chile',-24.1,-69.9],['Haughton Crater, Devon Island',75.4,-89.8],['McMurdo Dry Valleys, Antarctica',-77.5,162],['Askja, Iceland',65.05,-16.75],['Mauna Loa (HI-SEAS), Hawaii',19.6,-155.5],['MDRS Hanksville, Utah',38.4,-110.8],['Death Valley, USA',36.5,-117],['Río Tinto, Spain',37.7,-6.55],['Svalbard (AMASE)',79,14],['Pilbara, Australia',-21.5,119],['Danakil, Ethiopia',14.24,40.3],['Qaidam Basin, China',37.5,94],['Lanzarote, Spain',29,-13.7],['Ramon Crater, Negev',30.6,34.8],['Namib, Namibia',-24.5,15.5],['SP Crater near Flagstaff, USA',35.4,-111.5],['Erfoud, Morocco',31.4,-4.2]];
 function dist(a,b,c,d){var r=Math.PI/180,x=Math.sin(a*r)*Math.sin(c*r)+Math.cos(a*r)*Math.cos(c*r)*Math.cos((d-b)*r);return 6371*Math.acos(Math.max(-1,Math.min(1,x)));}
-KNOWN.forEach(function(k){var best=-1,bd=1e9;for(var i=0;i<N;i++){if(Math.abs(lat[i]-k[1])>2)continue;var d=dist(k[1],k[2],lat[i],lon[i]);if(d<bd){bd=d;best=i;}}k[3]=best;});
+KNOWN.forEach(function(k){var best=-1,bd=1e9;for(var i=0;i<N;i++){if(Math.abs(lat[i]-k[1])>2)continue;var d=dist(k[1],k[2],lat[i],lon[i]);if(d<bd){bd=d;best=i;}}k[3]=bd<100?best:-1;});
 
 var state={t:0,w:DIMS.map(function(){return 1;}),sel:-1,hide:false};
 var score=new Float32Array(N),pct=new Float32Array(N),order=new Uint32Array(N),lut=[],hits=[],smin=0,smax=1;
@@ -270,7 +271,8 @@ function lists(){
     mid.appendChild(document.createTextNode(label(c)));mid.appendChild(el('small',null,coords(c)+' · weakest dimension: '+META[DIMS[worst]].name));
     b.appendChild(mid);b.appendChild(el('span','s',fmt(score[c],1)));b.onclick=function(){select(c,true);};li.appendChild(b);ol.appendChild(li);});
   var tb=document.querySelector('#known tbody');tb.textContent='';
-  KNOWN.slice().sort(function(a,b){return score[b[3]]-score[a[3]];}).forEach(function(k){var tr=el('tr'),c=k[3];
+  KNOWN.filter(function(k){return k[3]<0;}).forEach(function(k){var tr=el('tr');tr.appendChild(el('td',null,k[0]));var td=el('td',null,'not covered: the cell is mostly ice or water at this resolution');td.colSpan=3;td.style.color='var(--muted)';tr.appendChild(td);tb.appendChild(tr);});
+  KNOWN.filter(function(k){return k[3]>=0;}).sort(function(a,b){return score[b[3]]-score[a[3]];}).forEach(function(k){var tr=el('tr'),c=k[3];
     tr.appendChild(el('td',null,k[0]));tr.appendChild(el('td','num',fmt(score[c],1)));tr.appendChild(el('td','num',fmt(pct[c],0)+'%'));
     var td=el('td'),bar=el('div','bar'),f=el('i');f.style.width=pct[c]+'%';bar.appendChild(f);td.appendChild(bar);tr.appendChild(td);
     tr.style.cursor='pointer';tr.onclick=function(){select(c,true);};tb.appendChild(tr);});

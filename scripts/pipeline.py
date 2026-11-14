@@ -73,7 +73,10 @@ glac = np.zeros(NR * NC, bool); glac[idx[np.unique(hit)]] = True; glac = glac.re
 def agg(a, w):
     a = np.where(w, a, np.nan).reshape(NR // 2, 2, NC // 2, 2)
     return np.nanmean(a, axis=(1, 3))
-valid = land & ~glac
+# land cover prefilter (CLAUDE.md): drop cells with > 50 % water + forest + cropland + urban (MCD12C1)
+lc_excl = np.nan_to_num(np.load(f'{D}/modis_landcover.npz')['excluded'].astype(float), nan=0.0)
+print('land cells dropped by land cover filter', float((land & ~glac & (lc_excl > 0.5)).sum() / (land & ~glac).sum()))
+valid = land & ~glac & (lc_excl <= 0.5)
 n_valid = valid.reshape(NR // 2, 2, NC // 2, 2).sum(axis=(1, 3))
 mask = n_valid >= 2
 F_raw = dict(slope=agg(slope55, valid), relief=agg(relief, valid), sun=agg(sun, valid), temp=agg(temp, valid),
