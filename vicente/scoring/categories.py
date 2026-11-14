@@ -57,9 +57,13 @@ def _pressure(df):
 
 
 def _barren(df):
-    """Vegetationsarm: NDVI-Mittel < 0,12, ersatzweise Landbedeckung."""
-    nd = _c(df, "ndvi_mean")
-    return (nd < 0.12) | (nd.isna() & (_c(df, "barren_pct") >= 60))
+    """
+    Vegetationsarm (Plan, Korrektur 4): NDVI-Jahresmaximum < 0,15 ODER MODIS-Klasse "barren" >= 50 %.
+    Nicht das NDVI-Mittel: heller nackter Boden erreicht NDVI um 0,12 (Atacama-Kern 0,124), und Schneemonate
+    druecken das Mittel kuenstlich nach unten.
+    """
+    peak = _c(df, "ndvi_peak_mean")
+    return (peak < 0.15) | (_c(df, "barren_pct") >= 50)
 
 
 def _arid(df, mm):
@@ -82,8 +86,10 @@ ENV_CLASSES = [
         id="salzpfanne", name="Salzpfanne / Evaporit",
         desc="Sehr flach, hell, vegetationslos: ausgetrocknete Salzseen.",
         analog="Chlorid- und Sulfatablagerungen auf dem Mars (z. B. Meridiani, Terra Sirenum).",
-        rule=lambda d: (_albedo(d) > 0.35) & (_c(d, "flat_frac") >= 0.9) & (_c(d, "relief") < 60)
-        & _barren(d) & (_c(d, "snow_mean_pct").fillna(0) < 10),
+        # topfeben: Relief < 25 m und Hoehen-Standardabweichung < 5 m (Duenenfelder sind zwar hell und im
+        # Mittel flach, haben aber Dutzende Meter Relief)
+        rule=lambda d: (_albedo(d) > 0.35) & (_c(d, "flat_frac") >= 0.95) & (_c(d, "relief") < 25)
+        & (_c(d, "elev_std") < 5) & _barren(d) & (_c(d, "snow_mean_pct").fillna(0) < 10),
     ),
     dict(
         id="duenenfeld", name="Duenenfeld / Sandmeer",

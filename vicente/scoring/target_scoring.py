@@ -28,8 +28,9 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from categories import TARGETS as PROFILES, _weighted_pct, classify, mark_known, top_sites, ENV_CLASSES  # noqa: E402
 
-# Ziel-ID (Team) -> Gewichtsprofil aus categories.py
-PROFILE_OF = {"shackleton": "mond_suedpol", "jezero": "mars_aequatorial", "arcadia": "mars_eis_mittelbreiten"}
+# Ziel-ID (VERARBEITUNGSPLAN.md, Abschnitt 3) -> Gewichtsprofil aus categories.py
+PROFILE_OF = {"shackleton_rim": "mond_suedpol", "shackleton_psr": "mond_suedpol",
+              "jezero": "mars_aequatorial", "arcadia": "mars_eis_mittelbreiten"}
 
 # Merkmal -> (Methode, Dimension, Erdspalte bzw. Funktion)
 FEATURES = {
@@ -52,19 +53,35 @@ FEATURES = {
     # wie scripts/pipeline.py: Eis-Proxy aus der Jahresmitteltemperatur (hier Oberflaeche statt Luft)
     "ground_ice":        ("direction", "eis_wasser",  lambda d: ((272.15 - d["lst_mean"]) / 7).clip(0, 1)
                           if "lst_mean" in d else None),
-    # wie scripts/pipeline.py: hoechster Sonnenstand aus Breite und Achsneigung
-    "sun_elevation_max": ("direct",    "beleuchtung", lambda d: np.minimum(90, 90 - d["lat"].abs() + 23.44)),
+    # hoechster Sonnenstand aus Breite und Achsneigung. Methode Richtung (Plan, Korrektur 15):
+    # die Erde erreicht die ca. 1,5 Grad am Mond-Suedpol nie (Minimum ca. 23,4 Grad an den Polen)
+    "sun_elevation_max": ("direction", "beleuchtung", lambda d: np.minimum(90, 90 - d["lat"].abs() + 23.44)),
 }
-# Gelaende: Erdspalte haengt von der Basislaenge ab. Vorhanden aus dem 90-m-DEM (zentrale Differenzen):
-# slope_p90 -> naeherungsweise 100-m-Basislaenge. 463-m-Spalten folgen (dem_features.py mit Basislaenge 463 m).
+# Gelaende: Erdspalte nach Pixelgroesse (Plan, Abschnitt 4), berechnet mit common/terrain.py
+# durch earth/dem_features.py (Lauf mit 100 m und 463 m). Bis dahin fehlen diese Spalten und werden uebersprungen.
 TERRAIN_COLS = {
-    ("slope_p90", 100): "slope_p90",
-    ("slope_p50", 100): "slope_p50_100m",
-    ("relief", 100): "relief_p95p5_100m",
-    ("slope_p50", 463): "slope_p50_463m",
-    ("slope_p90", 463): "slope_p90_463m",
-    ("relief", 463): "relief_p95p5_463m",
+    ("slope_p50", 100): "slope_p50_100m", ("slope_p90", 100): "slope_p90_100m", ("relief", 100): "relief_100m",
+    ("slope_p50", 463): "slope_p50_463m", ("slope_p90", 463): "slope_p90_463m", ("relief", 463): "relief_463m",
 }
+EXCLUDED_LC = {1, 2, 3, 4, 5, 12, 13, 14}  # Wald, Acker, Siedlung, Acker-Mosaik (IGBP), wie scripts/modis_landcover.py
+
+
+def ranking_mask(df):
+    """
+    Zellen, die ins Ranking duerfen (Plan, Abschnitt 5 und Korrektur 8): kein Wasser (> 50 %), kein Eisschild,
+    keine Zelle mit Wald/Acker/Siedlung als Hauptklasse.
+    """
+    c = lambda k: df[k] if k in df else pd.Series(np.nan, index=df.index)
+    water = c("water_pct") > 50
+    ice = (c("snow_perm_frac") >= 0.8) | (c("snow_ice_pct") >= 60)
+    lc = c("landcover").isin(EXCLUDED_LC)
+    return ~(water | ice | lc)
+
+
+def reference_mask(df):
+    """Erd-Referenz fuer den Rang-Abgleich (Korrektur 7): vegetationsfreies, eisfreies Land."""
+    from categories import _barren
+    return ranking_mask(df) & _barren(df).fillna(False)
 
 
 def load_targets(path):
@@ -99,6 +116,8 @@ def score_target(df, target, verbose=True):
     """Bewertung aller Zeilen von df fuer ein Ziel aus targets.json."""
     w = pd.Series(np.cos(np.radians(df["lat"].to_numpy())), index=df.index)
     prof = PROFILES[PROFILE_OF[target["id"]]]
+    rank_ok = ranking_mask(df)
+    ref = reference_mask(df)
     out = pd.DataFrame(index=df.index)
     used, skipped = [], []
     dims = {}
@@ -111,6 +130,8 @@ def score_target(df, target, verbose=True):
             skipped.append((key, "kein Zielwert"))
             continue
         method, dim, _ = FEATURES[key]
+        if key == "albedo" and target.get("body") == "Moon":
+            method = "quantile"  # Mond-Albedo (LROC, 643 nm) ist nicht dieselbe Groesse wie MODIS-Kurzwelle
         x, col = _earth_values(df, key, feat)
         if x is None:
             skipped.append((key, f"Erdmerkmal fehlt ({col})"))
@@ -125,7 +146,14 @@ def score_target(df, target, verbose=True):
             if bp is None:
                 skipped.append((key, "body_percentile fehlt"))
                 continue
-            pe = _weighted_pct(x, w)
+            # Perzentil relativ zur Erd-Referenz (vegetations- und eisfreies Land), flaechengewichtet
+            xr, wr = x[ref & x.notna()], w[ref & x.notna()]
+            if len(xr) < 100:
+                skipped.append((key, "zu wenig Referenzzellen"))
+                continue
+            o = np.argsort(xr.to_numpy())
+            xs, cw = xr.to_numpy()[o], np.cumsum(wr.to_numpy()[o])
+            pe = pd.Series(np.interp(x.to_numpy(), xs, cw / cw[-1]), index=x.index).where(x.notna())
             s = (1 - (pe - bp).abs() / max(bp, 1 - bp)).clip(0, 1)
         else:  # direction
             med = _wquantile(x, w, [0.5])[0]
@@ -144,6 +172,8 @@ def score_target(df, target, verbose=True):
         W = pd.Series(weights)
         avail = S.notna()
         out["total"] = (S.fillna(0) * W).sum(axis=1) / (avail * W).sum(axis=1).replace(0, np.nan)
+        out["total"] = out["total"].where(rank_ok)  # Wasser, Eisschild, Wald/Acker/Siedlung nicht ins Ranking
+        out["in_ranking"] = rank_ok
         out["coverage"] = (avail * W).sum(axis=1) / sum(v for v in prof["weights"].values() if v > 0)
         arr = S.to_numpy(dtype="float64")
         has = avail.any(axis=1).to_numpy()

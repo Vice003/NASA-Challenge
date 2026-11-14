@@ -1,8 +1,8 @@
 """
-Prueft eine Zielsignatur-Datei (planetary/targets.json) gegen die Spezifikation in ZIELSIGNATUREN.md.
-Braucht nur Python, keine Zusatzpakete.
+Prueft eine Zielsignatur-Datei (planetary/targets.json) gegen die Spezifikation in ZIELSIGNATUREN.md
+und den VERARBEITUNGSPLAN.md. Braucht nur Python, keine Zusatzpakete.
 
-Aufruf:  python check_targets.py planetary/targets.json
+Aufruf:  python planetary/check_targets.py planetary/targets.json
 Ausgabe: FEHLER (muss behoben werden), WARNUNG (pruefen), Uebersicht welche Werte noch fehlen.
 Exit-Code 1, wenn es Fehler gibt.
 """
@@ -11,6 +11,7 @@ import json
 import math
 import sys
 
+SCHEMA = 2
 FEATURES = {
     # Schluessel: (Einheit, Methode, erlaubter Bereich)
     "slope_p50": ("deg", "direct", (0, 90)),
@@ -29,20 +30,61 @@ FEATURES = {
     "humidity": ("g/kg", "direction", (0, 50)),
     "ndvi": ("1", "direction", (-1, 1)),
     "ground_ice": ("1", "direction", (0, 1)),
-    "sun_elevation_max": ("deg", "direct", (0, 90)),
+    "sun_elevation_max": ("deg", "direction", (0, 90)),
 }
 TERRAIN = {"slope_p50", "slope_p90", "relief"}
-BASELINE = {"Moon": 100, "Mars": 463}
-TARGET_IDS = {"shackleton": "Moon", "jezero": "Mars", "arcadia": "Mars"}
-FIELDS = {"value", "p10", "p90", "unit", "baseline_m", "body_percentile", "source", "notes"}
+PIXEL = {"Moon": 100, "Mars": 463}
+RADIUS_KM = {"Moon": 1737.4, "Mars": 3389.5}
+TARGET_IDS = {"shackleton_rim": "Moon", "shackleton_psr": "Moon", "jezero": "Mars", "arcadia": "Mars"}
+SIZE_KM = {"shackleton_rim": (8, 25), "shackleton_psr": (1, 40), "jezero": (5, 20), "arcadia": (10, 30)}
+TARGET_FIELDS = {"body", "name", "center_lat", "center_lon", "region_geojson", "region_notes", "features"}
+FIELDS = {"value", "p10", "p90", "unit", "pixel_m", "body_percentile", "source", "notes"}
 
 errors, warnings = [], []
-err = lambda m: errors.append(m)
-warn = lambda m: warnings.append(m)
+err = errors.append
+warn = warnings.append
 
 
 def num(x):
     return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+
+
+def check_polygon(where, g, body, tid):
+    if g is None:
+        warn(f"{where} region_geojson fehlt noch (Polygon des Zielorts, 10-20 km)")
+        return
+    if not isinstance(g, dict) or g.get("type") != "Polygon":
+        err(f"{where} region_geojson muss ein GeoJSON-Objekt mit type 'Polygon' sein")
+        return
+    try:
+        ring = g["coordinates"][0]
+        pts = [(float(p[0]), float(p[1])) for p in ring]
+    except (KeyError, IndexError, TypeError, ValueError):
+        err(f"{where} region_geojson.coordinates muss [[[lon, lat], ...]] sein")
+        return
+    if len(pts) < 4 or pts[0] != pts[-1]:
+        err(f"{where} Polygon-Ring braucht mindestens 4 Punkte und muss geschlossen sein (erster = letzter)")
+    if any(not 0 <= lo <= 360 for lo, _ in pts):
+        err(f"{where} Polygon-Laengen muessen Ost 0..360 sein (Konvention im Plan)")
+    if any(not -90 <= la <= 90 for _, la in pts):
+        err(f"{where} Polygon-Breiten ausserhalb -90..90 (Reihenfolge ist [Laenge, Breite])")
+        return
+    # Ausdehnung grob in km (Nord-Sued und Ost-West ueber die Mittelbreite)
+    lats = [la for _, la in pts]
+    lons = [lo for lo, _ in pts]
+    r = RADIUS_KM.get(body)
+    if not r:
+        return
+    ns = math.radians(max(lats) - min(lats)) * r
+    dlon = max(lons) - min(lons)
+    dlon = min(dlon, 360 - dlon)
+    ew = math.radians(dlon) * r * math.cos(math.radians(sum(lats) / len(lats)))
+    if abs(sum(lats) / len(lats)) > 85:
+        ew = ns  # nahe dem Pol ist die Laengenausdehnung nicht aussagekraeftig
+    lo_km, hi_km = SIZE_KM[tid]
+    size = max(ns, ew)
+    if not lo_km <= size <= hi_km:
+        err(f"{where} Polygon ist ca. {ns:.1f} x {ew:.1f} km; erwartet {lo_km}-{hi_km} km (Plan, Abschnitt 3)")
 
 
 def main(path):
@@ -51,10 +93,10 @@ def main(path):
     except FileNotFoundError:
         sys.exit(f"Datei nicht gefunden: {path}")
     except json.JSONDecodeError as e:
-        sys.exit(f"FEHLER: Kein gueltiges JSON ({e}). Datei in einem JSON-Validator pruefen.")
+        sys.exit(f"FEHLER: Kein gueltiges JSON ({e}).")
 
-    if data.get("schema_version") != 1:
-        err("schema_version muss 1 sein")
+    if data.get("schema_version") != SCHEMA:
+        err(f"schema_version muss {SCHEMA} sein (aktuelle Vorlage verwenden)")
     targets = data.get("targets")
     if not isinstance(targets, dict) or not targets:
         err("'targets' fehlt oder ist leer")
@@ -66,16 +108,18 @@ def main(path):
         if tid not in TARGET_IDS:
             err(f"{where} unbekannte Ziel-ID. Erlaubt: {', '.join(TARGET_IDS)}")
             continue
+        extra = set(t) - TARGET_FIELDS
+        if extra:
+            err(f"{where} unbekannte Felder {sorted(extra)}")
         body = t.get("body")
         if body != TARGET_IDS[tid]:
             err(f"{where} body muss '{TARGET_IDS[tid]}' sein, ist '{body}'")
-        for k in ("center_lat", "center_lon"):
-            if not num(t.get(k)):
-                err(f"{where} {k} fehlt oder ist keine Zahl")
-        if num(t.get("center_lat")) and not -90 <= t["center_lat"] <= 90:
-            err(f"{where} center_lat ausserhalb -90..90")
-        if "Koordinaten der Ecken hier eintragen" in str(t.get("region", "")):
-            warn(f"{where} region noch nicht beschrieben (Polygon-Ecken eintragen)")
+        lat, lon = t.get("center_lat"), t.get("center_lon")
+        if not num(lat) or not -90 <= lat <= 90:
+            err(f"{where} center_lat fehlt oder liegt ausserhalb -90..90")
+        if not num(lon) or not 0 <= lon <= 360:
+            err(f"{where} center_lon fehlt oder liegt nicht in Ost 0..360")
+        check_polygon(where, t.get("region_geojson"), body, tid)
 
         feats = t.get("features", {})
         filled, missing = [], []
@@ -85,11 +129,15 @@ def main(path):
                 err(f"{w} unbekannter Merkmalsschluessel. Erlaubt: {', '.join(FEATURES)}")
                 continue
             unit, method, (lo, hi) = FEATURES[key]
+            if key == "albedo" and body == "Moon":
+                method = "quantile"
             extra = set(f) - FIELDS
             if extra:
                 err(f"{w} unbekannte Felder {sorted(extra)}")
             if f.get("unit") != unit:
                 err(f"{w} unit muss '{unit}' sein, ist '{f.get('unit')}'")
+            if key in TERRAIN and f.get("pixel_m") != PIXEL.get(body):
+                err(f"{w} pixel_m muss {PIXEL.get(body)} sein ({body}, Plan Abschnitt 4)")
             v = f.get("value")
             if v is None:
                 missing.append(key)
@@ -99,10 +147,13 @@ def main(path):
                 continue
             if not lo <= v <= hi:
                 err(f"{w} value {v} ausserhalb des plausiblen Bereichs {lo}..{hi} {unit}")
-            if not str(f.get("source", "")).strip():
+            src = str(f.get("source", "")).strip()
+            if not src:
                 err(f"{w} value gesetzt, aber source leer. Quelle angeben oder value auf null setzen")
-            if "Quelle offen" in str(f.get("source", "")):
+            if "Quelle offen" in src:
                 warn(f"{w} Wert aus pipeline.py vorbelegt, Quelle noch offen")
+            if key in TERRAIN and "terrain.py" not in src + str(f.get("notes", "")):
+                warn(f"{w} in source/notes ist nicht vermerkt, dass common/terrain.py benutzt wurde")
             p10, p90 = f.get("p10"), f.get("p90")
             if (p10 is None) != (p90 is None):
                 err(f"{w} p10 und p90 nur gemeinsam angeben")
@@ -111,13 +162,6 @@ def main(path):
                     err(f"{w} p10/p90 muessen Zahlen sein")
                 elif not p10 <= v <= p90:
                     err(f"{w} erwartet p10 <= value <= p90, ist {p10} / {v} / {p90}")
-            if key in TERRAIN:
-                b = f.get("baseline_m")
-                if not num(b):
-                    err(f"{w} baseline_m fehlt (Gelaende braucht die Basislaenge in Metern)")
-                elif body in BASELINE and b != BASELINE[body]:
-                    warn(f"{w} baseline_m {b} weicht vom Teamplan ab ({BASELINE[body]} m fuer {body}); "
-                         f"ohne passendes Erdmerkmal wird es uebersprungen")
             if method == "quantile":
                 bp = f.get("body_percentile")
                 if not num(bp) or not 0 <= bp <= 1:
@@ -130,7 +174,7 @@ def main(path):
 
 def report(summary):
     for tid, (filled, missing) in summary.items():
-        print(f"{tid:11s} {len(filled):2d} Werte gesetzt, {len(missing):2d} offen"
+        print(f"{tid:15s} {len(filled):2d} Werte gesetzt, {len(missing):2d} offen"
               + (f": {', '.join(missing)}" if missing else ""))
     print()
     for m in errors:
@@ -143,5 +187,5 @@ def report(summary):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        sys.exit("Aufruf: python check_targets.py planetary/targets.json")
+        sys.exit("Aufruf: python planetary/check_targets.py planetary/targets.json")
     sys.exit(main(sys.argv[1]))
