@@ -240,6 +240,12 @@ if __name__ == "__main__":
     T = load_targets(tpath)
     print(f"Zielsignaturen: {tpath}\nErdtabelle:     {table.name} ({len(df):,} Zellen)")
     from categories import flags as _flags
+    try:  # Land nur zur Beschriftung (Natural Earth, data/ref/); fehlt die Datei, bleibt das Feld leer
+        from countries import CountryLookup
+        _cl = CountryLookup()
+    except Exception as e:
+        print("Hinweis: keine Laenderzuordnung:", e)
+        _cl = None
     N_TOP = 20
     results, rows = {}, []
     for tid, t in T.items():
@@ -261,7 +267,9 @@ if __name__ == "__main__":
             if rank <= 10:
                 print(f"     {r.lat:7.2f} {r.lon:8.2f}  {r.total:.2f}  {names[r.env_class]:30.30s}  "
                       f"passt: {r.best_dim:11s} bricht: {r.worst_dim:11s}  {('bekannt: ' + kn) if kn else 'NEU'}")
-            site = dict(rank=rank, lat=round(float(r.lat), 3), lon=round(float(r.lon), 3), score=round(float(r.total), 4),
+            country, iso = _cl.label(r.lat, r.lon) if _cl else (None, None)
+            site = dict(rank=rank, lat=round(float(r.lat), 3), lon=round(float(r.lon), 3), country=country, country_iso=iso,
+                        score=round(float(r.total), 4),
                         better_than_pct=round(float(pct[i]) * 100, 2), coverage=round(float(r.coverage), 3),
                         env_class=str(r.env_class), env_class_name=names[r.env_class],
                         best_dim=r.best_dim, worst_dim=r.worst_dim, known_analog=kn,
