@@ -1,4 +1,4 @@
-# MODIS-Rohdaten und andere Eingangsdaten (siehe README)
+# Raw MODIS files and other input data (see README)
 *.hdf
 *.nc4
 data/raw/

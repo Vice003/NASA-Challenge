@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -85,69 +85,69 @@ td .bar{width:100%;min-width:60px}
 <div class="wrap">
 <header>
   <h1>Analog-Finder</h1>
-  <p>Wo auf der Erde sieht es einem Landeplatz auf Mond oder Mars am ähnlichsten? Die Karte vergleicht 143.306 Landzellen (je 20 Bogenminuten, rund 37 km) in neun Dimensionen mit dem Fingerabdruck des Zielorts.</p>
+  <p>Where on Earth looks most like a landing site on the Moon or Mars? The map compares 143,306 land cells (20 arcminutes each, about 37 km) with the fingerprint of the target site across nine dimensions.</p>
 </header>
 
 <div class="grid">
-  <section class="panel" aria-label="Zielort und Gewichte">
-    <h2>Zielort</h2>
+  <section class="panel" aria-label="Target site and weights">
+    <h2>Target site</h2>
     <div class="targets" id="targets"></div>
-    <h2>Fingerabdruck und Gewichte</h2>
+    <h2>Fingerprint and weights</h2>
     <div id="dims"></div>
-    <p class="hint">Rechts steht der Zielwert. Der Regler legt fest, wie stark die Dimension zählt (0 = aus). Hangneigung und Relief sind aus MOLA- und LOLA-Höhendaten gemessen, die übrigen Zielwerte sind gerundete Literaturwerte.</p>
+    <p class="hint">The target value is on the right. The slider sets how much the dimension counts (0 = off). Slope and relief are measured from MOLA and LOLA elevation data; the other target values are rounded literature values.</p>
   </section>
 
   <section class="panel">
-    <h2 id="maptitle">Ähnlichkeit</h2>
+    <h2 id="maptitle">Similarity</h2>
     <div class="mapbox">
-      <canvas id="map" tabindex="0" aria-label="Weltkarte der Ähnlichkeit. Die Trefferliste darunter enthält dieselben Ergebnisse als Text."></canvas>
+      <canvas id="map" tabindex="0" aria-label="World map of similarity. The list of top matches below holds the same results as text."></canvas>
       <div id="tip"></div>
     </div>
     <div class="mapbar">
-      <div class="legend"><span id="lmin"></span><i></i><span id="lmax"></span><span>Punkte von 100</span></div>
-      <div class="keys"><span class="k1">Top-Treffer</span><span class="k2">bekanntes Analog</span></div>
-      <div class="zoom"><button id="zin" aria-label="Hineinzoomen">+</button><button id="zout" aria-label="Herauszoomen">−</button><button id="zreset">Ganze Erde</button></div>
+      <div class="legend"><span id="lmin"></span><i></i><span id="lmax"></span><span>points out of 100</span></div>
+      <div class="keys"><span class="k1">Top match</span><span class="k2">Known analog</span></div>
+      <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zreset">Whole Earth</button></div>
     </div>
-    <p class="hint">Klick wählt eine Zelle, Ziehen verschiebt die Karte. Gletscher, Eisschelfe und Meer sind ausgeblendet.</p>
+    <p class="hint">Click to select a cell, drag to move the map. Glaciers, ice shelves and sea are hidden.</p>
   </section>
 </div>
 
 <div class="two">
   <section class="panel">
-    <h2>Top-Treffer</h2>
-    <label class="toggle"><input type="checkbox" id="hide"> Bekannte Analoge ausblenden (300 km Umkreis)</label>
+    <h2>Top matches</h2>
+    <label class="toggle"><input type="checkbox" id="hide"> Hide known analogs (300 km radius)</label>
     <ol class="hits" id="hits"></ol>
-    <p class="hint">Treffer liegen mindestens 500 km auseinander, damit nicht eine Region die Liste füllt.</p>
+    <p class="hint">Matches are at least 500 km apart so that one region does not fill the list.</p>
   </section>
   <section class="panel prof" id="prof" aria-live="polite"></section>
 </div>
 
 <section class="panel">
-  <h2>Gegenprobe mit bekannten Analogen</h2>
-  <p class="hint" style="margin:0 0 10px">Die Methode kennt diese Orte nicht. Landen etablierte Analoge für den gewählten Zielort weit oben, ist das Ranking plausibel.</p>
-  <div class="tw"><table id="known"><thead><tr><th>Ort</th><th class="num">Punkte</th><th class="num">besser als</th><th style="width:35%">Anteil der Landfläche</th></tr></thead><tbody></tbody></table></div>
+  <h2>Cross-check with known analogs</h2>
+  <p class="hint" style="margin:0 0 10px">The method does not know these sites. If established analogs for the selected target rank high, the ranking is plausible.</p>
+  <div class="tw"><table id="known"><thead><tr><th>Site</th><th class="num">Points</th><th class="num">Better than</th><th style="width:35%">Share of land area</th></tr></thead><tbody></tbody></table></div>
 </section>
 
 <section class="panel method">
-  <h2>Methode und Grenzen</h2>
-  <p>Für jede Dimension gilt: 100 Punkte heißt identisch mit dem Zielort, 0 Punkte heißt so unähnlich wie die unähnlichste Landfläche der Erde (2. bis 98. Perzentil). Die Gesamtnote ist das gewichtete Mittel. Liegt der Zielwert außerhalb dessen, was die Erde bietet, erreicht keine Zelle 100 Punkte. Das ist gewollt: Bei Temperatur und Luftdruck zeigt die Zahl, wie weit die Analogie trägt.</p>
-  <h3>Daten</h3>
+  <h2>Method and limits</h2>
+  <p>For each dimension, 100 points means identical to the target site and 0 points means as unlike it as the least similar land on Earth (2nd to 98th percentile). The total score is the weighted mean. Where the target value lies outside what Earth offers, no cell reaches 100 points. That is intended: for temperature and air pressure the number shows how far the analogy holds.</p>
+  <h3>Data</h3>
   <ul>
-    <li>Erde, Gelände: ETOPO1 (NOAA), 10 Bogenminuten. Hangneigung über 18,5 km Basis, Relief als Höhenstreuung über rund 90 km.</li>
-    <li>Mars, Gelände: MOLA-Kugelfunktionsmodell MarsTopo719, auf dieselbe Wellenlänge wie die Erddaten begrenzt, Abplattung entfernt.</li>
-    <li>Mond, Gelände: LOLA-Topografie, 10 Bogenminuten, ebenso bandbegrenzt.</li>
-    <li>Erde, Klima: WorldClim 2.1, Jahresmitteltemperatur und Jahresniederschlag (1970 bis 2000).</li>
-    <li>Erde, Vegetation: NASA MODIS/Terra MOD13C2 (Version 061), NDVI-Jahresmittel aus allen zwölf Monaten 2023. Fehlende Werte auf Land gelten als vegetationsfrei.</li>
-    <li>Erde, Tag-Nacht-Hub: NASA MODIS/Terra MOD11C3 (Version 061), alle zwölf Monate 2023. Jahresmittel der Differenz zwischen Tag- und Nachtüberflug (etwa 10:30 und 22:30 Uhr Ortszeit). Der wahre Tageshub ist größer, die Zielwerte für Mond und Mars sind grobe Schätzungen.</li>
-    <li>Luftdruck aus der Höhe (Standardatmosphäre), Sonnenstand aus Breite und Achsneigung, Bodeneis als Permafrost-Schätzung aus der Jahresmitteltemperatur.</li>
-    <li>Gletscher, Eisschelfe, Regions- und Ländernamen: Natural Earth.</li>
+    <li>Earth, terrain: ETOPO1 (NOAA), 10 arcminutes. Slope over an 18.5 km baseline, relief as the spread of elevation over about 90 km.</li>
+    <li>Mars, terrain: MOLA spherical harmonic model MarsTopo719, limited to the same wavelength as the Earth data, flattening removed.</li>
+    <li>Moon, terrain: LOLA topography, 10 arcminutes, band-limited in the same way.</li>
+    <li>Earth, climate: WorldClim 2.1, mean annual temperature and annual precipitation (1970 to 2000).</li>
+    <li>Earth, vegetation: NASA MODIS/Terra MOD13C2 (version 061), annual mean NDVI from all twelve months of 2023. Missing values on land count as bare.</li>
+    <li>Earth, day-night swing: NASA MODIS/Terra MOD11C3 (version 061), all twelve months of 2023. Annual mean of the difference between the day and night overpass (about 10:30 and 22:30 local time). The true daily swing is larger, and the target values for the Moon and Mars are rough estimates.</li>
+    <li>Air pressure from elevation (standard atmosphere), sun elevation from latitude and axial tilt, ground ice as a permafrost estimate from mean annual temperature.</li>
+    <li>Glaciers, ice shelves, region and country names: Natural Earth.</li>
   </ul>
-  <h3>Was dieser Prototyp nicht kann</h3>
+  <h3>What this prototype cannot do</h3>
   <ul>
-    <li>Die Basis von 18,5 km beschreibt Landschaftstypen, keine Landeplätze. Für Rover-Hänge braucht es Höhenmodelle im Meterbereich.</li>
-    <li>Es fehlen Mineralogie (EMIT, ASTER), Staub (MERRA-2) und Untergrund wie Lavaröhren. Das sind die nächsten Dimensionen.</li>
-    <li>Bodeneis ist eine Schätzung aus der Temperatur und deshalb mit ihr gekoppelt. Eine echte Permafrostkarte wäre besser.</li>
-    <li>Schwerkraft, Vakuum, Strahlung und die dünne CO₂-Atmosphäre lassen sich auf der Erde nirgends nachbilden.</li>
+    <li>The 18.5 km baseline describes landscape types, not landing sites. Rover-scale slopes need elevation models at metre resolution.</li>
+    <li>Mineralogy (EMIT, ASTER), dust (MERRA-2) and the subsurface, such as lava tubes, are missing. These are the next dimensions.</li>
+    <li>Ground ice is estimated from temperature and is therefore coupled to it. A real permafrost map would be better.</li>
+    <li>Gravity, vacuum, radiation and the thin CO₂ atmosphere cannot be reproduced anywhere on Earth.</li>
   </ul>
 </section>
 </div>
@@ -166,19 +166,19 @@ var N=rows.length,lat=new Float32Array(N),lon=new Float32Array(N),area=new Float
 for(var i=0;i<N;i++){lat[i]=90-(rows[i]+.5)*180/NR;lon[i]=-180+(cols[i]+.5)*360/NC;area[i]=Math.cos(lat[i]*Math.PI/180);}
 function label(i){return D.labels[labB[2*i]|(labB[2*i+1]<<8)];}
 var META={
- slope:{name:'Hangneigung',unit:'°',inv:function(v){return Math.pow(10,v)-.01;},dig:2},
+ slope:{name:'Slope',unit:'°',inv:function(v){return Math.pow(10,v)-.01;},dig:2},
  relief:{name:'Relief',unit:' m',inv:function(v){return Math.pow(10,v)-1;},dig:0},
- sun:{name:'Höchster Sonnenstand',unit:'°',inv:function(v){return v;},dig:0},
- temp:{name:'Jahresmitteltemperatur',unit:' °C',inv:function(v){return v;},dig:0},
- prec:{name:'Jahresniederschlag',unit:' mm',inv:function(v){return Math.max(0,Math.pow(10,v)-10);},dig:0},
+ sun:{name:'Highest sun elevation',unit:'°',inv:function(v){return v;},dig:0},
+ temp:{name:'Mean annual temperature',unit:' °C',inv:function(v){return v;},dig:0},
+ prec:{name:'Annual precipitation',unit:' mm',inv:function(v){return Math.max(0,Math.pow(10,v)-10);},dig:0},
  ndvi:{name:'Vegetation (NDVI)',unit:'',inv:function(v){return v;},dig:2},
- press:{name:'Luftdruck',unit:' hPa',inv:function(v){return Math.pow(10,v);},dig:0},
- ice:{name:'Bodeneis (Schätzung)',unit:'',inv:function(v){return v;},dig:1},
- dtr:{name:'Tag-Nacht-Hub (MODIS)',unit:' K',inv:function(v){return v;},dig:0}
+ press:{name:'Air pressure',unit:' hPa',inv:function(v){return Math.pow(10,v);},dig:0},
+ ice:{name:'Ground ice (estimate)',unit:'',inv:function(v){return v;},dig:1},
+ dtr:{name:'Day-night swing (MODIS)',unit:' K',inv:function(v){return v;},dig:0}
 };
-function fmt(x,d){return x.toLocaleString('de-DE',{minimumFractionDigits:d,maximumFractionDigits:d});}
-function fval(k,x){var m=META[k];if(k==='press'&&x<1e-3)return 'praktisch 0 hPa';if(k==='ice')return x>=.75?'ja':x<=.25?'nein':'teilweise';var d=m.dig;if(k==='press'&&x<100)d=1;return fmt(x,d)+m.unit;}
-var KNOWN=[['Atacama (Yungay), Chile',-24.1,-69.9],['Haughton-Krater, Devon Island',75.4,-89.8],['McMurdo-Trockentäler, Antarktis',-77.5,162],['Askja, Island',65.05,-16.75],['Mauna Loa (HI-SEAS), Hawaii',19.6,-155.5],['MDRS Hanksville, Utah',38.4,-110.8],['Death Valley, USA',36.5,-117],['Río Tinto, Spanien',37.7,-6.55],['Spitzbergen (AMASE)',79,14],['Pilbara, Australien',-21.5,119],['Danakil, Äthiopien',14.24,40.3],['Qaidam-Becken, China',37.5,94],['Lanzarote, Spanien',29,-13.7],['Ramon-Krater, Negev',30.6,34.8],['Namib, Namibia',-24.5,15.5],['SP Crater bei Flagstaff, USA',35.4,-111.5],['Erfoud, Marokko',31.4,-4.2]];
+function fmt(x,d){return x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
+function fval(k,x){var m=META[k];if(k==='press'&&x<1e-3)return 'practically 0 hPa';if(k==='ice')return x>=.75?'yes':x<=.25?'no':'partly';var d=m.dig;if(k==='press'&&x<100)d=1;return fmt(x,d)+m.unit;}
+var KNOWN=[['Atacama (Yungay), Chile',-24.1,-69.9],['Haughton Crater, Devon Island',75.4,-89.8],['McMurdo Dry Valleys, Antarctica',-77.5,162],['Askja, Iceland',65.05,-16.75],['Mauna Loa (HI-SEAS), Hawaii',19.6,-155.5],['MDRS Hanksville, Utah',38.4,-110.8],['Death Valley, USA',36.5,-117],['Río Tinto, Spain',37.7,-6.55],['Svalbard (AMASE)',79,14],['Pilbara, Australia',-21.5,119],['Danakil, Ethiopia',14.24,40.3],['Qaidam Basin, China',37.5,94],['Lanzarote, Spain',29,-13.7],['Ramon Crater, Negev',30.6,34.8],['Namib, Namibia',-24.5,15.5],['SP Crater near Flagstaff, USA',35.4,-111.5],['Erfoud, Morocco',31.4,-4.2]];
 function dist(a,b,c,d){var r=Math.PI/180,x=Math.sin(a*r)*Math.sin(c*r)+Math.cos(a*r)*Math.cos(c*r)*Math.cos((d-b)*r);return 6371*Math.acos(Math.max(-1,Math.min(1,x)));}
 KNOWN.forEach(function(k){var best=-1,bd=1e9;for(var i=0;i<N;i++){if(Math.abs(lat[i]-k[1])>2)continue;var d=dist(k[1],k[2],lat[i],lon[i]);if(d<bd){bd=d;best=i;}}k[3]=best;});
 
@@ -235,7 +235,7 @@ cv.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY,vx:v
 cv.addEventListener('pointermove',function(e){
   if(drag){var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4)drag.moved=true;if(drag.moved){view.x=drag.vx-dx/W*NC/view.z;view.y=drag.vy-dy/H*NR/view.z;draw();}tip.style.display='none';return;}
   var c=cellAt(e);if(c<0){tip.style.display='none';return;}
-  var r=cv.getBoundingClientRect();tip.textContent=label(c)+' · '+fmt(score[c],1)+' Punkte';tip.style.display='block';
+  var r=cv.getBoundingClientRect();tip.textContent=label(c)+' · '+fmt(score[c],1)+' points';tip.style.display='block';
   var x=e.clientX-r.left+12;if(x+tip.offsetWidth>W)x=e.clientX-r.left-tip.offsetWidth-12;tip.style.left=x+'px';tip.style.top=(e.clientY-r.top+12)+'px';});
 cv.addEventListener('pointerup',function(e){if(drag&&!drag.moved){var c=cellAt(e);if(c>=0)select(c,false);}drag=null;});
 cv.addEventListener('pointerleave',function(){tip.style.display='none';});
@@ -247,34 +247,34 @@ cv.addEventListener('dblclick',function(e){var r=cv.getBoundingClientRect();zoom
 
 /* ---------- panels */
 function el(t,c,h){var e=document.createElement(t);if(c)e.className=c;if(h!=null)e.textContent=h;return e;}
-function coords(i){return fmt(Math.abs(lat[i]),1)+'° '+(lat[i]>=0?'N':'S')+', '+fmt(Math.abs(lon[i]),1)+'° '+(lon[i]>=0?'O':'W');}
+function coords(i){return fmt(Math.abs(lat[i]),1)+'° '+(lat[i]>=0?'N':'S')+', '+fmt(Math.abs(lon[i]),1)+'° '+(lon[i]>=0?'E':'W');}
 function select(c,center){state.sel=c;if(center){view.z=Math.max(view.z,4);view.x=cols[c]-NC/view.z/2;view.y=rows[c]-NR/view.z/2;}draw();profile();}
 function profile(){
   var p=document.getElementById('prof'),c=state.sel,T=D.targets[state.t];p.textContent='';
-  p.appendChild(el('h2',null,'Profil der gewählten Zelle'));
-  if(c<0){p.appendChild(el('p','hint','Noch keine Zelle gewählt.'));return;}
+  p.appendChild(el('h2',null,'Profile of the selected cell'));
+  if(c<0){p.appendChild(el('p','hint','No cell selected yet.'));return;}
   p.appendChild(el('h3',null,label(c)));p.appendChild(el('div','meta',coords(c)));
-  var b=el('div','big',fmt(score[c],1));b.appendChild(el('small',null,'Punkte, besser als '+fmt(Math.min(pct[c],99.9),pct[c]>99?1:0)+' % der Landfläche'));p.appendChild(b);
+  var b=el('div','big',fmt(score[c],1));b.appendChild(el('small',null,'points, better than '+fmt(Math.min(pct[c],99.9),pct[c]>99?1:0)+'% of the land area'));p.appendChild(b);
   var weak=[];
   DIMS.forEach(function(k,d){var s=100*sim(c,d),lo=D.rng[k][0],hi=D.rng[k][1],v=META[k].inv(lo+feat[c*ND+d]/255*(hi-lo));
     var r=el('div','row');r.appendChild(el('div',null,META[k].name));r.appendChild(el('div','p',fmt(s,0)));
     var bar=el('div','bar'),f=el('i');f.style.width=s+'%';bar.appendChild(f);r.appendChild(bar);
-    r.appendChild(el('div','v','Erde '+fval(k,v)+' · '+T.name+' '+fval(k,T.raw[k])));p.appendChild(r);
+    r.appendChild(el('div','v','Earth '+fval(k,v)+' · '+T.name+' '+fval(k,T.raw[k])));p.appendChild(r);
     if(s<40)weak.push(META[k].name);});
-  var br=el('div','breaks');br.textContent=(weak.length?'Hier bricht die Analogie: '+weak.join(', ')+'. ':'Keine Dimension unter 40 Punkten. ')+'Schwerkraft, Vakuum und Strahlung fehlen an jedem Ort der Erde.';p.appendChild(br);
+  var br=el('div','breaks');br.textContent=(weak.length?'Where the analogy breaks: '+weak.join(', ')+'. ':'No dimension below 40 points. ')+'Gravity, vacuum and radiation are missing everywhere on Earth.';p.appendChild(br);
 }
 function lists(){
   var T=D.targets[state.t],ol=document.getElementById('hits');ol.textContent='';
   hits.forEach(function(c,n){var li=el('li'),b=el('button');b.type='button';b.appendChild(el('span','n',n+1));
     var mid=el('span'),best=0,worst=0;for(var d=1;d<ND;d++){if(state.w[d]>0&&sim(c,d)>sim(c,best))best=d;if(state.w[d]>0&&sim(c,d)<sim(c,worst))worst=d;}
-    mid.appendChild(document.createTextNode(label(c)));mid.appendChild(el('small',null,coords(c)+' · schwächste Dimension: '+META[DIMS[worst]].name));
+    mid.appendChild(document.createTextNode(label(c)));mid.appendChild(el('small',null,coords(c)+' · weakest dimension: '+META[DIMS[worst]].name));
     b.appendChild(mid);b.appendChild(el('span','s',fmt(score[c],1)));b.onclick=function(){select(c,true);};li.appendChild(b);ol.appendChild(li);});
   var tb=document.querySelector('#known tbody');tb.textContent='';
   KNOWN.slice().sort(function(a,b){return score[b[3]]-score[a[3]];}).forEach(function(k){var tr=el('tr'),c=k[3];
-    tr.appendChild(el('td',null,k[0]));tr.appendChild(el('td','num',fmt(score[c],1)));tr.appendChild(el('td','num',fmt(pct[c],0)+' %'));
+    tr.appendChild(el('td',null,k[0]));tr.appendChild(el('td','num',fmt(score[c],1)));tr.appendChild(el('td','num',fmt(pct[c],0)+'%'));
     var td=el('td'),bar=el('div','bar'),f=el('i');f.style.width=pct[c]+'%';bar.appendChild(f);td.appendChild(bar);tr.appendChild(td);
     tr.style.cursor='pointer';tr.onclick=function(){select(c,true);};tb.appendChild(tr);});
-  document.getElementById('maptitle').textContent='Ähnlichkeit zu '+T.body+' · '+T.name;
+  document.getElementById('maptitle').textContent='Similarity to '+T.body+' · '+T.name;
   document.getElementById('lmin').textContent='≤ '+fmt(smin,0);document.getElementById('lmax').textContent=fmt(smax,0);
 }
 function controls(){

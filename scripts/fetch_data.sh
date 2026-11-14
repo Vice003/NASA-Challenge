@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Laedt die offenen Eingangsdaten nach data/raw (ohne MODIS, siehe README).
+# Downloads the open input data to data/raw (MODIS excluded, see README).
 set -euo pipefail
 D="${1:-data/raw}"; mkdir -p "$D"; cd "$D"
 dl(){ curl -sSL -o "$2" "$1"; echo "$2"; }

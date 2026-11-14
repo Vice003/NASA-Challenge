@@ -119,9 +119,9 @@ def earth_check(lat0, lon0):
 TARGETS = [
   dict(id='arcadia', body='Mars', name='Arcadia Planitia', lat=40.0, lon=200.0, R=3389.5, co=mars,
        temp=-70, prec=0, ndvi=0, press=8.5, ice=1, dtr=60, sun=min(90, 90 - 40 + 25.19)),
-  dict(id='jezero', body='Mars', name='Jezero-Krater', lat=18.44, lon=77.45, R=3389.5, co=mars,
+  dict(id='jezero', body='Mars', name='Jezero Crater', lat=18.44, lon=77.45, R=3389.5, co=mars,
        temp=-55, prec=0, ndvi=0, press=7.5, ice=0, dtr=75, sun=90.0),
-  dict(id='shackleton', body='Mond', name='Südpol (Shackleton)', lat=-89.67, lon=129.8, R=1737.4, co=moon,
+  dict(id='shackleton', body='Moon', name='South Pole (Shackleton)', lat=-89.67, lon=129.8, R=1737.4, co=moon,
        temp=-170, prec=0, ndvi=0, press=1e-9, ice=1, dtr=150, sun=90 - 89.67 + 1.54),
 ]
 for t in TARGETS:
@@ -167,13 +167,13 @@ miss = np.where(ci < 0)[0]
 if len(miss): ci[miss] = ctree.nearest(pts[miss])
 labels, lab_idx, lab_of = [], {}, np.zeros(len(pts), int)
 for n in range(len(pts)):
-    cn = nm(countries[ci[n]][1], 'NAME_DE', 'NAME')
-    if ri[n] >= 0: lab = f"{nm(regions[ri[n]][1], 'NAME_DE', 'NAME')}, {cn}"
+    cn = nm(countries[ci[n]][1], 'NAME_EN', 'NAME')
+    if ri[n] >= 0: lab = f"{nm(regions[ri[n]][1], 'NAME_EN', 'NAME')}, {cn}"
     else:
         la, lo = np.radians(lat2[ii[n]]), np.radians(lon2[jj[n]])
         dd = np.arccos(np.clip(np.sin(la) * np.sin(plat) + np.cos(la) * np.cos(plat) * np.cos(plon - lo), -1, 1)) * 6371
         m = dd.argmin()
-        lab = f"bei {P[m]['name']}, {cn}" if dd[m] < 400 else cn
+        lab = f"near {P[m]['name']}, {cn}" if dd[m] < 400 else cn
     if lab not in lab_idx: lab_idx[lab] = len(labels); labels.append(lab)
     lab_of[n] = lab_idx[lab]
 print('cells', len(pts), 'labels', len(labels), 'glaciated 10min cells', int(glac.sum()), 'ndvi missing on valid land', float((ndvi_missing & valid).sum() / valid.sum()))
