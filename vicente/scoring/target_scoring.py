@@ -124,7 +124,7 @@ def _earth_values(df, key, feat):
 
 def _wquantile(x, w, qs):
     ok = x.notna().to_numpy()
-    v, ww = x.to_numpy()[ok], w.to_numpy()[ok]
+    v, ww = x.to_numpy(dtype=np.float64)[ok], w.to_numpy(dtype=np.float64)[ok]  # 64 Bit, siehe _weighted_pct
     o = np.argsort(v)
     cw = np.cumsum(ww[o]); cw /= cw[-1]
     return [v[o][min(np.searchsorted(cw, q), len(v) - 1)] for q in qs]
@@ -137,7 +137,7 @@ def score_target(df, target, verbose=True):
     rank_ok = ranking_mask(df)
     ref = reference_mask(df)
     out = pd.DataFrame(index=df.index)
-    used, skipped = [], []
+    used, skipped, meta = [], [], []
     dims = {}
     for key, feat in target["features"].items():
         if key not in FEATURES:
@@ -153,10 +153,14 @@ def score_target(df, target, verbose=True):
             skipped.append((key, f"Erdmerkmal fehlt ({col})"))
             continue
         x = x.astype("float64")
+        info = dict(key=key, method=method, dim=dim, col=col, target=tv, unit=feat.get("unit"),
+                    body_percentile=feat.get("body_percentile"))
+        pe = None
         if method == "direct":
             p2, p98 = _wquantile(x, w, [0.02, 0.98])
             span = max(abs(p2 - tv), abs(p98 - tv)) or 1e-9
             s = (1 - (x - tv).abs() / span).clip(0, 1)
+            info["span"] = float(span)
         elif method == "quantile":
             bp = feat.get("body_percentile")
             if bp is None:
@@ -168,18 +172,23 @@ def score_target(df, target, verbose=True):
                 skipped.append((key, "zu wenig Referenzzellen"))
                 continue
             o = np.argsort(xr.to_numpy())
-            xs, cw = xr.to_numpy()[o], np.cumsum(wr.to_numpy()[o])
+            xs, cw = xr.to_numpy(dtype=np.float64)[o], np.cumsum(wr.to_numpy(dtype=np.float64)[o])
             pe = pd.Series(np.interp(x.to_numpy(), xs, cw / cw[-1]), index=x.index).where(x.notna())
             s = (1 - (pe - bp).abs() / max(bp, 1 - bp)).clip(0, 1)
         else:  # direction
             med = _wquantile(x, w, [0.5])[0]
             pe = _weighted_pct(x, w)
             s = pe if tv > med else 1 - pe
+            info["direction"] = "higher" if tv > med else "lower"
         out[f"feat_{key}"] = s
+        if pe is not None:
+            out[f"pct_{key}"] = pe.astype("float32")  # Rang des Erdwerts auf der Erde (fuer die Erklaerung)
         rel_t = feat.get("reliability") or REL_DEFAULT
         wgt = REL_WEIGHT.get(rel_t, REL_WEIGHT[REL_DEFAULT]) * REL_WEIGHT[EARTH_RELIABILITY.get(key, "B")]
         dims.setdefault(dim, []).append((s, wgt))
         used.append((key, method, f"{col}, Gewicht {wgt:.2f} (Ziel {rel_t}, Erde {EARTH_RELIABILITY.get(key, 'B')})"))
+        info.update(weight=float(wgt), rel_target=rel_t, rel_earth=EARTH_RELIABILITY.get(key, "B"))
+        meta.append(info)
 
     conf = {}
     for dim, parts in dims.items():  # gewichtetes Mittel der Merkmale, fehlende Werte zaehlen nicht
@@ -218,6 +227,7 @@ def score_target(df, target, verbose=True):
     else:
         out["total"] = np.nan; out["coverage"] = 0.0; out["best_dim"] = None; out["worst_dim"] = None
 
+    out.attrs["features"] = meta
     if verbose:
         print(f"\n{target['id']} ({target.get('body')}): {len(used)} Merkmale bewertet, {len(skipped)} uebersprungen")
         for k, m, c in used:
@@ -225,6 +235,26 @@ def score_target(df, target, verbose=True):
         for k, why in skipped:
             print(f"   - {k:18s} {why}")
     return out
+
+
+def country_raster(df):
+    """ISO-A3 je Zeile von df ueber die gerasterten Natural-Earth-Grenzen (0,05 Grad); leer = kein Land."""
+    import shapefile
+    from rasterio.features import rasterize
+    from rasterio.transform import from_origin
+    path = Path(__file__).resolve().parent.parent / "data" / "ref" / "ne_50m_admin_0_countries"
+    r = shapefile.Reader(str(path), encoding="utf-8")
+    fields = [f[0] for f in r.fields[1:]]
+    isos, shapes = [""], []
+    for n, sr in enumerate(r.iterShapeRecords(), 1):
+        rec = dict(zip(fields, sr.record))
+        iso = rec.get("ISO_A3")
+        isos.append(iso if iso not in (None, "", "-99") else (rec.get("ADM0_A3") or ""))
+        shapes.append((sr.shape.__geo_interface__, n))
+    grid = rasterize(shapes, out_shape=(3600, 7200), transform=from_origin(-180, 90, 0.05, 0.05), fill=0, dtype="int32")
+    iy = np.clip(((90 - df["lat"].to_numpy()) / 0.05).astype(int), 0, 3599)
+    ix = np.clip(((df["lon"].to_numpy() + 180) / 0.05).astype(int), 0, 7199)
+    return pd.Series(np.array(isos, dtype=object)[grid[iy, ix]], index=df.index)
 
 
 if __name__ == "__main__":
@@ -247,42 +277,73 @@ if __name__ == "__main__":
         print("Hinweis: keine Laenderzuordnung:", e)
         _cl = None
     N_TOP = 20
+    EXCLUDE = {"china": {"CHN", "HKG", "MAC"}}  # Option im Frontend: China inkl. verwalteter Gebiete (Aksai Chin)
+    from categories import explain_class_full
+    iso_cell = country_raster(df)  # ISO-A3 je Zelle (Natural Earth, gerastert)
+    w_area = pd.Series(np.cos(np.radians(df["lat"].to_numpy(dtype=np.float64))), index=df.index)
     results, rows = {}, []
     for tid, t in T.items():
         s = score_target(df, t)
         if s["total"].notna().sum() == 0:
             continue
-        idx = top_sites(df, s["total"], n=N_TOP, min_km=200)
+        fmeta = s.attrs.get("features", [])
         dimcols = [c for c in s.columns if c.startswith("dim_")]
-        top = df.loc[idx, ["lat", "lon", "env_class"]].join(s.loc[idx, ["total", "coverage", "best_dim", "worst_dim"] + dimcols])
-        known = mark_known(top)
-        fl = _flags(df.loc[idx])
-        # Rang jedes Ergebnisses unter allen bewerteten Landzellen (flaechengewichtet), fuer "besser als x %"
         tot = s["total"]
-        pct = _weighted_pct(tot, pd.Series(np.cos(np.radians(df["lat"].to_numpy())), index=df.index))
-        sites = []
+        pct = _weighted_pct(tot, w_area)  # Rang unter allen bewerteten Landzellen, fuer "besser als x %"
+
+        def site_list(total, label):
+            idx = top_sites(df, total, n=N_TOP, min_km=200)
+            top = df.loc[idx].join(s.loc[idx, ["total", "coverage", "coverage_target", "best_dim", "worst_dim"] + dimcols],
+                                   rsuffix="_s")
+            known = mark_known(top[["lat", "lon"]])
+            fl = _flags(df.loc[idx])
+            out_sites = []
+            for rank, (i, r) in enumerate(top.iterrows(), 1):
+                kn = known[i] if isinstance(known[i], str) else None
+                country, iso = _cl.label(r.lat, r.lon) if _cl else (None, None)
+                # Aufschluesselung je Merkmal: Zielwert, Erdwert, Methode, Teilnote, Gewicht, Rang auf der Erde
+                feats = []
+                for m in fmeta:
+                    ev, _c = _earth_values(df.loc[[i]], m["key"], t["features"][m["key"]])
+                    ev = None if ev is None or pd.isna(ev.iloc[0]) else float(ev.iloc[0])
+                    sc = s.at[i, f"feat_{m['key']}"]
+                    pc = s.at[i, f"pct_{m['key']}"] if f"pct_{m['key']}" in s else np.nan
+                    feats.append(dict(key=m["key"], dim=m["dim"], method=m["method"], target=m["target"], unit=m["unit"],
+                                      earth=None if ev is None else round(ev, 4),
+                                      score=None if pd.isna(sc) else round(float(sc), 3),
+                                      earth_pct=None if pd.isna(pc) else round(float(pc), 3),
+                                      target_pct=m.get("body_percentile"), direction=m.get("direction"),
+                                      weight=round(m["weight"], 2), rel_target=m["rel_target"], rel_earth=m["rel_earth"]))
+                site = dict(rank=rank, lat=round(float(r.lat), 3), lon=round(float(r.lon), 3), country=country,
+                            country_iso=iso, score=round(float(r.total), 4),
+                            better_than_pct=round(float(pct[i]) * 100, 2), coverage=round(float(r.coverage_target), 3),
+                            env_class=str(r.env_class), env_class_name=names[r.env_class],
+                            env_reason=explain_class_full(df.loc[i], str(r.env_class)),
+                            best_dim=r.best_dim, worst_dim=r.worst_dim, known_analog=kn,
+                            flags=[k[5:] for k in fl.columns if bool(fl.at[i, k])],
+                            dims={c[4:]: (None if pd.isna(r[c]) else round(float(r[c]), 3)) for c in dimcols},
+                            features=feats)
+                out_sites.append(site)
+                if label == "all" and rank <= 10:
+                    print(f"     {r.lat:7.2f} {r.lon:8.2f}  {r.total:.2f}  {names[r.env_class]:30.30s}  {country or '':22.22s} "
+                          f"passt: {r.best_dim:11s} bricht: {r.worst_dim:11s}  {('bekannt: ' + kn) if kn else 'NEU'}")
+            return out_sites
+
         print(f"   Top 10 (Datenabdeckung {s['coverage'].mean():.0%}):")
-        for rank, (i, r) in enumerate(top.iterrows(), 1):
-            kn = known[i] if isinstance(known[i], str) else None
-            if rank <= 10:
-                print(f"     {r.lat:7.2f} {r.lon:8.2f}  {r.total:.2f}  {names[r.env_class]:30.30s}  "
-                      f"passt: {r.best_dim:11s} bricht: {r.worst_dim:11s}  {('bekannt: ' + kn) if kn else 'NEU'}")
-            country, iso = _cl.label(r.lat, r.lon) if _cl else (None, None)
-            site = dict(rank=rank, lat=round(float(r.lat), 3), lon=round(float(r.lon), 3), country=country, country_iso=iso,
-                        score=round(float(r.total), 4),
-                        better_than_pct=round(float(pct[i]) * 100, 2), coverage=round(float(r.coverage), 3),
-                        env_class=str(r.env_class), env_class_name=names[r.env_class],
-                        best_dim=r.best_dim, worst_dim=r.worst_dim, known_analog=kn,
-                        flags=[k[5:] for k in fl.columns if bool(fl.at[i, k])],
-                        dims={c[4:]: (None if pd.isna(r[c]) else round(float(r[c]), 3)) for c in dimcols})
-            sites.append(site)
-            rows.append(dict(target=tid, body=t.get("body"), target_name=t.get("name"), **{k: v for k, v in site.items()
-                                                                                           if k not in ("dims", "flags")},
-                             flags=";".join(site["flags"])))
+        sites = site_list(tot, "all")
+        lists = {"all": sites}
+        for name, isos in EXCLUDE.items():
+            lists[f"excl_{name}"] = site_list(tot.where(~iso_cell.isin(isos)), name)
+        for x in sites:
+            rows.append(dict(target=tid, body=t.get("body"), target_name=t.get("name"),
+                             **{k: v for k, v in x.items() if k not in ("dims", "flags", "features", "env_reason")},
+                             flags=";".join(x["flags"])))
         results[tid] = dict(name=t.get("name"), body=t.get("body"), category=t.get("category"),
                             coord_quality=t.get("coord_quality"), center_lat=t.get("center_lat"),
                             center_lon=t.get("center_lon"), mean_coverage=round(float(s["coverage"].mean()), 3),
-                            n_new_in_top=sum(x["known_analog"] is None for x in sites), top=sites)
+                            n_new_in_top=sum(x["known_analog"] is None for x in sites), top=sites,
+                            **{k: v for k, v in lists.items() if k != "all"},
+                            features_used=[{k: v for k, v in m.items()} for m in fmeta])
     out_dir = here / "results"
     out_dir.mkdir(exist_ok=True)
     meta = dict(earth_table=table.name, earth_cells=int(len(df)), targets_file=str(tpath.name), n_top=N_TOP,

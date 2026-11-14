@@ -97,7 +97,7 @@ def slug(name):
 def feat(key, value=None, source="", reliability=None, pixel=None, p10=None, p90=None, bp=None, notes=""):
     if value is not None and not np.isfinite(value):
         value, source, reliability = None, "", None
-    r = lambda x: None if x is None else float(round(x, 4))
+    r = lambda x: None if x is None else float(f"{x:.5g}")  # signifikante Stellen (Vakuum 1e-12 bleibt erhalten)
     return dict(value=r(value), p10=r(p10), p90=r(p90), unit=UNITS[key], pixel_m=pixel, body_percentile=r(bp),
                 source=source if value is not None else "", reliability=reliability if value is not None else None,
                 notes=notes)

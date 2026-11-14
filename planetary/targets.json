@@ -50,7 +50,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 16.1745,
+          "value": 16.174,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -61,7 +61,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 442.5992,
+          "value": 442.6,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -105,7 +105,7 @@
           "notes": "noerdlich 85 S, ausserhalb des Diviner-Rasters"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -221,7 +221,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 19.3954,
+          "value": 19.395,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -232,7 +232,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 1268.6576,
+          "value": 1268.7,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -255,8 +255,8 @@
         },
         "surface_temp_mean": {
           "value": 44.191,
-          "p10": 37.9688,
-          "p90": 65.5448,
+          "p10": 37.969,
+          "p90": 65.545,
           "unit": "K",
           "pixel_m": null,
           "body_percentile": null,
@@ -276,7 +276,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -381,7 +381,7 @@
       "region_notes": "Quadrat 15 x 15 km auf den am besten beleuchteten Ausschnitt innerhalb 12 km um die Listenkoordinate (-86.0, 3.0) gelegt; mittlere LOLA-Sonnensichtbarkeit 0.41. Grund: Artemis-Regionen sind beleuchtete Landeflaechen, die Liste nennt oft den Kratermittelpunkt",
       "features": {
         "slope_p50": {
-          "value": 19.8556,
+          "value": 19.856,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -392,7 +392,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 26.8169,
+          "value": 26.817,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -403,7 +403,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 1374.9705,
+          "value": 1375.0,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -425,9 +425,9 @@
           "notes": "kein Produkt in den offiziellen Quellen"
         },
         "surface_temp_mean": {
-          "value": 170.946,
-          "p10": 144.315,
-          "p90": 188.4228,
+          "value": 170.95,
+          "p10": 144.32,
+          "p90": 188.42,
           "unit": "K",
           "pixel_m": null,
           "body_percentile": null,
@@ -436,7 +436,7 @@
           "notes": "Diviner-Dreiecke (km) mischen Sonne und Schatten"
         },
         "ground_ice": {
-          "value": 0.0242,
+          "value": 0.024187,
           "p10": null,
           "p90": null,
           "unit": "1",
@@ -447,7 +447,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -563,7 +563,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 13.5221,
+          "value": 13.522,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -574,7 +574,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 367.8684,
+          "value": 367.87,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -618,7 +618,7 @@
           "notes": "noerdlich 85 S, ausserhalb des Diviner-Rasters"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -723,7 +723,7 @@
       "region_notes": "Quadrat 15 x 15 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 12.5573,
+          "value": 12.557,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -745,7 +745,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 816.791,
+          "value": 816.79,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -789,7 +789,7 @@
           "notes": "noerdlich 85 S, ausserhalb des Diviner-Rasters"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -905,7 +905,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 11.6685,
+          "value": 11.668,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -916,7 +916,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 496.9942,
+          "value": 496.99,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -938,9 +938,9 @@
           "notes": "kein Produkt in den offiziellen Quellen"
         },
         "surface_temp_mean": {
-          "value": 125.234,
-          "p10": 93.9675,
-          "p90": 136.8707,
+          "value": 125.23,
+          "p10": 93.967,
+          "p90": 136.87,
           "unit": "K",
           "pixel_m": null,
           "body_percentile": null,
@@ -949,7 +949,7 @@
           "notes": "Diviner-Dreiecke (km) mischen Sonne und Schatten"
         },
         "ground_ice": {
-          "value": 0.3255,
+          "value": 0.32552,
           "p10": null,
           "p90": null,
           "unit": "1",
@@ -960,7 +960,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -1065,7 +1065,7 @@
       "region_notes": "Quadrat 15 x 15 km auf den am besten beleuchteten Ausschnitt innerhalb 12 km um die Listenkoordinate (-88.5, 272.9) gelegt; mittlere LOLA-Sonnensichtbarkeit 0.27. Grund: Artemis-Regionen sind beleuchtete Landeflaechen, die Liste nennt oft den Kratermittelpunkt",
       "features": {
         "slope_p50": {
-          "value": 14.4506,
+          "value": 14.451,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1076,7 +1076,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 21.4485,
+          "value": 21.449,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1087,7 +1087,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 1036.5542,
+          "value": 1036.6,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -1109,9 +1109,9 @@
           "notes": "kein Produkt in den offiziellen Quellen"
         },
         "surface_temp_mean": {
-          "value": 128.937,
+          "value": 128.94,
           "p10": 75.596,
-          "p90": 158.563,
+          "p90": 158.56,
           "unit": "K",
           "pixel_m": null,
           "body_percentile": null,
@@ -1131,7 +1131,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -1258,7 +1258,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 663.1605,
+          "value": 663.16,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -1281,8 +1281,8 @@
         },
         "surface_temp_mean": {
           "value": 86.747,
-          "p10": 48.5476,
-          "p90": 136.567,
+          "p10": 48.548,
+          "p90": 136.57,
           "unit": "K",
           "pixel_m": null,
           "body_percentile": null,
@@ -1291,7 +1291,7 @@
           "notes": "Diviner-Dreiecke (km) mischen Sonne und Schatten"
         },
         "ground_ice": {
-          "value": 0.7463,
+          "value": 0.74628,
           "p10": null,
           "p90": null,
           "unit": "1",
@@ -1302,7 +1302,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -1407,7 +1407,7 @@
       "region_notes": "Quadrat 15 x 15 km auf den am besten beleuchteten Ausschnitt innerhalb 12 km um die Listenkoordinate (-89.0, 200.0) gelegt; mittlere LOLA-Sonnensichtbarkeit 0.32. Grund: Artemis-Regionen sind beleuchtete Landeflaechen, die Liste nennt oft den Kratermittelpunkt",
       "features": {
         "slope_p50": {
-          "value": 12.7692,
+          "value": 12.769,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1418,7 +1418,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 18.7759,
+          "value": 18.776,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1429,7 +1429,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 931.1801,
+          "value": 931.18,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -1451,9 +1451,9 @@
           "notes": "kein Produkt in den offiziellen Quellen"
         },
         "surface_temp_mean": {
-          "value": 135.916,
-          "p10": 117.608,
-          "p90": 157.022,
+          "value": 135.92,
+          "p10": 117.61,
+          "p90": 157.02,
           "unit": "K",
           "pixel_m": null,
           "body_percentile": null,
@@ -1462,7 +1462,7 @@
           "notes": "Diviner-Dreiecke (km) mischen Sonne und Schatten"
         },
         "ground_ice": {
-          "value": 0.0897,
+          "value": 0.089695,
           "p10": null,
           "p90": null,
           "unit": "1",
@@ -1473,7 +1473,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -1578,7 +1578,7 @@
       "region_notes": "Quadrat 15 x 15 km auf den am besten beleuchteten Ausschnitt innerhalb 12 km um die Listenkoordinate (-89.4, 260.0) gelegt; mittlere LOLA-Sonnensichtbarkeit 0.30. Grund: Artemis-Regionen sind beleuchtete Landeflaechen, die Liste nennt oft den Kratermittelpunkt",
       "features": {
         "slope_p50": {
-          "value": 13.0883,
+          "value": 13.088,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1589,7 +1589,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 19.9414,
+          "value": 19.941,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1600,7 +1600,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 1021.3268,
+          "value": 1021.3,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -1622,9 +1622,9 @@
           "notes": "kein Produkt in den offiziellen Quellen"
         },
         "surface_temp_mean": {
-          "value": 136.357,
-          "p10": 102.6475,
-          "p90": 160.297,
+          "value": 136.36,
+          "p10": 102.65,
+          "p90": 160.3,
           "unit": "K",
           "pixel_m": null,
           "body_percentile": null,
@@ -1633,7 +1633,7 @@
           "notes": "Diviner-Dreiecke (km) mischen Sonne und Schatten"
         },
         "ground_ice": {
-          "value": 0.1915,
+          "value": 0.19148,
           "p10": null,
           "p90": null,
           "unit": "1",
@@ -1644,7 +1644,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -1760,7 +1760,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 15.5435,
+          "value": 15.544,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1771,7 +1771,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 568.6995,
+          "value": 568.7,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -1794,7 +1794,7 @@
         },
         "surface_temp_mean": {
           "value": 83.76,
-          "p10": 57.4066,
+          "p10": 57.407,
           "p90": 117.11,
           "unit": "K",
           "pixel_m": null,
@@ -1815,7 +1815,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -1920,7 +1920,7 @@
       "region_notes": "Quadrat 15 x 15 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 30.2375,
+          "value": 30.215,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1931,7 +1931,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 32.5744,
+          "value": 32.569,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -1942,7 +1942,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 2557.6103,
+          "value": 2557.6,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -1966,7 +1966,7 @@
         "surface_temp_mean": {
           "value": 56.192,
           "p10": 50.292,
-          "p90": 64.4198,
+          "p90": 64.42,
           "unit": "K",
           "pixel_m": null,
           "body_percentile": null,
@@ -1975,7 +1975,7 @@
           "notes": "Diviner-Dreiecke (km) mischen Sonne und Schatten"
         },
         "ground_ice": {
-          "value": 0.9702,
+          "value": 0.97024,
           "p10": null,
           "p90": null,
           "unit": "1",
@@ -1986,7 +1986,7 @@
           "notes": "Anteil der Polygonzellen mit Eis stabil in <= 1 m Tiefe"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -2102,7 +2102,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 14.5183,
+          "value": 14.518,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2113,7 +2113,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 556.6135,
+          "value": 556.61,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -2157,7 +2157,7 @@
           "notes": "noerdlich 85 S, ausserhalb des Diviner-Rasters"
         },
         "pressure": {
-          "value": 0.0,
+          "value": 1e-12,
           "p10": null,
           "p90": null,
           "unit": "hPa",
@@ -2262,7 +2262,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.9813,
+          "value": 0.93877,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2273,7 +2273,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 2.1658,
+          "value": 2.1361,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2284,7 +2284,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 78.6865,
+          "value": 78.092,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -2300,7 +2300,7 @@
           "p90": 335.0,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.8933,
+          "body_percentile": 0.89334,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -2444,7 +2444,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 21.6702,
+          "value": 21.469,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2455,7 +2455,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 30.7809,
+          "value": 30.509,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2466,7 +2466,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 1563.796,
+          "value": 1563.8,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -2482,7 +2482,7 @@
           "p90": 361.0,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.6681,
+          "body_percentile": 0.66813,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -2626,7 +2626,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.1584,
+          "value": 0.16368,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2637,7 +2637,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 0.3289,
+          "value": 0.31702,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2648,7 +2648,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 11.9364,
+          "value": 12.739,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -2664,7 +2664,7 @@
           "p90": 202.5,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.4271,
+          "body_percentile": 0.42709,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -2808,7 +2808,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.262,
+          "value": 0.23927,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2819,7 +2819,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 0.9912,
+          "value": 0.98138,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -2830,7 +2830,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 26.5054,
+          "value": 27.002,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -2846,7 +2846,7 @@
           "p90": 333.0,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.6657,
+          "body_percentile": 0.66565,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -2990,7 +2990,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.3459,
+          "value": 0.33938,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3001,7 +3001,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 0.525,
+          "value": 0.52412,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3012,7 +3012,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 25.2138,
+          "value": 26.761,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -3028,7 +3028,7 @@
           "p90": 232.0,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.5829,
+          "body_percentile": 0.58292,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -3172,7 +3172,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.5497,
+          "value": 0.55715,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3183,7 +3183,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 1.0869,
+          "value": 1.0754,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3194,7 +3194,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 36.8787,
+          "value": 36.879,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -3210,7 +3210,7 @@
           "p90": 172.2,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.2098,
+          "body_percentile": 0.20982,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "40 TES-Pixel (3 km) im Polygon"
@@ -3354,7 +3354,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.3847,
+          "value": 0.37491,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3365,7 +3365,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 0.6832,
+          "value": 0.68972,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3376,7 +3376,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 25.7309,
+          "value": 25.931,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -3392,7 +3392,7 @@
           "p90": 331.0,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.8228,
+          "body_percentile": 0.82279,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -3536,7 +3536,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.7236,
+          "value": 0.75044,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3547,7 +3547,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 2.1517,
+          "value": 2.1448,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3558,7 +3558,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 56.719,
+          "value": 57.512,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -3574,7 +3574,7 @@
           "p90": 307.5,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.8617,
+          "body_percentile": 0.86168,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -3718,7 +3718,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 1.0002,
+          "value": 1.0094,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3729,7 +3729,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 1.6367,
+          "value": 1.6753,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3740,7 +3740,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 82.5025,
+          "value": 86.131,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -3756,7 +3756,7 @@
           "p90": 388.0,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.9653,
+          "body_percentile": 0.96533,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -3900,7 +3900,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.9365,
+          "value": 0.83238,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3911,7 +3911,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 2.8873,
+          "value": 2.7522,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -3922,7 +3922,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 75.7185,
+          "value": 76.267,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -3938,7 +3938,7 @@
           "p90": 527.0,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.9861,
+          "body_percentile": 0.98611,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -4082,7 +4082,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 2.2317,
+          "value": 2.2086,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -4093,7 +4093,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 2.7078,
+          "value": 2.678,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -4104,7 +4104,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 170.6074,
+          "value": 178.49,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -4120,7 +4120,7 @@
           "p90": 432.5,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.9787,
+          "body_percentile": 0.97875,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -4264,7 +4264,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.3369,
+          "value": 0.34412,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -4275,7 +4275,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 0.7115,
+          "value": 0.72149,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -4286,7 +4286,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 28.037,
+          "value": 28.05,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -4302,7 +4302,7 @@
           "p90": 454.5,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.9841,
+          "body_percentile": 0.98414,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "16 TES-Pixel (3 km) im Polygon"
@@ -4446,7 +4446,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.3083,
+          "value": 0.3007,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -4457,7 +4457,7 @@
           "notes": ""
         },
         "slope_p90": {
-          "value": 0.6352,
+          "value": 0.60547,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -4468,7 +4468,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 16.9696,
+          "value": 16.97,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -4484,7 +4484,7 @@
           "p90": 189.7,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.3548,
+          "body_percentile": 0.35477,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "24 TES-Pixel (3 km) im Polygon"
@@ -4628,7 +4628,7 @@
       "region_notes": "Quadrat 10 x 10 km um die Koordinate der Ortsliste (automatisch)",
       "features": {
         "slope_p50": {
-          "value": 0.4757,
+          "value": 0.47566,
           "p10": null,
           "p90": null,
           "unit": "deg",
@@ -4650,7 +4650,7 @@
           "notes": ""
         },
         "relief": {
-          "value": 39.5447,
+          "value": 39.545,
           "p10": null,
           "p90": null,
           "unit": "m",
@@ -4666,7 +4666,7 @@
           "p90": 256.7,
           "unit": "J m-2 K-1 s-1/2",
           "pixel_m": null,
-          "body_percentile": 0.6067,
+          "body_percentile": 0.60667,
           "source": "TES nachts, Putzig & Mellon 2007 (PDS MGST_9001)",
           "reliability": "A",
           "notes": "24 TES-Pixel (3 km) im Polygon"

@@ -5,6 +5,11 @@ Erd-Datenbasis** mit Kategorien und Scoring. Die Team-Dateien außerhalb dieses 
 
 Ausführliche Beschreibung als Seite: [`docs/datenbasis.html`](docs/datenbasis.html) (im Browser öffnen).
 
+**Web-App (Englisch):** `web/` – `python web/build_web.py --targets ../planetary/targets.json` baut `web/index.html`
+(eine Datei, ohne Server). Live über GitHub Pages aus dem Ordner `docs/` im Repo-Wurzelverzeichnis.
+Funktionen: Mars- und Mondkarte mit anklickbaren Zielen, Weltkarte mit Ähnlichkeit, Top 20 je Ziel,
+Schalter „Exclude China“, Vergleich von bis zu 3 Orten, Begründung je Ort (Merkmale und Umgebungsklasse).
+
 ## Was hier anders ist als in der Team-Pipeline
 
 Bewusst als Alternative gebaut, nichts davon ersetzt die Entscheidungen in `CLAUDE.md` ohne Absprache.

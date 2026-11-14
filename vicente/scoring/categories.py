@@ -150,6 +150,80 @@ ENV_CLASSES = [
 ]
 ENV_IDS = [c["id"] for c in ENV_CLASSES]
 
+# Offengelegte Bedingungen je Klasse, damit jede Einstufung nachvollziehbar ist (Frontend: "Why this class").
+# Muss mit den Regeln oben uebereinstimmen. Je Bedingung: (Text, Spalte, Vergleich, Schwelle, Einheit).
+# "barren" ist die Kahl-Regel: NDVI-Jahresmaximum < 0,15 ODER MODIS-Klasse "barren" >= 50 %.
+BARREN = [("vegetation-free: NDVI yearly peak < 0.15", "ndvi_peak_mean", "<", 0.15, ""),
+          ("or MODIS land cover 'barren' >= 50 %", "barren_pct", ">=", 50, "%")]
+CLASS_RULES = {
+    "eisschild": [("permanent snow in >= 80 % of months", "snow_perm_frac", ">=", 0.8, ""),
+                  ("or MODIS snow/ice >= 60 %", "snow_ice_pct", ">=", 60, "%"),
+                  ("and warmest month < 280 K", "lst_warm_mean", "<", 280, "K")],
+    "salzpfanne": [("snow-free albedo > 0.35", "albedo_snowfree", ">", 0.35, ""),
+                   ("flat: >= 95 % of area below 5 deg", "flat_frac", ">=", 0.95, ""),
+                   ("relief < 100 m", "relief", "<", 100, "m"),
+                   ("elevation spread < 5 m", "elev_std", "<", 5, "m"),
+                   ("warmest month > 280 K (not snow)", "lst_warm_mean", ">", 280, "K")] + BARREN,
+    "duenenfeld": [("MODIS 'barren' >= 80 %", "barren_pct", ">=", 80, "%"),
+                   ("albedo 0.25 to 0.45", "albedo_snowfree", "between", (0.25, 0.45), ""),
+                   ("loose ground: apparent thermal inertia < 0.026", "ati", "<", 0.026, "1/K"),
+                   ("precipitation < 150 mm/yr", "precip_mm_yr", "<", 150, "mm/yr")] + BARREN,
+    "dunkel_vulkanisch": [("snow-free albedo < 0.15", "albedo_snowfree", "<", 0.15, ""),
+                          ("water < 30 %", "water_pct", "<", 30, "%")] + BARREN,
+    "kalte_polarwueste": [("mean surface temperature < 263 K", "lst_mean", "<", 263, "K"),
+                          ("not permanent snow (< 80 % of months)", "snow_perm_frac", "<", 0.8, ""),
+                          ("precipitation < 400 mm/yr", "precip_mm_yr", "<", 400, "mm/yr")] + BARREN,
+    "hochplateau": [("elevation > 3000 m", "elev_mean", ">", 3000, "m"),
+                    ("precipitation < 400 mm/yr", "precip_mm_yr", "<", 400, "mm/yr")] + BARREN,
+    "hyperarid": [("precipitation < 50 mm/yr", "precip_mm_yr", "<", 50, "mm/yr")] + BARREN,
+    "raues_gebirge": [("mean slope > 15 deg", "slope_mean", ">", 15, "deg")] + BARREN,
+    "aride_wueste": [("precipitation < 250 mm/yr", "precip_mm_yr", "<", 250, "mm/yr")] + BARREN,
+    "kein_analog": [("none of the rules above applies (vegetated, wet or icy)", None, None, None, "")],
+}
+
+
+def explain_class(row, cls):
+    """Bedingungen der Klasse mit dem Wert dieses Orts: [{text, value, unit, ok}]."""
+    out = []
+    for text, col, op, thr, unit in CLASS_RULES.get(cls, []):
+        v = None if col is None or col not in row or pd.isna(row[col]) else float(row[col])
+        ok = None
+        if v is not None:
+            ok = {"<": v < thr if op == "<" else None, ">": v > thr if op == ">" else None}.get(op)
+            if op == ">=":
+                ok = v >= thr
+            elif op == "between":
+                ok = thr[0] <= v <= thr[1]
+        out.append(dict(text=text, value=None if v is None else round(v, 4), unit=unit, ok=ok))
+    return out
+
+
+def _rule_groups(row, cls):
+    """Bedingungen als Gruppen: eine Zeile, die mit 'or ' beginnt, gehoert zur vorherigen (Gruppe ok, wenn eine ok)."""
+    groups = []
+    for r in explain_class(row, cls):
+        if r["text"].startswith("or ") and groups:
+            groups[-1].append(r)
+        else:
+            groups.append([r])
+    return groups
+
+
+def explain_class_full(row, cls):
+    """
+    Begruendung der Klasse: ihre Bedingungen mit den Werten des Orts, und fuer jede vorher gepruefte Klasse
+    die erste Bedingung, an der der Ort scheiterte (Klassifikation = erste zutreffende Klasse in ENV_IDS-Reihenfolge).
+    """
+    not_ = []
+    for c in ENV_IDS:
+        if c == cls or c == "kein_analog":
+            break
+        for g in _rule_groups(row, c):
+            if not any(r["ok"] for r in g):
+                not_.append(dict(cls=c, failed=g))
+                break
+    return dict(rules=explain_class(row, cls), not_=not_)
+
 
 def classify(df):
     """Eine Umgebungsklasse pro Zeile (erste zutreffende Regel). Rueckgabe: kategoriale Serie."""
@@ -328,7 +402,8 @@ def _weighted_pct(x, w):
     """Flaechengewichteter Perzentil-Rang (0..1). Ohne Gewichtung waeren Polargebiete ueberrepraesentiert,
     weil 0,05-Grad-Zellen zu den Polen hin kleiner und damit zahlreicher werden."""
     ok = x.notna().to_numpy()
-    v, ww = x.to_numpy()[ok], w.to_numpy()[ok]
+    # 64 Bit: bei Millionen Zellen summieren sich 32-Bit-Rundungsfehler sonst auf ~1 % (Perzentile > 100 %)
+    v, ww = x.to_numpy(dtype=np.float64)[ok], w.to_numpy(dtype=np.float64)[ok]
     o = np.argsort(v, kind="mergesort")
     cw = np.cumsum(ww[o]) - ww[o] / 2  # Mittelpunkt der eigenen Gewichtsstufe
     r = np.empty(v.size)

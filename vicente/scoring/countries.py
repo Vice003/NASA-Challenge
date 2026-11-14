@@ -22,7 +22,8 @@ DISPUTED = Path(__file__).resolve().parent.parent / "data" / "ref" / "ne_50m_adm
 
 
 class CountryLookup:
-    def __init__(self, path=DEFAULT, disputed=DISPUTED, max_km=30.0):
+    def __init__(self, path=DEFAULT, disputed=DISPUTED, max_km=30.0, lang="de"):
+        self.lang = lang
         import shapefile
         from shapely.geometry import shape
         from shapely import STRtree
@@ -35,7 +36,7 @@ class CountryLookup:
             for sr in rd.iterShapeRecords():
                 rec = dict(zip(fd, sr.record))
                 self.disp_geoms.append(shape(sr.shape.__geo_interface__))
-                self.disp_names.append(rec.get("NAME_DE") or rec.get("BRK_NAME") or rec.get("NAME"))
+                self.disp_names.append((rec.get("NAME_DE") if lang == "de" else rec.get("BRK_NAME")) or rec.get("BRK_NAME") or rec.get("NAME"))
         self.disp_tree = STRtree(self.disp_geoms) if self.disp_geoms else None
 
         r = shapefile.Reader(str(path), encoding="utf-8")
@@ -47,7 +48,7 @@ class CountryLookup:
             iso = rec.get("ISO_A3")
             if iso in (None, "", "-99"):
                 iso = rec.get("ADM0_A3") or ""
-            self.names.append((rec.get("NAME_DE") or rec.get("NAME"), iso))
+            self.names.append(((rec.get("NAME_DE") if lang == "de" else rec.get("NAME")) or rec.get("NAME"), iso))
         self.tree = STRtree(self.geoms)
         self.max_deg = max_km / 111.0
 
@@ -65,7 +66,9 @@ class CountryLookup:
         name, iso = self.lookup(lat, lon)
         d = self.disputed(lat, lon)
         if d:
-            return f"{d} (umstritten; verwaltet: {name})" if name else f"{d} (umstritten)", iso
+            if self.lang == "de":
+                return (f"{d} (umstritten; verwaltet: {name})" if name else f"{d} (umstritten)"), iso
+            return (f"{d} (disputed; administered by {name})" if name else f"{d} (disputed)"), iso
         return name, iso
 
     def lookup(self, lat, lon):
