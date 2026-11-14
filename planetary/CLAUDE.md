@@ -12,7 +12,8 @@ Vollständige Spezifikation: `ZIELSIGNATUREN.md`. **Beides vor jeder Arbeit hier
   planetozentrische Breite, Länge Ost 0…360.
 - Gelände (`slope_p50`, `slope_p90`, `relief`) **nur mit `common/terrain.py`**:
   `terrain_stats(dem, dx, dy, pixel_m)` mit `pixel_m` = 100 (Mond) bzw. 463 (Mars). In `source` vermerken.
-- Pro Merkmal: `value`, `p10`/`p90`, `unit`, `source`. Methode `quantile` zusätzlich `body_percentile`
+- Pro Merkmal: `value`, `p10`/`p90`, `unit`, `source`, `reliability` (A/B/C wie in `docs/official_sources_audit.md`).
+  Methode `quantile` (auch Albedo) zusätzlich `body_percentile`
   (flächengewichtet über den ganzen Himmelskörper).
 - Nach jeder Änderung: `python planetary/check_targets.py planetary/targets.json`. Fertig erst bei 0 Fehlern.
 

@@ -8,6 +8,21 @@ point. Nothing in your files has been changed.
 `check_targets.py` follow **schema 2**. Several of your open questions are already settled there (marked
 **decided** below). Items marked **proposal** need a short yes/no from your side; **meeting** items need the team.
 
+> **Update 16:45, after reading `docs/official_sources_audit.md` (branch `Mars_and_Moon`).** Very useful audit, thanks.
+> Three corrections to the first version of this file, already applied to `ZIELSIGNATUREN.md`, the template and the checker:
+> 1. **Mars albedo is compared by rank (`quantile`), not by value.** The global product is OMEGA `ALBEDO_R1080`
+>    (1.08 µm), a different quantity from the broadband MODIS albedo on Earth. Moon albedo (LOLA `LDAM`) was already
+>    `quantile`. Both now need `body_percentile`.
+> 2. **No Mars rock abundance** in the official sources (your audit: – / C). I had wrongly listed THEMIS/IRTM.
+>    Substrate class 4 ("blocky") is therefore open on Mars as well as on Earth; on the Moon it works (Diviner, A).
+> 3. **Mars `ground_ice` = water-equivalent hydrogen from Odyssey GRS** as mass fraction 0…1 (about 300 km, one value
+>    per polygon, reliability B). SWIM is not in the official sources and is dropped.
+>
+> **Adopted from your audit: the reliability scale A/B/C.** New required field `reliability` per value in
+> `targets.json`. The scoring weights each feature with *target reliability × Earth reliability* (A = 1, B = 0.7,
+> C = 0.4), and each dimension with the mean weight of its features, so weak proxies count less in the total.
+> The pre-filled `pipeline.py` estimates are marked `C` until you confirm them with a source.
+
 ## 1. General setup
 
 | # | Your question | Status | Answer |
@@ -42,8 +57,9 @@ p = body_percentile(ti_global, w, target=ti_median)  # fraction of the body belo
 |---|---|---|
 | `thermal_inertia`, Mars | TES thermal inertia, 3 km, global | yes |
 | `dust_opacity`, Mars | TES dust optical depth, global | yes |
-| `albedo`, Moon | LOLA LDAM, global | yes (Moon albedo uses `quantile`) |
-| `rock_abundance` (new, section 4) | Moon: Diviner rock abundance; Mars: THEMIS/IRTM | yes, if global |
+| `albedo`, Moon | LOLA LDAM, global | yes |
+| `albedo`, Mars | OMEGA `ALBEDO_R1080`, global | yes (corrected: `quantile`, not `direct`) |
+| `rock_abundance` (new, section 4) | Moon: Diviner GHRM rock abundance (A); Mars: **none in official sources** | Moon yes, Mars – |
 | `thermal_inertia`, Moon | none found | leave `null` |
 
 For polar stereographic maps pass the pixel-area map as `weights` instead of `latlon_weights`.
@@ -54,13 +70,13 @@ For polar stereographic maps pass the pixel-area map as `weights` instead of `la
 |---|---|---|---|
 | 1 | `slope` → `slope_p50`, `slope_p90` | **decided** | LOLA / MOLA through `common/terrain.py`. |
 | 2 | `roughness` → `relief` | **proposal** | Keep `relief` (median of P95 − P5 in 5 × 5 km windows) because the Earth side computes it with the same code. RMS roughness can be added later as a second terrain feature. |
-| 3 | `rock_abundance` | **proposal: add** | New feature, method `quantile`, unit `%`. Used for the substrate classes (section 4). |
-| 4 | `water_ice` → `ground_ice` | **proposal** | Definition per body, always the **fraction of the polygon area**: Moon = Diviner ice stability depth ≤ 1 m; Mars = SWIM ice consistency > 0. Earth side: permafrost fraction (ESA CCI, being added). |
+| 3 | `rock_abundance` | **proposal: add (Moon only)** | New feature, method `quantile`, unit `%`, Diviner GHRM. Mars has no product in the official sources (corrected). Used for the substrate classes (section 4). |
+| 4 | `water_ice` → `ground_ice` | **decided** (corrected) | Moon = fraction of the polygon where ice is stable ≤ 1 m (Diviner PRP, optionally LOLA PSR map). Mars = water-equivalent hydrogen from Odyssey GRS as mass fraction 0…1 (about 300 km, reliability B); SWIM dropped, not in the official sources. Earth side: ESA CCI Permafrost (being added). |
 | 5 | `illumination` | **proposal** | Real LOLA visibility maps are better than latitude, but Earth has no equivalent (averaged over a year, the sun is up ~50 % of the time everywhere on Earth). So: keep `sun_elevation_max` (method `direction`) for scoring; report your illumination value as a description of the Moon site. |
 | 6 | `bearing_capacity` → `thermal_inertia` | **proposal** | Thermal inertia alone is only an indirect hint. Proposal in section 4. |
 | 7 | `temperature`, Mars source | **open** | Literature with full citation (author, year, table) is fine. |
 | 8 | `geology` | **decided: not needed** | `CLAUDE.md`: no global mineralogy in the available time. |
-| 9 | `albedo` | **please add** | Mars: TES Lambert albedo (`direct`). Moon: LOLA LDAM (`quantile`, normal albedo at 1064 nm is not the same quantity as MODIS shortwave). |
+| 9 | `albedo` | **please add** | Both `quantile` with `body_percentile` (corrected): Mars OMEGA `ALBEDO_R1080` (1.08 µm), Moon LOLA LDAM (1064 nm). Neither is the same quantity as broadband MODIS albedo. |
 | 10 | `dust_opacity` | **ok** | TES dust optical depth + `body_percentile`. |
 | 11 | `dust_storm_days` | **decided** | Optional, leave `null`. |
 | 12 | `pressure` | **open** | Mars team with citation. Moon: vacuum value is already in the template. |
@@ -84,10 +100,10 @@ it gives **substrate classes**, defined the same way on all three bodies:
 - **Percentiles on the own body** make the rule independent of instrument and unit (same idea as `quantile`).
 - **Earth side:** thermal inertia = apparent thermal inertia (MODIS), albedo = MODIS snow-free, reference =
   vegetation-free land. Earth has no global rock abundance map in the allowed sources, so class 4 on Earth is
-  open (possible later: Sentinel-1 radar roughness). This is a stated limit, not hidden.
-- **Moon:** thermal inertia barely varies (fine regolith everywhere) and has no map, so Moon classes rest on
-  rock abundance. A better Moon input would be the Diviner H-parameter (density increase with depth), as a
-  next step.
+  open (possible later: Sentinel-1 radar roughness). **Mars has no rock abundance product either** (corrected),
+  so on Mars the classes 1–3 rest on thermal inertia and albedo. This is a stated limit, not hidden.
+- **Moon:** there is no thermal inertia product in the official sources (your audit), so Moon classes rest on
+  rock abundance (Diviner GHRM, A) and, as a weak proxy, the Diviner midnight regolith temperature (C).
 - **Numbers:** published in-situ measurements (Surveyor, Apollo and Lunokhod soil mechanics; wheel sinkage of
   Spirit, Opportunity and Curiosity) can give a **range per class**, never a value per site. If your team adds
   ranges, please only with full citation.
@@ -95,8 +111,8 @@ it gives **substrate classes**, defined the same way on all three bodies:
 In the presentation the dimension would be called **"Substrate (class 1–4)"**, with the sentence that true bearing
 capacity needs in-situ measurement, which is exactly what an Earth analog site can be used to test.
 
-What this needs from you: `rock_abundance` with `body_percentile` per target, plus `thermal_inertia` and
-`albedo` with `body_percentile` (Mars). The classes are computed in the scoring, you do not enter them.
+What this needs from you: Moon `rock_abundance` with `body_percentile`; Mars `thermal_inertia` and `albedo` with
+`body_percentile`; every value with `reliability`. The classes are computed in the scoring, you do not enter them.
 
 ## 5. Next steps
 

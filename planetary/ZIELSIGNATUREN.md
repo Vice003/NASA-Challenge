@@ -41,7 +41,7 @@ Kraterboden und Umland gehören in getrennte Zielorte.
         "slope_p90": {
           "value": 6.1, "p10": null, "p90": null,
           "unit": "deg", "pixel_m": 463, "body_percentile": null,
-          "source": "MOLA MEGDR 128 ppd, common/terrain.py",
+          "source": "MOLA MEGDR 128 ppd, common/terrain.py", "reliability": "A",
           "notes": ""
         }
       }
@@ -65,6 +65,7 @@ der Ring ist geschlossen (erster = letzter Punkt).
 | `pixel_m` | bei Gelände | Pixelgröße, auf die das DEM gebracht wurde: **Mond 100, Mars 463** |
 | `body_percentile` | bei Methode `quantile` | Anteil der **ganzen** Körperoberfläche mit niedrigerem Wert, 0…1, flächengewichtet |
 | `source` | ja, sobald `value` gesetzt | Produkt und Literatur |
+| `reliability` | ja, sobald `value` gesetzt | Verlässlichkeit nach der Skala aus `docs/official_sources_audit.md` (Branch `Mars_and_Moon`): **`A`** direkte Messung · **`B`** grob/lückenhaft oder bewährter Ersatzwert · **`C`** schwacher Ersatzwert. Geht als Gewicht ins Scoring ein (A = 1, B = 0,7, C = 0,4) |
 | `notes` | nein | Freitext |
 
 ## Merkmalsliste
@@ -74,8 +75,8 @@ der Ring ist geschlossen (erster = letzter Punkt).
 | `slope_p50` | deg | direct | LOLA → `terrain_stats(..., pixel_m=100)` | MOLA → `pixel_m=463` |
 | `slope_p90` | deg | direct | wie oben | wie oben |
 | `relief` | m | direct | wie oben (P95 − P5 je 5-km-Fenster, Median) | wie oben |
-| `albedo` | 1 | direct (Mars), quantile (Mond) | LROC/Diviner, optional | TES Lambert-Albedo |
-| `thermal_inertia` | J m-2 K-1 s-1/2 | quantile | Diviner | TES-TI (Putzig & Mellon 2007) |
+| `albedo` | 1 | quantile | LOLA `LDAM` (Normalalbedo 1064 nm) | OMEGA `ALBEDO_R1080` (1,08 µm, global) |
+| `thermal_inertia` | J m-2 K-1 s-1/2 | quantile | kein Produkt in den offiziellen Quellen → `null` | TES `GLOBAL_TI_*_2007` (ODE `TIMAP`, 3 km, global) |
 | `dust_opacity` | 1 | quantile | – | TES/MCS |
 | `dust_storm_days` | d/yr | quantile | – | optional |
 | `surface_temp_mean` | K | direction | Diviner | TES/Literatur |
@@ -86,12 +87,21 @@ der Ring ist geschlossen (erster = letzter Punkt).
 | `precip` | mm/yr | direction | 0 | 0 |
 | `humidity` | g/kg | direction | 0 | Literatur |
 | `ndvi` | 1 | direction | 0 | 0 |
-| `ground_ice` | 1 | direction | Diviner-Eisstabilität (Anteil mit Eis ≤ 1 m) | Eiskarten, z. B. SWIM |
+| `ground_ice` | 1 | direction | Anteil der Polygonfläche, in der Eis laut Diviner PRP in ≤ 1 m Tiefe stabil ist (ggf. mit LOLA-PSR-Karte) | wasseräquivalenter Wasserstoff aus Odyssey GRS als Massenanteil 0…1 (ca. 300 km grob, ein Wert für das ganze Polygon, Verlässlichkeit B) |
 | `sun_elevation_max` | deg | direction | höchster Sonnenstand im Jahr (90 − \|Breite\| + Achsneigung 1,54°) | wie Mond, Achsneigung 25,19°, höchstens 90 |
 
 **Methoden:** `direct` = Wert gegen Wert (gleiche Größe, gleiche Berechnung). `quantile` = Perzentil gegen Perzentil
 (anderes Instrument, z. B. TES-Trägheit gegen Erd-ATI; deshalb `body_percentile` Pflicht). `direction` = die Erde
 erreicht den Wert nie; bewertet wird, wie weit eine Erdzelle in diese Richtung geht.
+
+**Albedo immer als Rang:** Die verfügbaren Albedo-Produkte messen bei einer Wellenlänge (LOLA 1064 nm, OMEGA 1,08 µm),
+die Erde (MODIS) breitbandig. Das sind verschiedene Größen, deshalb `quantile` mit `body_percentile`.
+
+**Nicht verfügbar in den offiziellen Quellen** (laut `docs/official_sources_audit.md`): thermische Trägheit Mond,
+Gesteinshäufigkeit Mars, globale Gesteinshäufigkeit Erde. Diese Felder bleiben `null` bzw. werden nicht angelegt.
+
+**Übersicht der Produkte und Zugriffswege** (PDS, ODE, Earthdata, Copernicus, ESA): `docs/official_sources_audit.md`
+im Branch `Mars_and_Moon`. ODE (`oderest.rsl.wustl.edu`) enthält viele Produkte, die im PDS-Register fehlen.
 
 ## Regeln für die Berechnung
 

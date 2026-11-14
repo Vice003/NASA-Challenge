@@ -48,13 +48,13 @@ gehen durch denselben Code. Niemand schreibt eine eigene Neigungsberechnung.
 |---|---|---|---|---|---|
 | `slope_p50`, `slope_p90` | DEM auf **100 m** (Mond) bzw. **463 m** (Mars) | Copernicus GLO-90, neu abgetastet | LOLA polar | MOLA 463 m | direkt |
 | `relief` | P95 − P5 je **5 km**-Fenster, Median | GLO-90 | LOLA | MOLA | direkt |
-| `albedo` | nativ | MODIS MCD43C3, schneefrei | LROC/Diviner | TES-Albedo | Mars direkt, Mond Rang |
-| `thermal_inertia` | nativ | ATI = (1 − Albedo)/Tagesgang | Diviner | TES-TI | Rang |
+| `albedo` | nativ | MODIS MCD43C3, schneefrei | LOLA LDAM (1064 nm) | OMEGA ALBEDO_R1080 (1,08 µm) | Rang (verschiedene Wellenlängen) |
+| `thermal_inertia` | nativ | ATI = (1 − Albedo)/Tagesgang | kein Produkt → `null` | TES-TI (ODE TIMAP, 3 km) | Rang |
 | `dust_opacity` | nativ | MERRA-2 Staub-AOD | – | TES/MCS | Rang |
 | `surface_temp_mean`, `_min`, `diurnal_range` | nativ | MODIS Terra+Aqua | Diviner | TES/Literatur | Richtung |
 | `pressure` | 0,05° | MERRA-2, mit DEM auf Höhe umgerechnet | Vakuum | Literatur | Richtung |
 | `precip`, `humidity`, `ndvi`, `wind_mean` | nativ | MERRA-2 / MODIS | 0 | Literatur / 0 | Richtung |
-| `ground_ice` | 0,05° | Permafrost-Karte (ESA CCI), sonst Kälte-Proxy | Diviner-Eisstabilität | Eiskarten (z. B. SWIM) | Richtung |
+| `ground_ice` | 0,05° | Permafrost-Karte (ESA CCI), sonst Kälte-Proxy | Diviner-Eisstabilität | Odyssey GRS, wasseräquivalenter Wasserstoff (ca. 300 km) | Richtung |
 
 **Rang-Abgleich:** Das Ziel wird als Perzentil auf seinem Körper angegeben (`body_percentile`). Auf der Erde wird
 das Perzentil **nur über vegetationsfreie, eisfreie Landzellen** gebildet, weil Mond und Mars ebenfalls
@@ -70,7 +70,10 @@ Eine Implementierung, kein paralleles Scoring: `vicente/scoring/target_scoring.p
 - **direkt:** S = 1 − |Erde − Ziel| / Spanne, Spanne = Abstand vom Ziel zur unähnlichsten Erde (P2…P98, flächengewichtet). Wie `scripts/rank.py`.
 - **Rang:** dasselbe auf Perzentilen (Erde gegen `body_percentile`).
 - **Richtung:** flächengewichtetes Perzentil in Richtung Ziel; zusätzlich als Grenze der Analogie ausgewiesen.
-- Dimensionen = Mittel ihrer Merkmale; Gesamtwert = gewichtetes Mittel der Dimensionen, **nur zum Sortieren**.
+- **Verlässlichkeit A/B/C** (Skala aus `docs/official_sources_audit.md`, Branch `Mars_and_Moon`): jedes Merkmal wird mit
+  *Note Zielwert × Note Erd-Gegenstück* gewichtet (A = 1, B = 0,7, C = 0,4); jede Dimension zusätzlich mit dem mittleren
+  Gewicht ihrer Merkmale. Pflichtfeld `reliability` in `targets.json`.
+- Dimensionen = gewichtetes Mittel ihrer Merkmale; Gesamtwert = gewichtetes Mittel der Dimensionen, **nur zum Sortieren**.
 - Gezeigt wird immer das **Profil**: stärkste Dimension („passt“), schwächste („bricht“), Abdeckung.
 - **Masken vor dem Ranking:** Wasser (> 50 % der Zelle), Eisschilde und Gletscher, Zellen mit > 50 % Wald/Acker/Siedlung.
   Eisschilde bleiben nur als eigene Umgebungsklasse „Eis-Prozess“ sichtbar.
@@ -141,3 +144,4 @@ Karte & Story (C)   web/, index.html    ◄── liest nur results/
 | 14.11. 13:30 | Erste Fassung; 100-km-Zielgebiete verworfen, feine Rasterung beschlossen | Vicente |
 | 14.11. 14:30 | Korrekturen 4, 7, 8, 15 umgesetzt. Testorte der Umgebungsklassen: 13 von 14 richtig (Hajar wird als dunkles Gestein erkannt: Semail-Ophiolith, geologisch zutreffend). Dry Valleys bei 5 km nicht auflösbar (MOD10CM meldet überall Dauerschnee), als Datengrenze vermerkt | Vicente |
 | 14.11. 16:00 | `common/terrain.py`: beim Vergröbern um nicht ganzzahlige Faktoren wird vorher gemittelt (vorher nur abgetastet; im Test 3,44° statt 3° bei 30 m kleinräumigem Relief). Neuer Selbsttest. Erd-Gelände bei 100/463 m: `vicente/earth/dem_baselines.py` | Vicente |
+| 14.11. 16:45 | Nach `docs/official_sources_audit.md`: Albedo auf beiden Körpern als Rang (OMEGA 1,08 µm, LOLA 1064 nm); keine Gesteinshäufigkeit Mars und keine thermische Trägheit Mond in den offiziellen Quellen; Mars-Bodeneis aus Odyssey GRS statt SWIM; Verlässlichkeitsskala A/B/C als Gewicht übernommen | Vicente |

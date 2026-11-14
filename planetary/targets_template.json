@@ -17,6 +17,7 @@
           "pixel_m": 100,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=100"
         },
         "slope_p90": {
@@ -27,6 +28,7 @@
           "pixel_m": 100,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=100"
         },
         "relief": {
@@ -37,6 +39,7 @@
           "pixel_m": 100,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=100"
         },
         "albedo": {
@@ -47,7 +50,8 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
-          "notes": "optional; Methode quantile, body_percentile noetig"
+          "reliability": null,
+          "notes": "LOLA LDAM (1064 nm); Methode quantile, body_percentile noetig"
         },
         "thermal_inertia": {
           "value": null,
@@ -57,7 +61,8 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
-          "notes": "Diviner; body_percentile ueber den ganzen Mond"
+          "reliability": null,
+          "notes": "kein Produkt in den offiziellen Quellen (docs/official_sources_audit.md) -> null lassen"
         },
         "surface_temp_mean": {
           "value": null,
@@ -67,6 +72,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "pipeline.py-Wert (103 K / 150 K) fuer den beleuchteten Kamm unplausibel, aus Diviner bestimmen"
         },
         "surface_temp_min": {
@@ -77,6 +83,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "Diviner PRP"
         },
         "diurnal_range": {
@@ -87,6 +94,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "pipeline.py-Wert (103 K / 150 K) fuer den beleuchteten Kamm unplausibel, aus Diviner bestimmen"
         },
         "pressure": {
@@ -97,6 +105,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": "Vakuum"
         },
         "wind_mean": {
@@ -107,6 +116,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "precip": {
@@ -117,6 +127,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "humidity": {
@@ -127,6 +138,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "ndvi": {
@@ -137,6 +149,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "ground_ice": {
@@ -147,6 +160,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "Diviner-Eisstabilitaet; am beleuchteten Kamm vermutlich klein"
         },
         "sun_elevation_max": {
@@ -157,6 +171,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "berechnet: 90 - |Breite| + Achsneigung 1,54 Grad",
+          "reliability": "A",
           "notes": ""
         }
       }
@@ -177,6 +192,7 @@
           "pixel_m": 100,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=100"
         },
         "slope_p90": {
@@ -187,6 +203,7 @@
           "pixel_m": 100,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=100"
         },
         "relief": {
@@ -197,6 +214,7 @@
           "pixel_m": 100,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=100"
         },
         "surface_temp_mean": {
@@ -207,6 +225,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "Diviner"
         },
         "surface_temp_min": {
@@ -217,6 +236,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "Diviner PRP"
         },
         "pressure": {
@@ -227,6 +247,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "precip": {
@@ -237,6 +258,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "humidity": {
@@ -247,6 +269,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "ndvi": {
@@ -257,6 +280,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "ground_ice": {
@@ -267,6 +291,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "Diviner-Eisstabilitaet"
         },
         "sun_elevation_max": {
@@ -277,6 +302,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "dauerhaft beschattet",
+          "reliability": "A",
           "notes": ""
         }
       }
@@ -297,6 +323,7 @@
           "pixel_m": 463,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=463"
         },
         "slope_p90": {
@@ -307,6 +334,7 @@
           "pixel_m": 463,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=463"
         },
         "relief": {
@@ -317,6 +345,7 @@
           "pixel_m": 463,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=463"
         },
         "albedo": {
@@ -327,7 +356,8 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
-          "notes": "TES Lambert-Albedo"
+          "reliability": null,
+          "notes": "OMEGA ALBEDO_R1080 (1,08 um, global); Methode quantile, body_percentile noetig"
         },
         "thermal_inertia": {
           "value": null,
@@ -337,7 +367,8 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
-          "notes": "TES-TI (Putzig & Mellon 2007); body_percentile ueber den ganzen Mars"
+          "reliability": null,
+          "notes": "TES GLOBAL_TI_*_2007 (ODE TIMAP, 3 km); body_percentile ueber den ganzen Mars"
         },
         "dust_opacity": {
           "value": null,
@@ -347,6 +378,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "TES/MCS; body_percentile ueber den ganzen Mars"
         },
         "dust_storm_days": {
@@ -357,6 +389,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "optional"
         },
         "surface_temp_mean": {
@@ -367,6 +400,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "reliability": "C",
           "notes": "-55 Grad C"
         },
         "surface_temp_min": {
@@ -377,6 +411,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": ""
         },
         "diurnal_range": {
@@ -387,6 +422,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "reliability": "C",
           "notes": ""
         },
         "pressure": {
@@ -397,6 +433,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "reliability": "C",
           "notes": ""
         },
         "wind_mean": {
@@ -407,6 +444,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": ""
         },
         "precip": {
@@ -417,6 +455,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "humidity": {
@@ -427,6 +466,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": ""
         },
         "ndvi": {
@@ -437,6 +477,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "ground_ice": {
@@ -447,7 +488,8 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
-          "notes": ""
+          "reliability": "C",
+          "notes": "Odyssey GRS wasseraequivalenter Wasserstoff als Massenanteil 0..1 (ca. 300 km, ein Wert je Polygon), reliability B"
         },
         "sun_elevation_max": {
           "value": 90,
@@ -457,6 +499,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "berechnet: 90 - |Breite| + Achsneigung 25,19 Grad, gekappt bei 90",
+          "reliability": "A",
           "notes": ""
         }
       }
@@ -477,6 +520,7 @@
           "pixel_m": 463,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=463"
         },
         "slope_p90": {
@@ -487,6 +531,7 @@
           "pixel_m": 463,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=463"
         },
         "relief": {
@@ -497,6 +542,7 @@
           "pixel_m": 463,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "mit common/terrain.py, pixel_m=463"
         },
         "albedo": {
@@ -507,7 +553,8 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
-          "notes": "TES Lambert-Albedo"
+          "reliability": null,
+          "notes": "OMEGA ALBEDO_R1080 (1,08 um, global); Methode quantile, body_percentile noetig"
         },
         "thermal_inertia": {
           "value": null,
@@ -517,7 +564,8 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
-          "notes": "TES-TI; body_percentile ueber den ganzen Mars"
+          "reliability": null,
+          "notes": "TES GLOBAL_TI_*_2007 (ODE TIMAP, 3 km); body_percentile ueber den ganzen Mars"
         },
         "dust_opacity": {
           "value": null,
@@ -527,6 +575,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "TES/MCS"
         },
         "dust_storm_days": {
@@ -537,6 +586,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": "optional"
         },
         "surface_temp_mean": {
@@ -547,6 +597,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "reliability": "C",
           "notes": "-70 Grad C"
         },
         "surface_temp_min": {
@@ -557,6 +608,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": ""
         },
         "diurnal_range": {
@@ -567,6 +619,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "reliability": "C",
           "notes": ""
         },
         "pressure": {
@@ -577,6 +630,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "reliability": "C",
           "notes": ""
         },
         "wind_mean": {
@@ -587,6 +641,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": ""
         },
         "precip": {
@@ -597,6 +652,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "humidity": {
@@ -607,6 +663,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "",
+          "reliability": null,
           "notes": ""
         },
         "ndvi": {
@@ -617,6 +674,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "reliability": "A",
           "notes": ""
         },
         "ground_ice": {
@@ -627,7 +685,8 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
-          "notes": "z. B. SWIM-Eiskonsistenz"
+          "reliability": "C",
+          "notes": "Odyssey GRS wasseraequivalenter Wasserstoff als Massenanteil 0..1 (ca. 300 km, ein Wert je Polygon), reliability B"
         },
         "sun_elevation_max": {
           "value": 75.19,
@@ -637,6 +696,7 @@
           "pixel_m": null,
           "body_percentile": null,
           "source": "berechnet: 90 - |Breite| + Achsneigung 25,19 Grad",
+          "reliability": "A",
           "notes": ""
         }
       }

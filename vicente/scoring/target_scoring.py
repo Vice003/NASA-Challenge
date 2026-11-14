@@ -37,7 +37,8 @@ FEATURES = {
     "slope_p50":         ("direct",    "gelaende",    "baseline"),
     "slope_p90":         ("direct",    "gelaende",    "baseline"),
     "relief":            ("direct",    "gelaende",    "baseline"),
-    "albedo":            ("direct",    "oberflaeche", lambda d: d["albedo_snowfree"].fillna(d["albedo_sw_mean"])
+    # Albedo immer als Rang: LOLA 1064 nm bzw. OMEGA 1,08 um gegen MODIS breitbandig (verschiedene Groessen)
+    "albedo":            ("quantile",  "oberflaeche", lambda d: d["albedo_snowfree"].fillna(d["albedo_sw_mean"])
                           if "albedo_snowfree" in d else d.get("albedo_sw_mean")),
     "thermal_inertia":   ("quantile",  "oberflaeche", "ati"),
     "dust_opacity":      ("quantile",  "staub_wind",  "DUEXTTAU_mean"),
@@ -57,8 +58,19 @@ FEATURES = {
     # die Erde erreicht die ca. 1,5 Grad am Mond-Suedpol nie (Minimum ca. 23,4 Grad an den Polen)
     "sun_elevation_max": ("direction", "beleuchtung", lambda d: np.minimum(90, 90 - d["lat"].abs() + 23.44)),
 }
+# Verlaesslichkeit als Gewicht (Skala aus docs/official_sources_audit.md, Branch Mars_and_Moon):
+# Gewicht je Merkmal = Note des Zielwerts (reliability in targets.json) x Note des Erd-Gegenstuecks (unten).
+REL_WEIGHT = {"A": 1.0, "B": 0.7, "C": 0.4}
+REL_DEFAULT = "B"  # Zielwert ohne Angabe
+EARTH_RELIABILITY = {  # Erdseite, nach Abschnitt 5 des Audits
+    "slope_p50": "A", "slope_p90": "A", "relief": "A", "albedo": "A", "thermal_inertia": "B",
+    "dust_opacity": "A", "dust_storm_days": "B", "wind_mean": "A", "surface_temp_mean": "A",
+    "surface_temp_min": "A", "diurnal_range": "A", "pressure": "A", "humidity": "A", "precip": "A",
+    "ndvi": "A", "ground_ice": "C",  # Temperatur-Proxy, bis die ESA-CCI-Permafrostkarte eingebaut ist
+    "sun_elevation_max": "A",
+}
 # Gelaende: Erdspalte nach Pixelgroesse (Plan, Abschnitt 4), berechnet mit common/terrain.py
-# durch earth/dem_features.py (Lauf mit 100 m und 463 m). Bis dahin fehlen diese Spalten und werden uebersprungen.
+# durch earth/dem_baselines.py (100 m und 463 m). Fehlen die Spalten, wird das Merkmal uebersprungen.
 TERRAIN_COLS = {
     ("slope_p50", 100): "slope_p50_100m", ("slope_p90", 100): "slope_p90_100m", ("relief", 100): "relief_100m",
     ("slope_p50", 463): "slope_p50_463m", ("slope_p90", 463): "slope_p90_463m", ("relief", 463): "relief_463m",
@@ -131,8 +143,6 @@ def score_target(df, target, verbose=True):
             skipped.append((key, "kein Zielwert"))
             continue
         method, dim, _ = FEATURES[key]
-        if key == "albedo" and target.get("body") == "Moon":
-            method = "quantile"  # Mond-Albedo (LROC, 643 nm) ist nicht dieselbe Groesse wie MODIS-Kurzwelle
         x, col = _earth_values(df, key, feat)
         if x is None:
             skipped.append((key, f"Erdmerkmal fehlt ({col})"))
@@ -161,18 +171,29 @@ def score_target(df, target, verbose=True):
             pe = _weighted_pct(x, w)
             s = pe if tv > med else 1 - pe
         out[f"feat_{key}"] = s
-        dims.setdefault(dim, []).append(s)
-        used.append((key, method, col))
+        rel_t = feat.get("reliability") or REL_DEFAULT
+        wgt = REL_WEIGHT.get(rel_t, REL_WEIGHT[REL_DEFAULT]) * REL_WEIGHT[EARTH_RELIABILITY.get(key, "B")]
+        dims.setdefault(dim, []).append((s, wgt))
+        used.append((key, method, f"{col}, Gewicht {wgt:.2f} (Ziel {rel_t}, Erde {EARTH_RELIABILITY.get(key, 'B')})"))
 
-    for dim, parts in dims.items():
-        out[f"dim_{dim}"] = pd.concat(parts, axis=1).mean(axis=1, skipna=True)
+    conf = {}
+    for dim, parts in dims.items():  # gewichtetes Mittel der Merkmale, fehlende Werte zaehlen nicht
+        num = sum(s.fillna(0) * w for s, w in parts)
+        den = sum(s.notna() * w for s, w in parts)
+        n_av = sum(s.notna().astype(float) for s, w in parts)
+        out[f"dim_{dim}"] = num / den.replace(0, np.nan)
+        # Konfidenz der Dimension = mittleres Verlaesslichkeitsgewicht ihrer vorhandenen Merkmale
+        conf[dim] = (den / n_av.replace(0, np.nan)).fillna(0)
+        out[f"conf_{dim}"] = conf[dim]
     weights = {d: prof["weights"].get(d, 0) for d in dims if prof["weights"].get(d, 0) > 0}
     if weights:
         S = out[[f"dim_{d}" for d in weights]]
         S.columns = list(weights)
         W = pd.Series(weights)
         avail = S.notna()
-        out["total"] = (S.fillna(0) * W).sum(axis=1) / (avail * W).sum(axis=1).replace(0, np.nan)
+        # Dimensionsgewicht x Konfidenz: unsichere Dimensionen (z. B. nur Note-C-Merkmale) zaehlen weniger
+        WC = pd.DataFrame({d: W[d] * conf[d] for d in weights})
+        out["total"] = (S.fillna(0) * WC).sum(axis=1) / (avail * WC).sum(axis=1).replace(0, np.nan)
         out["total"] = out["total"].where(rank_ok)  # Wasser, Eisschild, Wald/Acker/Siedlung nicht ins Ranking
         out["in_ranking"] = rank_ok
         out["coverage"] = (avail * W).sum(axis=1) / sum(v for v in prof["weights"].values() if v > 0)

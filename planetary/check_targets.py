@@ -17,7 +17,7 @@ FEATURES = {
     "slope_p50": ("deg", "direct", (0, 90)),
     "slope_p90": ("deg", "direct", (0, 90)),
     "relief": ("m", "direct", (0, 30000)),
-    "albedo": ("1", "direct", (0, 1)),
+    "albedo": ("1", "quantile", (0, 1)),
     "thermal_inertia": ("J m-2 K-1 s-1/2", "quantile", (0, 5000)),
     "dust_opacity": ("1", "quantile", (0, 20)),
     "dust_storm_days": ("d/yr", "quantile", (0, 700)),
@@ -38,7 +38,8 @@ RADIUS_KM = {"Moon": 1737.4, "Mars": 3389.5}
 TARGET_IDS = {"shackleton_rim": "Moon", "shackleton_psr": "Moon", "jezero": "Mars", "arcadia": "Mars"}
 SIZE_KM = {"shackleton_rim": (8, 25), "shackleton_psr": (1, 40), "jezero": (5, 20), "arcadia": (10, 30)}
 TARGET_FIELDS = {"body", "name", "center_lat", "center_lon", "region_geojson", "region_notes", "features"}
-FIELDS = {"value", "p10", "p90", "unit", "pixel_m", "body_percentile", "source", "notes"}
+FIELDS = {"value", "p10", "p90", "unit", "pixel_m", "body_percentile", "source", "reliability", "notes"}
+RELIABILITY = {"A", "B", "C"}
 
 errors, warnings = [], []
 err = errors.append
@@ -129,8 +130,6 @@ def main(path):
                 err(f"{w} unbekannter Merkmalsschluessel. Erlaubt: {', '.join(FEATURES)}")
                 continue
             unit, method, (lo, hi) = FEATURES[key]
-            if key == "albedo" and body == "Moon":
-                method = "quantile"
             extra = set(f) - FIELDS
             if extra:
                 err(f"{w} unbekannte Felder {sorted(extra)}")
@@ -150,6 +149,11 @@ def main(path):
             src = str(f.get("source", "")).strip()
             if not src:
                 err(f"{w} value gesetzt, aber source leer. Quelle angeben oder value auf null setzen")
+            rel = f.get("reliability")
+            if rel is None:
+                err(f"{w} value gesetzt, aber reliability fehlt (A, B oder C, siehe ZIELSIGNATUREN.md)")
+            elif rel not in RELIABILITY:
+                err(f"{w} reliability muss A, B oder C sein, ist '{rel}'")
             if "Quelle offen" in src:
                 warn(f"{w} Wert aus pipeline.py vorbelegt, Quelle noch offen")
             if key in TERRAIN and "terrain.py" not in src + str(f.get("notes", "")):
