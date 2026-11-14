@@ -62,7 +62,9 @@ def resample(dem, dx, dy, pixel_m):
         if k > 1:  # beim Vergroebern erst ueber die Zielpixelbreite mitteln, sonst nur abgetastet (Rauschen)
             row = _box(row[None, :], k, axis=1)[0]
         ok = ~np.isnan(row)
-        res[i] = np.interp(dst_x, src_x[ok], row[ok], left=np.nan, right=np.nan) if ok.sum() > 1 else np.nan
+        # Zielpixel am Rand ragen bis zu einem Pixel ueber den letzten Messwert hinaus: Randwert verwenden
+        # (frueher NaN, dadurch fehlten Randzellen jeder Kachel; Aenderung 14.11. 19:00)
+        res[i] = np.interp(dst_x, src_x[ok], row[ok]) if ok.sum() > 1 else np.nan
     return res
 
 

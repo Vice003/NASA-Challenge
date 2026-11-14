@@ -74,6 +74,7 @@ Eine Implementierung, kein paralleles Scoring: `vicente/scoring/target_scoring.p
   *Note Zielwert × Note Erd-Gegenstück* gewichtet (A = 1, B = 0,7, C = 0,4); jede Dimension zusätzlich mit dem mittleren
   Gewicht ihrer Merkmale. Pflichtfeld `reliability` in `targets.json`.
 - Dimensionen = gewichtetes Mittel ihrer Merkmale; Gesamtwert = gewichtetes Mittel der Dimensionen, **nur zum Sortieren**.
+- **Mindestabdeckung:** ins Ranking kommt eine Erdzelle nur, wenn sie mindestens 80 % des Gewichts der Dimensionen belegt, für die das Ziel Werte hat.
 - Gezeigt wird immer das **Profil**: stärkste Dimension („passt“), schwächste („bricht“), Abdeckung.
 - **Masken vor dem Ranking:** Wasser (> 50 % der Zelle), Eisschilde und Gletscher, Zellen mit > 50 % Wald/Acker/Siedlung.
   Eisschilde bleiben nur als eigene Umgebungsklasse „Eis-Prozess“ sichtbar.
@@ -146,3 +147,4 @@ Karte & Story (C)   web/, index.html    ◄── liest nur results/
 | 14.11. 16:00 | `common/terrain.py`: beim Vergröbern um nicht ganzzahlige Faktoren wird vorher gemittelt (vorher nur abgetastet; im Test 3,44° statt 3° bei 30 m kleinräumigem Relief). Neuer Selbsttest. Erd-Gelände bei 100/463 m: `vicente/earth/dem_baselines.py` | Vicente |
 | 14.11. 16:45 | Nach `docs/official_sources_audit.md`: Albedo auf beiden Körpern als Rang (OMEGA 1,08 µm, LOLA 1064 nm); keine Gesteinshäufigkeit Mars und keine thermische Trägheit Mond in den offiziellen Quellen; Mars-Bodeneis aus Odyssey GRS statt SWIM; Verlässlichkeitsskala A/B/C als Gewicht übernommen | Vicente |
 | 14.11. 19:05 | Freie Ziel-IDs; `planetary/targets.json` mit 27 Orten aus der Ortsliste des Mond/Mars-Teams, berechnet von Vicente (`planetary/compute_targets.py`): Gelände MOLA/LOLA mit `common/terrain.py`, Mars-Trägheit TES mit Körper-Perzentil, Mond-Temperatur und -Eis aus Diviner (Jimales Raster). Artemis-Regionen auf beleuchtete Flächen verschoben, weil die Liste Kratermittelpunkte nennt. Korrektur 3 berichtigt | Vicente |
+| 14.11. 19:00 | Mindestabdeckung 80 % im Scoring (Zellen mit Lücken kamen sonst nach oben). Geländelücken in hohen Breiten behoben: `common/terrain.py` füllt die Randpixel jeder Kachel, `dem_baselines.py` weist bei Zellen schmaler als ein Pixel (polnah) die Pixelspalte über der Zellmitte zu. Höhenmodell 100/463 m wird neu gerechnet | Vicente |

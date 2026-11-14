@@ -101,6 +101,13 @@ def process(name):
         zr = resample(z, dx, dy, float(px))   # gemeinsame Funktion
         s = slope_deg(zr, float(px))          # gemeinsame Funktion
         ny, nx = zr.shape
+        if nx < CPD:
+            # Nahe den Polen ist eine 0,05-Grad-Zelle in Ost-West-Richtung schmaler als ein Pixel (bei 89 Grad
+            # Breite ca. 100 m). Dann bekommt jede Zelle die Pixelspalte, die ihre Mitte ueberdeckt, statt leer
+            # zu bleiben (Aenderung 14.11. 19:00).
+            idx = np.minimum(((np.arange(CPD) + 0.5) * nx / CPD).astype(int), nx - 1)
+            zr, s = zr[:, idx], s[:, idx]
+            nx = CPD
         rr = np.minimum((np.arange(ny) * CPD) // ny, CPD - 1)
         cc = np.minimum((np.arange(nx) * CPD) // nx, CPD - 1)
         cid = (rr[:, None] * CPD + cc[None, :]).ravel()

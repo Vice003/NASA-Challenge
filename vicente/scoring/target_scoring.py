@@ -64,6 +64,7 @@ FEATURES = {
 }
 # Verlaesslichkeit als Gewicht (Skala aus docs/official_sources_audit.md, Branch Mars_and_Moon):
 # Gewicht je Merkmal = Note des Zielwerts (reliability in targets.json) x Note des Erd-Gegenstuecks (unten).
+MIN_COVERAGE = 0.8  # Anteil des Zielgewichts, den eine Erdzelle belegen muss, um ins Ranking zu kommen
 REL_WEIGHT = {"A": 1.0, "B": 0.7, "C": 0.4}
 REL_DEFAULT = "B"  # Zielwert ohne Angabe
 EARTH_RELIABILITY = {  # Erdseite, nach Abschnitt 5 des Audits
@@ -198,8 +199,13 @@ def score_target(df, target, verbose=True):
         # Dimensionsgewicht x Konfidenz: unsichere Dimensionen (z. B. nur Note-C-Merkmale) zaehlen weniger
         WC = pd.DataFrame({d: W[d] * conf[d] for d in weights})
         out["total"] = (S.fillna(0) * WC).sum(axis=1) / (avail * WC).sum(axis=1).replace(0, np.nan)
-        out["total"] = out["total"].where(rank_ok)  # Wasser, Eisschild, Wald/Acker/Siedlung nicht ins Ranking
-        out["in_ranking"] = rank_ok
+        # Mindestabdeckung: mindestens MIN_COVERAGE des Gewichts der Dimensionen, fuer die das Ziel Werte hat,
+        # muss die Erdzelle belegen. Sonst wuerden fehlende Dimensionen einfach weggelassen und Zellen mit Luecken
+        # nach oben rutschen ("Bestnote durch Weglassen").
+        out["coverage_target"] = (avail * W).sum(axis=1) / W.sum()
+        full = out["coverage_target"] >= MIN_COVERAGE
+        out["total"] = out["total"].where(rank_ok & full)  # Wasser, Eis, Wald/Acker/Siedlung, Luecken nicht ins Ranking
+        out["in_ranking"] = rank_ok & full
         out["coverage"] = (avail * W).sum(axis=1) / sum(v for v in prof["weights"].values() if v > 0)
         arr = S.to_numpy(dtype="float64")
         has = avail.any(axis=1).to_numpy()
