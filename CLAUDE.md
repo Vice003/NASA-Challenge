@@ -2,7 +2,7 @@
 
 Angelegt von Vicente.
 
-Stand: Sa 14.11.2026, 13:45 MEZ. Deadline: So 15.11.2026, 23:59 Ortszeit (auf der Space-Apps-Seite bestätigen).
+Stand: Sa 14.11.2026, 17:15 MEZ. Deadline: So 15.11.2026, 23:59 Ortszeit (auf der Space-Apps-Seite bestätigen).
 
 > **Verbindlich für alle Verarbeitungsschritte: [`VERARBEITUNGSPLAN.md`](VERARBEITUNGSPLAN.md).**
 > Bei Widerspruch zu dieser Datei gilt der Plan. Vor jeder Arbeit an Daten, Merkmalen, Scoring oder Karte lesen.
@@ -109,13 +109,62 @@ Schwerkraft (Mond 1,62, Mars 3,71 m/s²), Vakuum bzw. ~0,6 kPa Marsatmosphäre (
 Sonnenhöhe am Mondpol max. ~1,5°, Strahlung ohne Magnetfeld, Verwitterung durch Wasser und Biologie,
 unterschiedliche Instrumente/Wellenlängen (z. B. Sentinel-1 C-Band linear vs. Mini-RF S-Band zirkular).
 
+## Abdeckung der Challenge-Dimensionen (Stand 14.11., 17:15)
+
+Die Challenge nennt acht Dimensionen. Diese Tabelle gehört in ähnlicher Form auf die Projektseite: was passt,
+was teilweise, was nicht, und warum.
+
+| # | Dimension (Challenge) | Stand | Abgedeckt durch | Lücke / Grenze |
+|---|---|---|---|---|
+| 1 | Geologie, Mineralogie, Oberflächenmaterial | ⚠️ teilweise | Albedo, scheinbare thermische Trägheit, Untergrund-Klassen, Umgebungsklassen „dunkles Gestein“ (Basalt) und „Salzpfanne“ (Evaporit) | echte Mineralogie bewusst ausgeschlossen (siehe Entscheidungen); in der Story über Beispielorte zeigen |
+| 2 | Gelände, Höhe, Neigung, Rauheit, Krater | ✅ fast vollständig | Copernicus GLO-90: Höhe, Neigung bei 90/100/463 m, Relief, landefreundliche Fläche | keine globale Kraterkarte der Erde in den erlaubten Quellen; bekannte Krater nur in der Analoga-Liste |
+| 3 | Temperatur, Beleuchtung, Extreme | ✅ | MODIS-Temperatur 2003–2024, Tagesgang, Jahresgang, Extreme, Frost-Tau, Sonnenstand | echte Beleuchtungskarte nur auf dem Mond (LOLA) |
+| 4 | Wasser, Eis, Permafrost, Ressourcen | ⚠️ teilweise | Schnee, Dauereis, Niederschlag, Kälte als Eis-Ersatzwert | ESA-CCI-Permafrost geplant |
+| 5 | Staub, Wind, Erosion, Prozesse | ✅ | MERRA-2: Staub-AOD, Staubemission, Staubsturm- und Sturmtage, Wind; Dünenfelder | Erosion nur indirekt (Staubemission); MERRA-2 grob (~55 km) |
+| 6 | Biologie, Extremophile, Bewohnbarkeit, Biosignaturen | ❌ schwach | NDVI (Vegetationsfreiheit), Hyperaridität | UV-Strahlung geplant; Biosignaturen aus dem All nicht messbar |
+| 7 | Höhlen, Lavaröhren, Untergrund | ❌ fehlt | höchstens Hinweis über Klasse „dunkles Gestein“ (junge Basaltfelder) | keine globalen Daten in den erlaubten Quellen; als Grenze benennen |
+| 8 | Landung, Mobilität, Robotik, Bau | ⚠️ teilweise | landefreundliche Fläche, Neigung, Untergrund-Klassen, Stürme, Staub | Erreichbarkeit des Testgeländes geplant (Bevölkerungsdichte) |
+
+### Geplante Ergänzungen der Erdseite (nach dem Höhenmodell-Lauf)
+
+| Merkmal | Quelle (erlaubt) | Wofür | Aufwand |
+|---|---|---|---|
+| Permafrost | ESA CCI Permafrost (ESA Open Science Catalog) | Dimension 4, ersetzt den Temperatur-Ersatzwert für Bodeneis (Plan, Korrektur 10) | ca. 30 Min. |
+| UV-Strahlung | NASA OMI (GES DISC) | Dimension 6: zusammen mit Hyperaridität und Kälte ein Indikator „Grenze des Lebens“ | ca. 1–1,5 Std. |
+| Erreichbarkeit | NASA SEDAC Bevölkerungsdichte | Dimension 8: Abgeschiedenheit bzw. Nutzbarkeit als Testgelände | ca. 30 Min. |
+
+## Ideen für den kreativen Ansatz (noch nicht beschlossen)
+
+Die Challenge lädt ausdrücklich zu Statistik, Ähnlichkeitsmetriken, ML und interaktiven Anwendungen ein.
+
+1. **Robustheitskarte (Monte Carlo)** – empfohlen: Scoring 1.000-mal mit zufällig variierten Gewichten; je Ort der
+   Anteil der Läufe, in denen er in den Top 50 landet. Trennt robuste von Spezial-Analoga, deckt Prüfung 3 im Plan ab.
+2. **Analog-Raum mit ML** – Kür: Clustering der vegetationsfreien Erdzellen ohne unsere Regeln (findet die Maschine
+   dieselben Umgebungsklassen?) und 2D-Darstellung des Merkmalsraums, Mond/Mars-Zielorte als Sterne in der Punktwolke.
+   Braucht die Zielwerte aus `planetary/targets.json`.
+3. **Interaktive Karte mit Zwillingssuche** – Kernprodukt (Rolle C): Ziel wählen, Klick zeigt Profil (Netzdiagramm,
+   passt/bricht, Klasse, Flags, Verlässlichkeit A/B/C), Markierung bekannt/NEU, umgekehrte Suche, Worldview-Link.
+4. Kleinere Ideen: Steckbriefe für die Top-Neufunde; „Welche Mission würde hier testen?“ aus der stärksten Dimension.
+
+## Offene Vorschläge (warten auf Antwort)
+
+Stehen in `planetary/RESPONSE_REQUIREMENTS.md`; Antwort des Mond/Mars-Teams angefragt bis Sa 17:00.
+
+- [ ] Luftfeuchte (`humidity`) und Mars-Wind (`wind_mean`) aus dem Scoring nehmen (Luftfeuchte wiederholt vor allem
+      die Temperatur, für beide gibt es keine Mars-Karte)
+- [ ] Neues Merkmal `rock_abundance` (nur Mond, Diviner) für die Untergrund-Klassen 1–4
+- [ ] Untergrund-Klassen 1–4 statt eines „bearing capacity“-Werts
+- [ ] Deuteronilus Mensae als zweites Mars-Eisziel; Artemis-Kandidatenregionen als weitere Mondziele nach M1
+- [ ] Dimensionsgewichte (Team-Meeting)
+
 ## Repo-Struktur
 
 ```
 VERARBEITUNGSPLAN.md  verbindlicher Plan für alle
-common/      gemeinsamer Code (terrain.py), Änderungen nur nach Absprache
+common/      gemeinsamer Code (terrain.py, body_percentile.py), Änderungen nur nach Absprache
 vicente/     Erdseite fein (0,05°, 2003–2024), Kategorien, Scoring; derived/ im Format von data/derived
-planetary/   Mond/Mars-Zielwerte: targets.json, Spezifikation, Prüfskript, eigene CLAUDE.md
+planetary/   Mond/Mars-Zielwerte: targets.json, Spezifikation, Prüfskript, eigene CLAUDE.md,
+             Abgleich mit dem Mond/Mars-Team (REQUIREMENTS_COMPARISON.md, RESPONSE_REQUIREMENTS.md)
 scripts/     erste Pipeline (37-km-Zellen), Rückfallebene bis M2
 web/         Karte; index.html ist die fertige Karte der ersten Pipeline
 data/        kleine Ergebnisdateien (npz, CSV, GeoJSON)
@@ -127,10 +176,30 @@ Python: rasterio, xarray, numpy, scipy, pyproj, earthaccess. Große Rohdaten nic
 
 ## Rollen
 
-- A – Erddaten: Accounts, MODIS, Gitter, Thermik-Merkmale, Zonen-Vorauswahl, DEM, Feinanalyse
-- B – Mond/Mars + Metrik: Downloads, Reprojektion, Ziel-Signaturen, Scores, Kontrollen, Ranking
-- C – Karte + Story: Web-Karte (ab Sa 16:00 mit Platzhalterdaten), Projektseite, Demo
-- Offen: Teamgröße, Zuordnung, Projektname
+- A – Erddaten (Vicente): MODIS, MERRA-2, Copernicus DEM, Merkmale, Kategorien, Scoring der feinen Pipeline
+- B – Mond/Mars (Mert, Jimale; Branch `Mars_and_Moon`): PDS/ODE-Daten, Zielorte, `planetary/targets.json`
+- C – Karte + Story: Web-Karte, Projektseite, Demo. Erste Pipeline und Karte bisher von Niko (`scripts/`, `index.html`)
+- Offen: feste Zuordnung von C, Projektname
+
+### Wer liefert welche Daten
+
+- **Erde – nur Vicente (A):** alles in `vicente/` und `vicente/derived/` stammt aus Erddaten (NASA MODIS, MERRA-2,
+  GPM IMERG; ESA Copernicus DEM). Mond- und Marsdaten werden auf der Erdseite **nicht** heruntergeladen.
+- **Mond und Mars – nur das Mond/Mars-Team (B):** LOLA, Diviner, MOLA, TES, OMEGA, Odyssey GRS aus PDS/ODE, eingetragen
+  in `planetary/targets.json`. Übersicht der Produkte: `docs/official_sources_audit.md` im Branch `Mars_and_Moon`.
+- **Bisher in der Vorlage vorbelegt:** nur physikalisch eindeutige Werte (kein Niederschlag, keine Vegetation, Vakuum),
+  berechnete Werte (höchster Sonnenstand) und gerundete Schätzwerte aus `scripts/pipeline.py` (Quelle offen, Note C).
+- **Gemeinsam:** `common/terrain.py` und `common/body_percentile.py`, damit beide Seiten gleich rechnen.
+  Erst wenn die Planetenwerte eingetragen sind, vergleicht das Scoring in allen Dimensionen.
+
+### Lokale Arbeitsumgebung (Vicente)
+
+- Rohdaten-Ergebnisse und Zwischenstände liegen **nur lokal** in `~/SpaceApps/analog-finder/` (Klimadateien
+  `data/earth/clim/*.npz`, Merkmalstabellen `data/earth/earth_features_*.parquet`), nicht im Repo (bis 180 MB pro Datei).
+  Für das Team: als GitHub-Release-Anhang bereitstellen (Plan Abschnitt 2).
+- `~/SpaceApps/analog-finder/common` ist eine Verknüpfung auf `NASA-Challenge/common`.
+- Earthdata-Login liegt in `~/.netrc`; für MERRA-2/IMERG musste die App „NASA GESDISC DATA ARCHIVE“ im Earthdata-Profil
+  freigegeben werden.
 
 ## Zeitplan / Meilensteine
 
@@ -150,10 +219,15 @@ Python: rasterio, xarray, numpy, scipy, pyproj, earthaccess. Große Rohdaten nic
 - [x] Projektplan als Doc; verbindlicher `VERARBEITUNGSPLAN.md` (13:30)
 - [x] Earthdata-Login angelegt (inkl. Freigabe GES DISC für MERRA-2/IMERG)
 - [x] Erste Pipeline mit Karte (`scripts/`, `index.html`, 37-km-Zellen) – Rückfallebene
-- [x] Erdmerkmale fein: Albedo, Landbedeckung, Schnee, NDVI, Gelände (GLO-90 global), MERRA-2 Staub/Wind/Druck/Niederschlag
-- [ ] Erdmerkmale fein: Temperatur 2003–2024 und Staubsturmtage (laufen), Gelände bei 100/463 m, Korrekturen 4–12 aus dem Plan
-- [x] Schnittstelle Mond/Mars (`planetary/`), gemeinsame Geländefunktion (`common/terrain.py`)
-- [ ] Zielpolygone (10–20 km) festlegen und `planetary/targets.json` füllen
+- [x] Erdmerkmale fein, alle 2003–2024: Temperatur (Terra + Aqua), Albedo inkl. schneefrei, Landbedeckung, Schnee, NDVI,
+      Gelände (GLO-90 global), MERRA-2 Staub/Staubsturmtage/Wind/Sturmtage/Druck/Feuchte/Niederschlag; im Team-Format in `vicente/derived/`
+- [x] Umgebungsklassen kalibriert: 13 von 14 Testorten richtig (Plan, Änderungsprotokoll)
+- [ ] Gelände bei 100/463 m mit `common/terrain.py` (Lauf ~17:15 fertig), dann in Tabelle und `derived/`
+- [ ] Korrekturen 5, 6, 9–12 aus dem Plan; Ergänzungen Permafrost, UV, Erreichbarkeit
+- [x] Schnittstelle Mond/Mars (`planetary/`, Schema 2, Verlässlichkeit A/B/C), gemeinsamer Code (`common/`)
+- [x] Abgleich mit dem Mond/Mars-Team: `REQUIREMENTS_COMPARISON.md` (Mert) und `RESPONSE_REQUIREMENTS.md` (Vicente)
+- [ ] Zielpolygone (10–20 km) festlegen und `planetary/targets.json` füllen (Mond/Mars-Team, M1)
+- [ ] Antwort auf die offenen Vorschläge (siehe oben)
 - [ ] Copernicus-Data-Space-Konto (nur für Sentinel-1 nötig)
 - [ ] Ranking, Kontrollen, `results/` für die Karte
 - [ ] Web-Karte auf feine Ergebnisse, Projektseite, Demo
