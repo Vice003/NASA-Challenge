@@ -26,7 +26,7 @@ with the fingerprint of a target site across nine dimensions and ranks them by s
 | Vegetation (NDVI) | NASA MODIS/Terra MOD13C2, 2023 | 0 |
 | Air pressure | from elevation (standard atmosphere) | literature value, rounded |
 | Ground ice | estimate from mean annual temperature | yes / no |
-| Day-night swing | NASA MODIS/Terra MOD11C3, 2023 | rough estimate |
+| Day-night swing | NASA MODIS/Aqua MYD11C3, 2023 | rough estimate |
 
 ## Method
 
@@ -46,14 +46,15 @@ out first, and for the lunar south pole Haughton Crater and the McMurdo Dry Vall
 
 | Target | Best match | Points |
 |---|---|---|
-| Mars, Arcadia Planitia | Kunlun Mountains, northern Tibet | 65 |
-| Mars, Jezero Crater | Atacama | 72 |
+| Mars, Arcadia Planitia | Kunlun Mountains, northern Tibet | 66 |
+| Mars, Jezero Crater | Atacama | 73 |
 | Moon, South Pole | Victoria Land (Antarctica) and Ellesmere Island | 57 |
 
 ## Limits
 
 - The 18.5 km baseline describes landscape types, not landing sites.
-- MODIS/Terra observes at about 10:30 and 22:30 local time. The true daily swing is larger.
+- MODIS/Aqua observes at about 13:30 and 01:30 local time, close to but not exactly at the daily
+  maximum and minimum.
 - The target values for temperature, air pressure, ground ice and day-night swing are rounded
   estimates and still need sources.
 - Mineralogy, dust and the subsurface (lava tubes) are missing.
@@ -72,7 +73,7 @@ python scripts/build_page.py web/template.html out/data.json index.html
 ```
 
 The raw MODIS data (24 files, about 1.7 GB) is not in the repo. To rebuild the layers in
-`data/derived`, download the products `MOD11C3` and `MOD13C2` (version 061, all months of 2023)
+`data/derived`, download the products `MYD11C3` and `MOD13C2` (version 061, all months of 2023)
 through [Earthdata Search](https://search.earthdata.nasa.gov/) into one folder and run:
 
 ```bash
@@ -82,7 +83,7 @@ python scripts/modis_ndvi.py FOLDER_WITH_HDF data/raw   # annual mean NDVI -> mo
 
 ## Data sources
 
-- NASA MODIS/Terra MOD11C3 and MOD13C2, version 061 (LP DAAC)
+- NASA MODIS/Aqua MYD11C3 and MODIS/Terra MOD13C2, version 061 (LP DAAC)
 - LOLA topography of the Moon, 10 arcminutes (fatiando-data)
 - MOLA spherical harmonic model MarsTopo719 (SHTOOLS example data)
 - ETOPO1 (NOAA), 10 arcminutes (fatiando-data)

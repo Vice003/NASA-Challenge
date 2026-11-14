@@ -1,6 +1,8 @@
 import sys, glob, numpy as np
 from pyhdf.SD import SD, SDC
-files = sorted(glob.glob(sys.argv[1] + '/*MOD11C3_A2023*.hdf')); out = sys.argv[2]
+# usage: modis_lst.py FOLDER_WITH_HDF OUT_DIR [PRODUCT]   PRODUCT = MYD11C3 (Aqua, default) or MOD11C3 (Terra)
+prod = sys.argv[3] if len(sys.argv) > 3 else 'MYD11C3'
+files = sorted(glob.glob(sys.argv[1] + f'/*{prod}_A*.hdf')); out = sys.argv[2]; print(prod, len(files), 'files')
 sd = np.zeros((3600, 7200)); sn = np.zeros((3600, 7200)); n = np.zeros((3600, 7200)); sdy = np.zeros((3600, 7200))
 for f in files:
     h = SD(f, SDC.READ)
@@ -8,7 +10,7 @@ for f in files:
     d = h.select('LST_Day_CMG')[:].astype(float) * 0.02; nt = h.select('LST_Night_CMG')[:].astype(float) * 0.02
     ok = (d > 0) & (nt > 0)
     sd += np.where(ok, d - nt, 0); sdy += np.where(ok, (d + nt) / 2, 0); n += ok
-    print(f.split('_A2023')[1][:3], 'valid share', round(ok.mean(), 3))
+    print(f.split('_A')[-1][:7], 'valid share', round(ok.mean(), 3))
 dtr = np.where(n >= 6, sd / np.maximum(n, 1), np.nan); mean = np.where(n >= 6, sdy / np.maximum(n, 1), np.nan)
 # bin 0.05 deg pixels into the 10 arcmin grid (1080 x 2160)
 r = np.floor((np.arange(3600) + .5) * 0.05 * 6).astype(int); c = np.floor((np.arange(7200) + .5) * 0.05 * 6).astype(int)
