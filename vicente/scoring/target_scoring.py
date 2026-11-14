@@ -233,15 +233,48 @@ if __name__ == "__main__":
     names = {c["id"]: c["name"] for c in ENV_CLASSES}
     T = load_targets(tpath)
     print(f"Zielsignaturen: {tpath}\nErdtabelle:     {table.name} ({len(df):,} Zellen)")
+    from categories import flags as _flags
+    N_TOP = 20
+    results, rows = {}, []
     for tid, t in T.items():
         s = score_target(df, t)
         if s["total"].notna().sum() == 0:
             continue
-        idx = top_sites(df, s["total"], n=10, min_km=200)
-        top = df.loc[idx, ["lat", "lon", "env_class"]].join(s.loc[idx, ["total", "coverage", "best_dim", "worst_dim"]])
+        idx = top_sites(df, s["total"], n=N_TOP, min_km=200)
+        dimcols = [c for c in s.columns if c.startswith("dim_")]
+        top = df.loc[idx, ["lat", "lon", "env_class"]].join(s.loc[idx, ["total", "coverage", "best_dim", "worst_dim"] + dimcols])
         known = mark_known(top)
+        fl = _flags(df.loc[idx])
+        # Rang jedes Ergebnisses unter allen bewerteten Landzellen (flaechengewichtet), fuer "besser als x %"
+        tot = s["total"]
+        pct = _weighted_pct(tot, pd.Series(np.cos(np.radians(df["lat"].to_numpy())), index=df.index))
+        sites = []
         print(f"   Top 10 (Datenabdeckung {s['coverage'].mean():.0%}):")
-        for i, r in top.iterrows():
-            tag = f"bekannt: {known[i]}" if isinstance(known[i], str) else "NEU"
-            print(f"     {r.lat:7.2f} {r.lon:8.2f}  {r.total:.2f}  {names[r.env_class]:30.30s}  "
-                  f"passt: {r.best_dim:11s} bricht: {r.worst_dim:11s}  {tag}")
+        for rank, (i, r) in enumerate(top.iterrows(), 1):
+            kn = known[i] if isinstance(known[i], str) else None
+            if rank <= 10:
+                print(f"     {r.lat:7.2f} {r.lon:8.2f}  {r.total:.2f}  {names[r.env_class]:30.30s}  "
+                      f"passt: {r.best_dim:11s} bricht: {r.worst_dim:11s}  {('bekannt: ' + kn) if kn else 'NEU'}")
+            site = dict(rank=rank, lat=round(float(r.lat), 3), lon=round(float(r.lon), 3), score=round(float(r.total), 4),
+                        better_than_pct=round(float(pct[i]) * 100, 2), coverage=round(float(r.coverage), 3),
+                        env_class=str(r.env_class), env_class_name=names[r.env_class],
+                        best_dim=r.best_dim, worst_dim=r.worst_dim, known_analog=kn,
+                        flags=[k[5:] for k in fl.columns if bool(fl.at[i, k])],
+                        dims={c[4:]: (None if pd.isna(r[c]) else round(float(r[c]), 3)) for c in dimcols})
+            sites.append(site)
+            rows.append(dict(target=tid, body=t.get("body"), target_name=t.get("name"), **{k: v for k, v in site.items()
+                                                                                           if k not in ("dims", "flags")},
+                             flags=";".join(site["flags"])))
+        results[tid] = dict(name=t.get("name"), body=t.get("body"), category=t.get("category"),
+                            coord_quality=t.get("coord_quality"), center_lat=t.get("center_lat"),
+                            center_lon=t.get("center_lon"), mean_coverage=round(float(s["coverage"].mean()), 3),
+                            n_new_in_top=sum(x["known_analog"] is None for x in sites), top=sites)
+    out_dir = here / "results"
+    out_dir.mkdir(exist_ok=True)
+    meta = dict(earth_table=table.name, earth_cells=int(len(df)), targets_file=str(tpath.name), n_top=N_TOP,
+                min_separation_km=200, note="Gesamtwert nur zum Sortieren; gezeigt wird das Profil (dims). "
+                                            "known_analog = innerhalb des Radius eines bekannten Analogs, sonst neu.")
+    json.dump(dict(meta=meta, targets=results), open(out_dir / "top_sites.json", "w", encoding="utf-8"),
+              indent=1, ensure_ascii=False)
+    pd.DataFrame(rows).to_csv(out_dir / "top_sites.csv", index=False)
+    print(f"\nErgebnisse: {out_dir / 'top_sites.json'}, {out_dir / 'top_sites.csv'}")
