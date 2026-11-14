@@ -1,0 +1,522 @@
+{
+  "schema_version": 1,
+  "targets": {
+    "shackleton": {
+      "body": "Moon",
+      "name": "Suedpol-Kraterrand (Shackleton - de Gerlache)",
+      "center_lat": -89.67,
+      "center_lon": 129.8,
+      "region": "ca. 100 x 100 km Polygon laut Teamplan, Koordinaten der Ecken hier eintragen",
+      "features": {
+        "slope_p50": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": 100,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "slope_p90": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": 100,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "relief": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "m",
+          "baseline_m": 100,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "albedo": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "optional"
+        },
+        "thermal_inertia": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "J m-2 K-1 s-1/2",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "Diviner; body_percentile ueber den ganzen Mond"
+        },
+        "surface_temp_mean": {
+          "value": 103.15,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": "-170 Grad C"
+        },
+        "surface_temp_min": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "Diviner PRP"
+        },
+        "diurnal_range": {
+          "value": 150,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": ""
+        },
+        "pressure": {
+          "value": 1e-09,
+          "p10": null,
+          "p90": null,
+          "unit": "hPa",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": "Vakuum"
+        },
+        "wind_mean": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "m/s",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "notes": ""
+        },
+        "precip": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "mm/yr",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "notes": ""
+        },
+        "humidity": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "g/kg",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "notes": ""
+        },
+        "ndvi": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "notes": ""
+        },
+        "ground_ice": {
+          "value": 1,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": "Diviner-Eisstabilitaet: Anteil der Flaeche mit stabilem Eis <= 1 m Tiefe"
+        },
+        "sun_elevation_max": {
+          "value": 1.87,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "berechnet: 90 - |Breite| + Achsneigung 1,54 Grad",
+          "notes": ""
+        }
+      }
+    },
+    "jezero": {
+      "body": "Mars",
+      "name": "Jezero-Krater",
+      "center_lat": 18.44,
+      "center_lon": 77.45,
+      "region": "ca. 100 x 100 km Polygon laut Teamplan, Koordinaten der Ecken hier eintragen",
+      "features": {
+        "slope_p50": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": 463,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "slope_p90": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": 463,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "relief": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "m",
+          "baseline_m": 463,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "albedo": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "TES Lambert-Albedo"
+        },
+        "thermal_inertia": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "J m-2 K-1 s-1/2",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "TES-TI (Putzig & Mellon 2007); body_percentile ueber den ganzen Mars"
+        },
+        "dust_opacity": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "TES/MCS; body_percentile ueber den ganzen Mars"
+        },
+        "dust_storm_days": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "d/yr",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "optional"
+        },
+        "surface_temp_mean": {
+          "value": 218.15,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": "-55 Grad C"
+        },
+        "surface_temp_min": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "diurnal_range": {
+          "value": 75,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": ""
+        },
+        "pressure": {
+          "value": 7.5,
+          "p10": null,
+          "p90": null,
+          "unit": "hPa",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": ""
+        },
+        "wind_mean": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "m/s",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "precip": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "mm/yr",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "notes": ""
+        },
+        "humidity": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "g/kg",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "ndvi": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "notes": ""
+        },
+        "ground_ice": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": ""
+        },
+        "sun_elevation_max": {
+          "value": 90,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "berechnet: 90 - |Breite| + Achsneigung 25,19 Grad, gekappt bei 90",
+          "notes": ""
+        }
+      }
+    },
+    "arcadia": {
+      "body": "Mars",
+      "name": "Arcadia Planitia",
+      "center_lat": 40.0,
+      "center_lon": 200.0,
+      "region": "ca. 100 x 100 km Polygon laut Teamplan, Koordinaten der Ecken hier eintragen",
+      "features": {
+        "slope_p50": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": 463,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "slope_p90": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": 463,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "relief": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "m",
+          "baseline_m": 463,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "albedo": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "TES Lambert-Albedo"
+        },
+        "thermal_inertia": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "J m-2 K-1 s-1/2",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "TES-TI; body_percentile ueber den ganzen Mars"
+        },
+        "dust_opacity": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "TES/MCS"
+        },
+        "dust_storm_days": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "d/yr",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": "optional"
+        },
+        "surface_temp_mean": {
+          "value": 203.15,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": "-70 Grad C"
+        },
+        "surface_temp_min": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "diurnal_range": {
+          "value": 60,
+          "p10": null,
+          "p90": null,
+          "unit": "K",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": ""
+        },
+        "pressure": {
+          "value": 8.5,
+          "p10": null,
+          "p90": null,
+          "unit": "hPa",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": ""
+        },
+        "wind_mean": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "m/s",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "precip": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "mm/yr",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "notes": ""
+        },
+        "humidity": {
+          "value": null,
+          "p10": null,
+          "p90": null,
+          "unit": "g/kg",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "",
+          "notes": ""
+        },
+        "ndvi": {
+          "value": 0,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "physikalisch: keine Atmosphaere bzw. kein Wasserkreislauf",
+          "notes": ""
+        },
+        "ground_ice": {
+          "value": 1,
+          "p10": null,
+          "p90": null,
+          "unit": "1",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "pipeline.py, gerundet - Quelle offen, bitte pruefen",
+          "notes": "z. B. SWIM-Eiskonsistenz"
+        },
+        "sun_elevation_max": {
+          "value": 75.19,
+          "p10": null,
+          "p90": null,
+          "unit": "deg",
+          "baseline_m": null,
+          "body_percentile": null,
+          "source": "berechnet: 90 - |Breite| + Achsneigung 25,19 Grad",
+          "notes": ""
+        }
+      }
+    }
+  }
+}
