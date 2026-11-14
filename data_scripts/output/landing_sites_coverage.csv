@@ -1,0 +1,28 @@
+site,body,lat,lon_E,category,source,lola_dem,lola_dem_max_ppd,lola_slope,lola_slope_max_ppd,lola_roughness,lola_roughness_max_ppd,diviner_gdr_l3,diviner_gdr_l3_max_ppd,minirf_mosaic,minirf_mosaic_max_ppd,space_weathering,space_weathering_max_ppd,mola_megdr,mola_megdr_max_ppd,crism_mtrdr,crism_mtrdr_max_ppd,sharad_3d,sharad_3d_max_ppd
+Peak near Cabeus B,moon,-82.5,307.0,Artemis III region (2024),NASA 2024-10-28,30+,1516.17,2,252.695,14,126.347,30+,128.0,22,128.0,0,0.0,,,,,,
+Haworth,moon,-87.4,355.0,Artemis III region (2024),NASA 2024-10-28,30+,1024.0,4,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Malapert Massif,moon,-86.0,3.0,Artemis III region (2024),NASA 2024-10-28,30+,1024.0,4,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Mons Mouton Plateau,moon,-84.5,32.0,Artemis III region (2024),NASA 2024-10-28,30+,3032.34,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Mons Mouton,moon,-84.0,31.0,Artemis III region (2024),NASA 2024-10-28,30+,3032.34,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Nobile Rim 1 / 2,moon,-85.3,53.5,Artemis III region (2024),NASA 2024-10-28 (Nobile crater centre),30+,3032.34,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+de Gerlache Rim 2,moon,-88.5,272.9,Artemis III region (2022+2024),NASA; ESA (de Gerlache centre),30+,1516.17,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Slater Plain,moon,-88.0,110.0,Artemis III region (2024),NASA 2024-10-28 - coords UNVERIFIED,30+,3032.34,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Peak near Shackleton,moon,-89.0,200.0,Artemis III region (2022),NASA 2022-08-19 - coords approx,30+,3032.34,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Connecting Ridge (Shackleton-de Gerlache),moon,-89.4,260.0,Artemis III region (2022),NASA 2022-08-19 - coords approx,30+,1516.17,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Faustini Rim A,moon,-87.3,77.0,Artemis III region (2022),NASA 2022; ESA (Faustini centre),30+,1516.17,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Shackleton crater (PSR),moon,-89.67,129.78,PSR / ice target,Wikipedia/IAU,30+,3032.34,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+"Cabeus (LCROSS impact, PSR)",moon,-84.9,324.5,PSR / confirmed water ice,LCROSS 2009,30+,3032.34,3,758.084,15,758.084,30+,128.0,22,128.0,0,0.0,,,,,,
+Jezero crater (Perseverance),mars,18.4,77.5,landed 2021,NASA JPL,,,,,,,,,,,,,11,128.0,30+,3291.7295733,0,0.0
+Gale crater (Curiosity),mars,-5.4,137.8,landed 2012,NASA JPL,,,,,,,,,,,,,11,128.0,30+,3292.8902166,0,0.0
+Meridiani Planum (Opportunity),mars,-1.9,354.5,landed 2004,NASA JPL,,,,,,,,,,,,,11,128.0,30+,3293.0387513,0,0.0
+Gusev / Columbia Hills (Spirit),mars,-14.6,175.5,landed 2004; M2020 finalist,NASA JPL,,,,,,,,,,,,,11,128.0,30+,3292.4492441,0,0.0
+Elysium Planitia (InSight),mars,4.5,135.6,landed 2018,NASA JPL,,,,,,,,,,,,,11,128.0,0,0.0,0,0.0
+Phoenix site (Vastitas Borealis),mars,68.2,234.3,"landed 2008, ground ice",NASA JPL,,,,,,,,,,,,,11,128.0,30+,3293.0387513,2,124.0
+"Utopia Planitia (Zhurong, CNSA)",mars,25.1,109.9,landed 2021 (non-NASA),CNSA,,,,,,,,,,,,,11,128.0,0,0.0,0,0.0
+NE Syrtis,mars,17.8,77.1,M2020 finalist,Mars 2020 site selection,,,,,,,,,,,,,11,128.0,30+,3291.7295733,0,0.0
+Mawrth Vallis,mars,24.0,341.0,MSL + M2020 candidate,MSL site selection,,,,,,,,,,,,,11,128.0,30+,3290.7535924,0,0.0
+Eberswalde crater (delta),mars,-23.9,326.7,MSL finalist,MSL site selection,,,,,,,,,,,,,11,128.0,30+,3290.7535924,0,0.0
+Holden crater,mars,-26.4,325.1,MSL finalist,MSL site selection,,,,,,,,,,,,,11,128.0,30+,3289.5515937,0,0.0
+"Oxia Planum (Rosalind Franklin, ESA)",mars,18.3,335.4,ESA ExoMars target,ESA,,,,,,,,,,,,,11,128.0,10,3291.7295733,0,0.0
+Arcadia Planitia,mars,40.0,200.0,SWIM ice target / human EZ,"SWIM, Morgan et al. 2021",,,,,,,,,,,,,11,128.0,0,0.0,0,0.0
+Deuteronilus Mensae,mars,44.0,22.0,SWIM ice target / human EZ,"SWIM, Morgan et al. 2021",,,,,,,,,,,,,14,128.0,0,0.0,0,0.0

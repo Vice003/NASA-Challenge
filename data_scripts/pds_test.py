@@ -333,8 +333,12 @@ def bbox_clause(lat_min, lat_max, lon_min, lon_max):
     clause = (f"{BBOX}south_bounding_coordinate le {lat_max} and "
               f"{BBOX}north_bounding_coordinate ge {lat_min}")
     if not (lon_min <= 0 and lon_max >= 360):
-        clause += (f" and {BBOX}west_bounding_coordinate le {lon_max} and "
-                   f"{BBOX}east_bounding_coordinate ge {lon_min}")
+        # Labels mix 0..360 (LOLA, CRISM, MOLA) and -180..180 (Mini-RF) longitudes,
+        # so test the region in both conventions.
+        def lon_overlap(lo, hi):
+            return (f"({BBOX}west_bounding_coordinate le {hi} and "
+                    f"{BBOX}east_bounding_coordinate ge {lo})")
+        clause += f" and ({lon_overlap(lon_min, lon_max)} or {lon_overlap(lon_min - 360, lon_max - 360)})"
     return clause
 
 
