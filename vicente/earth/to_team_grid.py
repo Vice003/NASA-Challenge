@@ -145,6 +145,13 @@ if D is not None:
     save("slope_p90_90m", binmean(D["slope_p90"]), "Neigung P90 Grad (90-m-Pixel)")
     done.append("Gelaende")
 
+B = find("dem_baselines.npz")
+if B is not None:  # gleiche Pixelgroessen wie LOLA (100 m) und MOLA (463 m), common/terrain.py
+    for k in B.files:
+        save(k, binmean(B[k]), {"slope_p50": "Neigung Median", "slope_p90": "Neigung P90",
+                                "relief": "Relief P95-P5"}[k.rsplit("_", 1)[0]] + f" bei {k.rsplit('_', 1)[1]}")
+    done.append("Gelaende 100/463 m")
+
 if M is not None:
     g = lambda k: sample(M[k], M["lat"], M["lon"])
     save("dust_aod", g("DUEXTTAU_mean"), "Staub-AOD Mittel")

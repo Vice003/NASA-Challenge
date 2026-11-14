@@ -119,4 +119,5 @@ setzen beim letzten Zwischenstand wieder an. Die Ergebnisse landen in `data/eart
 - Fertig: Temperatur 2003–2024, NDVI, Höhenmodell GLO-90 global
 - Fertig: MERRA-2 Ereignistage (Staubsturm- und Sturmtage)
 - Testorte der Umgebungsklassen: 13 von 14 richtig
-- Offen: Gelände bei 100/463 m mit common/terrain.py, Korrekturen 5, 6, 9–12 aus VERARBEITUNGSPLAN.md
+- Fertig: Gelände bei 100/463 m mit common/terrain.py (`slope_p50_100m` … `relief_463m` in derived/)
+- Offen: Korrekturen 5, 6, 9–12 aus VERARBEITUNGSPLAN.md; Permafrost, UV, Erreichbarkeit

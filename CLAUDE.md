@@ -222,7 +222,7 @@ Python: rasterio, xarray, numpy, scipy, pyproj, earthaccess. Große Rohdaten nic
 - [x] Erdmerkmale fein, alle 2003–2024: Temperatur (Terra + Aqua), Albedo inkl. schneefrei, Landbedeckung, Schnee, NDVI,
       Gelände (GLO-90 global), MERRA-2 Staub/Staubsturmtage/Wind/Sturmtage/Druck/Feuchte/Niederschlag; im Team-Format in `vicente/derived/`
 - [x] Umgebungsklassen kalibriert: 13 von 14 Testorten richtig (Plan, Änderungsprotokoll)
-- [ ] Gelände bei 100/463 m mit `common/terrain.py` (Lauf ~17:15 fertig), dann in Tabelle und `derived/`
+- [x] Gelände bei 100/463 m mit `common/terrain.py` (in Tabelle und `vicente/derived/`)
 - [ ] Korrekturen 5, 6, 9–12 aus dem Plan; Ergänzungen Permafrost, UV, Erreichbarkeit
 - [x] Schnittstelle Mond/Mars (`planetary/`, Schema 2, Verlässlichkeit A/B/C), gemeinsamer Code (`common/`)
 - [x] Abgleich mit dem Mond/Mars-Team: `REQUIREMENTS_COMPARISON.md` (Mert) und `RESPONSE_REQUIREMENTS.md` (Vicente)
