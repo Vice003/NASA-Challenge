@@ -1,100 +1,142 @@
 # CLAUDE.md – Analog-Finder (NASA Space Apps Challenge 2026)
 
-Angelegt von Vicente, Stand Sa 14.11.2026, 12:15 MEZ (Repo-Commit 4c65dfc).
-Deadline: So 15.11.2026, 23:59 Ortszeit (auf der Space-Apps-Seite bestätigen).
+Angelegt von Vicente.
 
-- Challenge: https://www.spaceappschallenge.org/2026/challenges/permanent-moon-base-locations-and-mars/
-- Projektplan (Claude Doc): https://claude.ai/artifact/Wb2PgZUsBaBur3NUQG5eU7
+Stand: Sa 14.11.2026, 12:00 MEZ. Deadline: So 15.11.2026, 23:59 Ortszeit (auf der Space-Apps-Seite bestätigen).
 
-## Challenge in einem Satz
+## Challenge
 
-Mit offenen Daten von NASA und Partneragenturen (ESA, CSA, JAXA) Orte auf der Erde finden und
-charakterisieren, die als Analoga für Mondbasen oder Mars-Landeplätze taugen. Gewünscht sind neue,
-nicht schon bekannte Analoga, eine Begründung, was passt und wo die Analogie bricht, und gern
-systematische Methoden.
+„Identify Earth Locations that Analog the Permanent Moon Base Locations and Mars“
+https://www.spaceappschallenge.org/2026/challenges/permanent-moon-base-locations-and-mars/
 
-## Ist-Stand im Repo
+Aufgabe: Mit offenen Daten von NASA und Partneragenturen Orte auf der Erde finden und charakterisieren,
+die als Analoga für Mondbasen oder Mars-Landeplätze taugen. Ausdrücklich gewünscht: neue, nicht schon
+bekannte Analoga; sagen, was passt und wo die Analogie bricht; systematische Methoden sind willkommen.
 
-Lauffähiger Prototyp, siehe `README.md`.
+Projektplan (Claude Doc): https://claude.ai/artifact/Wb2PgZUsBaBur3NUQG5eU7
 
-- 143.306 Landzellen der Erde, je 20 Bogenminuten (~37 km), Gelände auf gemeinsame Basis 18,5 km begrenzt.
-- Drei Zielorte: Mars Arcadia Planitia, Mars Jezero-Krater, Mond Südpol (Shackleton).
-- Neun Dimensionen: Hangneigung, Relief, höchster Sonnenstand, Jahresmitteltemperatur, Niederschlag,
-  NDVI, Luftdruck, Bodeneis, Tag-Nacht-Hub.
-- Score pro Dimension: 100 = identisch mit dem Zielort, 0 = so unähnlich wie die unähnlichste
-  Landfläche (2.–98. Perzentil, flächengewichtet). Gesamtnote = gewichtetes Mittel, Gewichte in der
-  Karte verstellbar.
-- Gegenprobe gegen 17 bekannte Analoga in `scripts/rank.py` (Atacama für Jezero auf Platz 1).
-- `index.html` = fertige Karte, läuft ohne Server.
+## Kernidee
 
-Dateien:
+Globale, mehrdimensionale Ähnlichkeitssuche statt Einzelort. Jede Erdkachel bekommt pro Dimension einen
+Score S_d ∈ [0, 1]. Gezeigt wird immer das Profil pro Dimension; der Gesamtindex dient nur zum Sortieren.
+Bekannte Analoga (Atacama, Haughton, Devon Island, Mauna Kea, Island, McMurdo-Trockentäler, Rio Tinto,
+Death Valley …) werden markiert, aus dem „Neu“-Ranking genommen und als Positivkontrolle genutzt.
 
-```
-scripts/fetch_data.sh   Eingangsdaten nach data/raw laden (ohne MODIS)
-scripts/modis_lst.py    MOD11C3 -> Tag-Nacht-Hub (data/derived/modis_dtr.npz)
-scripts/modis_ndvi.py   MOD13C2 -> NDVI-Jahresmittel (data/derived/modis_ndvi.npz)
-scripts/pipeline.py     Merkmale + Fingerabdrücke -> out/data.json
-scripts/rank.py         Ranking + Gegenprobe im Terminal
-scripts/build_page.py   web/template.html + data.json -> index.html
-data/derived/           fertige MODIS-Ebenen (im Repo)
-```
+## Zielgebiete (je ~100 × 100 km Polygon)
 
-Pipeline ausführen:
+| Ziel | Körper | Daten |
+| --- | --- | --- |
+| Südpol-Kraterrand, Shackleton–de-Gerlache-Kamm | Mond | LOLA-Polar-DEM, Diviner PRP, optional Mini-RF |
+| Jezero-Krater | Mars | MOLA, TES-Thermalinertia, TES-Albedo |
+| Arcadia Planitia (fällt als erstes weg, wenn Zeit knapp) | Mars | MOLA, TES-TI, TES-Albedo/-Staub |
 
-```bash
-pip install -r requirements.txt
-bash scripts/fetch_data.sh data/raw
-cp data/derived/*.npz data/raw/
-mkdir -p out
-python scripts/pipeline.py data/raw out
-python scripts/rank.py out
-python scripts/build_page.py web/template.html out/data.json index.html
-```
+## Entscheidungen (nicht ohne Rücksprache ändern)
 
-## Offene Punkte (Abgleich Prototyp ↔ Projektplan)
+- **Nur Datenquellen, die die Challenge-Seite nennt.** Kein Google Earth Engine.
+  Erde: NASA Earthdata + ESA Copernicus. Mond/Mars: NASA PDS (bzw. USGS/PGDA-Spiegel der PDS-Produkte).
+- **Skalen angleichen:** Jedes Merkmal wird auf beiden Körpern mit gleicher Basislänge berechnet.
+  Mond-Vergleiche auf 100 m, Mars-Vergleiche auf 463 m (MOLA-Auflösung).
+- **Kacheln:** flächentreues Gitter EASE-Grid 2.0 (`EPSG:6933`). Erde global 10 km. Mond-Ziele 5 km,
+  Mars-Ziele 10 km.
+- **Grob nach fein:** Stufe 1 global mit MODIS-CMG-Produkten (Thermik, Albedo, Landbedeckung) →
+  Kandidatenzonen. Stufe 2 lädt nur dort das Copernicus DEM und rechnet Topographie.
+- **Vorfilter:** Kacheln mit > 50 % Wald + Acker + Siedlung + Wasser (MCD12C1-Klassenanteile) fliegen raus.
+- **Kein Deep Learning**, keine globale Mineralogie (CRISM/OMEGA) – nicht seriös in 37 h.
 
-Diese Punkte sind noch nicht entschieden bzw. umgesetzt. Nicht stillschweigend ändern, erst im Team klären.
+## Daten
 
-1. **Datenquellen.** Im Chat wurde beschlossen, nur Quellen zu nutzen, die die Challenge-Seite nennt
-   (NASA Earthdata/Worldview/PDS, CSA RADARSAT, ESA Copernicus, JAXA G-Portal).
-   Der Prototyp nutzt zusätzlich nicht gelistete Quellen:
-   - ETOPO1 (NOAA) → möglicher Ersatz: Copernicus DEM GLO-90 (ESA)
-   - WorldClim 2.1 Temperatur → möglicher Ersatz: MODIS-LST-Jahresmittel (MYD11C3, NASA)
-   - WorldClim 2.1 Niederschlag → möglicher Ersatz: GPM IMERG monatlich (NASA Earthdata)
-   - LOLA/MOLA kommen über Spiegel (fatiando-data, SHTOOLS); die Originaldaten sind NASA-Missionsdaten,
-     in der Einreichung als LOLA/MOLA (PDS) zitieren
-   - Natural Earth nur für Masken und Ortsnamen – offen, ob das bleiben darf
-2. **Terra statt Aqua.** MOD11C3 misst 10:30/22:30 Ortszeit, der Tag-Nacht-Hub wird unterschätzt
-   (steht auch in den Grenzen im README). Aqua (MYD11C3, ~13:30/~01:30) liegt näher an Max/Min.
-3. **Zielwerte ohne Beleg.** Temperatur, Luftdruck, Bodeneis und Tag-Nacht-Hub der Zielorte sind
-   gerundete Schätzungen. Quellen dafür: Diviner Polar Resource Products (Mond), TES-Thermalinertia
-   (Putzig & Mellon 2007), Literatur für Marsdruck (~0,6 kPa).
-4. **Auflösung.** 37-km-Zellen beschreiben Landschaftstypen, keine Landeplätze. Plan: Top-Kandidaten
-   in einer zweiten Stufe feiner nachrechnen (Copernicus DEM, Mond-Basis 100 m, Mars 463 m).
-5. **Fehlende Dimensionen.** Thermalinertia (ATI = (1 − Albedo) / (T_Tag − T_Nacht), mit MCD43C3-Albedo),
-   Albedo/Staub, Mineralogie, Untergrund.
-6. **Download-Skript.** `download_modis.py` (earthaccess; MYD11C3, MCD43C3, MCD12C1 für 2024 bzw. 2022)
-   wurde im Chat erstellt, liegt aber noch nicht im Repo und wurde noch nicht ausgeführt.
+### Erde
+| Produkt | Zweck | Auflösung | Zugang |
+| --- | --- | --- | --- |
+| MYD11C3 v061 (Aqua) | LST Tag/Nacht, monatlich, 2024 (12 Dateien) | 0,05° | Earthdata, `earthaccess` |
+| MCD43C3 v061 | Albedo (BSA/WSA, Kurzwelle), jeweils der 15. jedes Monats 2024 | 0,05° | Earthdata |
+| MCD12C1 v061 | Landbedeckung 2022 (neuestes Jahr), Klassenanteile | 0,05° | Earthdata |
+| Copernicus DEM GLO-90 | Topographie, nur Kandidatenzonen | 90 m, 1°-Kacheln | Copernicus Data Space (Konto) oder `s3://copernicus-dem-90m` (ohne Konto, gleiches ESA-Produkt) |
+| Sentinel-1 (optional) | Radar VH/VV, nur Top-Kandidaten | 10 m | Copernicus Data Space |
+| NASA Worldview, Sentinel-2 | visuelle Prüfung der Kandidaten | – | Browser |
+
+Aqua statt Terra: Überflugzeiten (~13:30 / ~01:30) liegen näher an Tagesmax/-min → besser für ATI.
+
+### Mond / Mars
+| Produkt | Auflösung | Quelle |
+| --- | --- | --- |
+| LOLA `LDEM_80S_80MPP_ADJ` (80–90° S) | 80 m, polarstereographisch | https://pgda.gsfc.nasa.gov/products/90 |
+| Diviner PRP `DLRE_PRP_SOUTH.TAB` (Jahresmittel/-max T, Eistiefe) | Polargitter, ASCII | PDS / ODE |
+| Mini-RF CPR (optional) | – | PDS, Quelle noch offen |
+| MOLA DEM global | 463 m, 2 GB | https://planetarymaps.usgs.gov/mosaic/Mars_MGS_MOLA_DEM_mosaic_global_463m.tif |
+| TES-Thermalinertia (Putzig & Mellon 2007) | 20 ppd (~3 km) | https://pds-geosciences.wustl.edu/missions/mgs/tes-timap.html |
+| TES-Albedo, TES-Staubkarte | 4–8 ppd | https://www.mars.asu.edu/data |
+
+## Merkmale pro Dimension
+
+| Dimension | Merkmale | Erde | Mond | Mars |
+| --- | --- | --- | --- | --- |
+| Topographie | Slope Median/P90, RMS-Rauigkeit nach Ebenen-Detrending, Höhenspanne | Copernicus DEM → 100/463 m | LOLA → 100 m | MOLA 463 m |
+| Thermophysik | Mars: Thermalinertia; Mond: Kälte | ATI = (1 − Albedo) / (T_Tag − T_Nacht); Jahresmin/-mittel LST | Diviner PRP | TES-TI |
+| Helligkeit/Staub | Albedo, Staub | MCD43C3; optional MYD08_M3 | – | TES-Albedo/-Staub |
+| Radar (optional) | Depolarisation | Sentinel-1 VH/VV | Mini-RF CPR | – |
+
+## Metrik
+
+- Skalare: robuste z-Differenz z = (x_Kachel − x_Ziel) / σ_d, σ_d = MAD über alle Erdkacheln.
+- Verteilungen (Slope): 1D-Wasserstein-Distanz der Histogramme, durch σ_d geteilt.
+- S_d = exp(−D_d² / 2); S_ges = geometrisches Mittel der S_d (nur zum Sortieren).
+- Ranking nur für Kacheln mit S_d > 0,5 in ≥ 2 Dimensionen.
+- Validierung: Positivkontrolle (bekannte Analoga oben in ≥ 1 Dimension), Negativkontrolle (feuchte
+  Mittelbreiten unten), Robustheit (Top 50 stabil bei 5 vs. 10 km und leicht geänderten Gewichten).
+- „Neu“-Filter: 50-km-Puffer um bekannte Analoga.
 
 ## Grenzen (gehören auf Projektseite und Demo)
 
-Schwerkraft (Mond 1,62, Mars 3,71 m/s²), Vakuum bzw. ~0,6 kPa Marsatmosphäre (Thermik nur über
-Proxys), Sonnenhöhe am Mondpol max. ~1,5°, Strahlung ohne Magnetfeld, Verwitterung durch Wasser und
-Biologie, unterschiedliche Instrumente und Wellenlängen.
+Schwerkraft (Mond 1,62, Mars 3,71 m/s²), Vakuum bzw. ~0,6 kPa Marsatmosphäre (Thermik nur über Proxys),
+Sonnenhöhe am Mondpol max. ~1,5°, Strahlung ohne Magnetfeld, Verwitterung durch Wasser und Biologie,
+unterschiedliche Instrumente/Wellenlängen (z. B. Sentinel-1 C-Band linear vs. Mini-RF S-Band zirkular).
+
+## Repo-Struktur (geplant)
+
+```
+analog-finder/
+  earth/      Earthdata- und DEM-Download, Merkmale
+  planetary/  Downloads, Reprojektion, Ziel-Signaturen
+  scoring/    Metrik, Kontrollen, Ranking
+  web/        MapLibre-Karte (GitHub Pages)
+  data/       kleine Ergebnisdateien (CSV, GeoJSON)
+```
+
+Python: rasterio, xarray, numpy, scipy, pyproj, earthaccess. Große Rohdaten nicht ins Repo.
+
+## Rollen
+
+- A – Erddaten: Accounts, MODIS, Gitter, Thermik-Merkmale, Zonen-Vorauswahl, DEM, Feinanalyse
+- B – Mond/Mars + Metrik: Downloads, Reprojektion, Ziel-Signaturen, Scores, Kontrollen, Ranking
+- C – Karte + Story: Web-Karte (ab Sa 16:00 mit Platzhalterdaten), Projektseite, Demo
+- Offen: Teamgröße, Zuordnung, Projektname
+
+## Zeitplan / Meilensteine
+
+- M1 Sa 20:00 – Ziel-Signaturen und globale Thermik-Merkmale fertig, DEM-Download startet (nachts)
+- M2 So 13:00 – Ranking steht, Kontrollen bestanden
+- M3 So 22:00 – Einreichung komplett (Puffer bis 23:59)
 
 ## Einreichung
 
 - Demo: Video ≤ 30 s mit englischen Untertiteln ODER ≤ 7 Folien auf Englisch, extern öffentlich gehostet.
-- Projektseite auf Englisch, genutzte NASA/ESA/CSA/JAXA-Daten explizit nennen.
+- Projektseite auf Englisch; genutzte NASA/ESA/CSA/JAXA-Daten explizit nennen.
 - Nach der Deadline keine Änderungen möglich.
 
-## Meilensteine
+## Aktueller Stand
 
-- M1 Sa 20:00 – Datenquellen geklärt, fehlende Daten geladen
-- M2 So 13:00 – Ranking mit belegten Zielwerten steht, Gegenprobe bestanden
-- M3 So 22:00 – Projektseite und Demo eingereicht (Puffer bis 23:59)
-
-Offen: Teamgröße, Rollen, Projektname.
+- [x] Challenge und Ressourcen gelesen
+- [x] Projektplan als Doc
+- [x] `download_modis.py` geschrieben (MYD11C3, MCD43C3, MCD12C1 via earthaccess) – noch nicht ausgeführt
+- [ ] Earthdata-Login anlegen: https://urs.earthdata.nasa.gov/users/new
+- [ ] Copernicus-Data-Space-Konto anlegen: https://dataspace.copernicus.eu
+- [ ] Zielpolygone festlegen
+- [ ] MODIS-Download ausführen
+- [ ] Mond/Mars-Daten laden
+- [ ] Merkmalsskripte Erde und Mond/Mars
+- [ ] Metrik, Kontrollen, Ranking
+- [ ] Web-Karte, Projektseite, Demo
 
 ## Arbeitsweise mit Claude
 
@@ -102,5 +144,3 @@ Offen: Teamgröße, Rollen, Projektname.
 - Technisch genau, ehrlich, mit konkreten Zahlen.
 - Bei Terminal-Befehlen immer erklären, was sie tun.
 - Passwörter und Tokens gibt der Nutzer selbst ein, nicht Claude.
-- Große Rohdaten (HDF, NetCDF, data/raw, out/) nicht committen, siehe `.gitignore`.
-- Commits von Vicente bzw. in seinem Auftrag mit `[Vicente]` im Betreff kennzeichnen.
