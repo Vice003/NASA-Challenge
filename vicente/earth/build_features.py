@@ -83,6 +83,13 @@ FIELDS = [
     ("dem_glo90.npz", "slope_p90", "slope_p90", "mean"),
     ("dem_glo90.npz", "flat_frac", "flat_frac", "mean"),
     ("dem_glo90.npz", "steep_frac", "steep_frac", "mean"),
+    # Gelaende bei den Pixelgroessen der Zielkoerper (common/terrain.py), fuer den Vergleich mit LOLA/MOLA
+    ("dem_baselines.npz", "slope_p50_100m", "slope_p50_100m", "mean"),
+    ("dem_baselines.npz", "slope_p90_100m", "slope_p90_100m", "mean"),
+    ("dem_baselines.npz", "relief_100m", "relief_100m", "max"),
+    ("dem_baselines.npz", "slope_p50_463m", "slope_p50_463m", "mean"),
+    ("dem_baselines.npz", "slope_p90_463m", "slope_p90_463m", "mean"),
+    ("dem_baselines.npz", "relief_463m", "relief_463m", "max"),
 ]
 
 

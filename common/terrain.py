@@ -58,9 +58,23 @@ def resample(dem, dx, dy, pixel_m):
         src_x = np.arange(out.shape[1]) * rows_dx[i]
         dst_x = (np.arange(nx) + 0.5) * pixel_m
         row = out[i]
+        k = int(round(pixel_m / rows_dx[i]))
+        if k > 1:  # beim Vergroebern erst ueber die Zielpixelbreite mitteln, sonst nur abgetastet (Rauschen)
+            row = _box(row[None, :], k, axis=1)[0]
         ok = ~np.isnan(row)
         res[i] = np.interp(dst_x, src_x[ok], row[ok], left=np.nan, right=np.nan) if ok.sum() > 1 else np.nan
     return res
+
+
+def _box(a, size, axis):
+    """Gleitendes Mittel ueber `size` Pixel entlang einer Achse, NaN-tolerant."""
+    from scipy.ndimage import uniform_filter1d
+
+    valid = np.isfinite(a)
+    num = uniform_filter1d(np.where(valid, a, 0.0), size, axis=axis, mode="nearest")
+    den = uniform_filter1d(valid.astype(float), size, axis=axis, mode="nearest")
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return np.where(den > 0, num / den, np.nan)
 
 
 def _scale_axis(a, f, axis, zoom):
@@ -76,6 +90,8 @@ def _scale_axis(a, f, axis, zoom):
             shp[axis:axis + 1] = [n // k, k]
             with np.errstate(invalid="ignore"):
                 return np.nanmean(a.reshape(shp), axis=axis + 1)
+    if f < 1:  # nicht ganzzahlig vergroebern: erst mitteln, dann abtasten
+        a = _box(a, int(round(1 / f)), axis)
     factors = [1.0, 1.0]
     factors[axis] = f
     filled = np.where(np.isnan(a), np.nanmean(a), a)
@@ -147,4 +163,13 @@ if __name__ == "__main__":
     st = terrain_stats(dem, dx=dx, dy=dy, pixel_m=463.0)
     print("Mars 60 Grad 5° ", {k: round(v, 2) if isinstance(v, float) else v for k, v in st.items()})
     assert abs(st["slope_p50"] - 5) < 0.3, st
+
+    # Selbsttest 4: Vergroebern muss mitteln. Ebene 3 Grad + kleinraeumiges Rauschen (90-m-Pixel, Ziel 463 m,
+    # krummer Faktor). Ohne Mittelung bliebe das Rauschen in der Neigung stehen.
+    n, px = 600, 90.0
+    x = np.arange(n) * px
+    noisy = np.tan(np.radians(3)) * x[None, :] + rng.normal(0, 30, (n, n))
+    st = terrain_stats(noisy, dx=93.0, dy=px, pixel_m=463.0)
+    print("Rauschen 463 m  ", {k: round(v, 2) if isinstance(v, float) else v for k, v in st.items()})
+    assert abs(st["slope_p50"] - 3) < 0.5, st
     print("Selbsttest bestanden")
