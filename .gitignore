@@ -1,0 +1,7 @@
+# Python virtual environment (local only, recreate with: python -m venv .venv; pip install pds.peppi pandas)
+.venv/
+__pycache__/
+
+# Large downloaded raw data (fetch again with pds_test.py --download-max-mb)
+data_scripts/output/raw/*
+!data_scripts/output/raw/grs_elements/
