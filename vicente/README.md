@@ -1,0 +1,73 @@
+# Erd-Datenbasis (Vicente)
+
+Eigener Arbeitsordner neben der Team-Pipeline in `scripts/`. Hier liegt eine **mehrjährige, feiner aufgelöste
+Erd-Datenbasis** mit Kategorien und Scoring. Die Team-Dateien außerhalb dieses Ordners sind unverändert.
+
+Ausführliche Beschreibung als Seite: [`docs/datenbasis.html`](docs/datenbasis.html) (im Browser öffnen).
+
+## Was hier anders ist als in der Team-Pipeline
+
+Bewusst als Alternative gebaut, nichts davon ersetzt die Entscheidungen in `CLAUDE.md` ohne Absprache.
+
+| Punkt | Team-Pipeline (`scripts/`) | Dieser Ordner |
+|---|---|---|
+| Gitter | 20′ (ca. 37 km) bzw. EASE-Grid 10 km geplant | 0,05° geographisch (ca. 5,5 km), 8,9 Mio. Landzellen |
+| Zeitraum Thermik | MYD11C3 2023/2024, ein Jahr | 2003–2024, Terra **und** Aqua (4 Messzeiten pro Tag) |
+| Gelände | ETOPO1 bzw. DEM nur für Kandidatenzonen | Copernicus GLO-90 global, aus 90-m-Pixeln pro 0,05°-Zelle |
+| Staub, Wind, Stürme | nicht enthalten | MERRA-2: Staub-AOD, Staubemission, Staubsturm- und Sturmtage pro Jahr |
+| Niederschlag | WorldClim 2.1 | MERRA-2 `PRECTOTCORR` (IMERG nur Zusatz, misst in der Atacama falsch) |
+| Albedo | MCD43C3 2024 | MCD43C3 2024, zusätzlich **schneefrei** |
+| Scoring | Abstand zum Zielwert, Perzentile 2–98 | Perzentil-Rang Richtung Ziel, Zielwert nur wo die Erde ihn erreicht |
+| Bekannte Analoga | 50-km-Puffer | Radius je Ort (20–300 km), Markierung „bekannt“/„NEU“ |
+
+Alle Quellen sind NASA Earthdata (LP DAAC, NSIDC, GES DISC) oder Copernicus und damit von der Challenge-Seite gedeckt.
+
+## Aufbau
+
+```
+vicente/
+├── earth/
+│   ├── download_modis.py   erste MODIS-Dateien (Albedo 2024, Landbedeckung 2022, LST 2024)
+│   ├── surface_static.py   Albedo inkl. schneefrei, Landbedeckung
+│   ├── clim_modis.py       Temperatur (lst), NDVI (ndvi), Schnee (snow) 2003–2024
+│   ├── dem_features.py     Höhe, Relief, Hangneigung, landefreundliche Fläche aus GLO-90
+│   ├── clim_merra.py       monthly | precip | daily: Staub, Wind, Druck, Feuchte, Niederschlag, Ereignistage
+│   ├── clim_imerg.py       IMERG-Niederschlag als Zusatz
+│   └── build_features.py   alles zur Merkmalstabelle (Parquet, 0,05° und 0,25°)
+├── scoring/
+│   └── categories.py       Umgebungsklassen, Flags, 9 Dimensionen, 3 Zielprofile, Bewertung, Testorte
+├── docs/
+│   ├── datenbasis.html     ausführliche Beschreibung
+│   └── earth_features_quicklook.png   Kontrollkarte (vorläufig, noch mit Teildaten)
+└── MODIS_laden.command     Doppelklick-Start für download_modis.py (macOS)
+```
+
+## Ausführen
+
+Im Ordner `vicente/`. Pakete: `earthaccess pyhdf netCDF4 rasterio affine==2.4.0 pandas pyarrow matplotlib`.
+Earthdata-Login nötig; für MERRA-2 und IMERG im Profil die App „NASA GESDISC DATA ARCHIVE“ freigeben.
+
+```bash
+python earth/download_modis.py
+python earth/surface_static.py
+python earth/clim_modis.py lst
+python earth/clim_modis.py ndvi
+python earth/clim_modis.py snow
+python earth/dem_features.py
+python earth/clim_merra.py monthly
+python earth/clim_merra.py precip
+python earth/clim_merra.py daily
+python earth/clim_imerg.py
+python earth/build_features.py
+python scoring/categories.py
+```
+
+Die Läufe laden zusammen rund 200 GB, rechnen im Durchlauf und behalten nur wenige GB. Abgebrochene Läufe
+setzen beim letzten Zwischenstand wieder an. Die Ergebnisse landen in `data/earth/` und sind nicht im Repo
+(einzelne Dateien bis 140 MB).
+
+## Stand 14.11.2026
+
+- Fertig: Albedo/Landbedeckung, Schnee, MERRA-2 Monatswerte, MERRA-2 Niederschlag, IMERG
+- Läuft: Temperatur 2003–2024, NDVI, Höhenmodell, MERRA-2 Ereignistage
+- Offen: Abgleich der Klassenschwellen an den Testorten, Permafrost
