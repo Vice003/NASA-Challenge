@@ -47,6 +47,10 @@ ersetzt werden (nicht umgesetzt, Team-Datei).
 `wind_mean`, `wind_storm_days`, `pressure`, `humidity`. Für eine neue Dimension braucht `pipeline.py` je einen
 Eintrag in `F_raw`, `TR` und `RNG` sowie einen Zielwert in `TARGETS`.
 
+**Höhe:** `elevation.npz` = mittlere Höhe in Metern aus Copernicus GLO-90 (ESA), Mittel der 90-m-Pixel je 10′-Zelle,
+Meer = NaN. Ein Erdprodukt aus den Challenge-Quellen; wer ein Höhenmodell auf diesem Gitter braucht, kann es statt
+ETOPO1 (NOAA) verwenden. Über Land vollständig (geprüft gegen die MODIS-Landmaske).
+
 `flat_frac_90m` und `slope_p90_90m` stammen aus 90-m-Pixeln und haben **nicht** die 18,5-km-Basislänge der
 Pipeline. Mit den LOLA/MOLA-Zielwerten sind sie deshalb nicht vergleichbar; sie dienen nur der Beschreibung
 von Kandidaten (z. B. „wie viel landefreundliche Fläche hat die Zelle“).

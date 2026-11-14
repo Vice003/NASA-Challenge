@@ -141,6 +141,8 @@ if W is not None:
     done.append("Schnee")
 
 if D is not None:
+    # Hoehe (m) aus Copernicus GLO-90, Mittel der 90-m-Pixel; Meer = NaN. Ersatz fuer ETOPO1 (NOAA) in scripts/pipeline.py
+    save("elevation", binmean(D["elev_mean"]), "Hoehe m, Copernicus GLO-90 (Ersatz ETOPO1)")
     save("flat_frac_90m", binmean(D["flat_frac"]), "Anteil < 5 Grad (90-m-Pixel)")
     save("slope_p90_90m", binmean(D["slope_p90"]), "Neigung P90 Grad (90-m-Pixel)")
     done.append("Gelaende")
