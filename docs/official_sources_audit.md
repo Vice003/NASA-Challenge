@@ -84,7 +84,7 @@ Cryosat-2 mountain glacier elevation change.
 |---|---|---|---|---|
 | Slope | LOLA `LDSM` slope maps (ODE `GDRDSM`, registry) ; LOLA `LDEM`, SLDEM2015 | 20–240 m (pole), 59 m (SLDEM) | laser altimetry → slope | **A** |
 | Roughness | LOLA `LDRM` roughness, `RMMAS` median abs. slope, `RMHE` Hurst exponent (ODE) ; Mini-RF CPR | 40 m–1 km ; Mini-RF ~240 m | topographic roughness (LOLA) ; radar roughness at cm–dm scale (Mini-RF) | **A** (LOLA) / B (Mini-RF) |
-| Rock abundance | Diviner GHRM rock abundance (slope-adjusted midnight) | 128 ppd ≈ 240 m | fraction of surface covered by rocks > ~1 m, from night-time cooling | **A** |
+| Rock abundance | Diviner GHRM rock abundance (slope-adjusted midnight) – **only 70 S–70 N**; Diviner GDR L3 rock abundance only to 80 S | 128 ppd ≈ 240 m | fraction of surface covered by rocks > ~1 m, from night-time cooling | **A** below 80° / **– at the pole** (use LOLA roughness as proxy, C) |
 | Ice accessibility | LOLA PSR maps `LPSR_85S_060M` (ODE `GDRPSR`) ; Diviner PRP (ice-stability depth, Tmax) ; LEND neutrons ; Mini-RF CPR ; LAMP (UV) | PSR 60–240 m ; PRP ~km ; LEND ~10s of km | where it is cold/dark enough for ice (A for "could exist"), hydrogen (LEND, B), radar (C, ambiguous with roughness) | **B** (combined) |
 | Illumination | LOLA average sun visibility `AVGVISIB_85S_060M` (+ `_EARTH` = Earth visibility for comms) ; sky visibility `GDRSKY` | 60–240 m | modelled % time sunlit from LOLA topography | **A** |
 | Bearing capacity | Diviner regolith temperature at midnight (GHRM) ; rock abundance | 128 ppd | night-time temperature of fines → regolith thermophysics | **C** (proxy) |
