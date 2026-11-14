@@ -51,7 +51,7 @@ Eintrag in `F_raw`, `TR` und `RNG` sowie einen Zielwert in `TARGETS`.
 Pipeline. Mit den LOLA/MOLA-Zielwerten sind sie deshalb nicht vergleichbar; sie dienen nur der Beschreibung
 von Kandidaten (z. B. „wie viel landefreundliche Fläche hat die Zelle“).
 
-Stand der Dateien: Nur die Ereignistage (`dust_event_days`, `dust_storm_days`, `wind_storm_days`) fehlen noch, der Lauf rechnet.
+Stand der Dateien: vollständig (alle Erdmerkmale 2003–2024).
 
 
 ## Mond- und Mars-Zielsignaturen
@@ -85,7 +85,7 @@ vicente/
 │   └── target_scoring.py   Bewertung gegen die gemessenen Zielsignaturen aus planetary/targets.json
 ├── docs/
 │   ├── datenbasis.html     ausführliche Beschreibung
-│   └── earth_features_quicklook.png   Kontrollkarte (vorläufig, noch mit Teildaten)
+│   └── earth_features_quicklook.png   Kontrollkarte mit allen Bausteinen
 └── MODIS_laden.command     Doppelklick-Start für download_modis.py (macOS)
 ```
 
@@ -117,6 +117,6 @@ setzen beim letzten Zwischenstand wieder an. Die Ergebnisse landen in `data/eart
 
 - Fertig: Albedo/Landbedeckung, Schnee, MERRA-2 Monatswerte, MERRA-2 Niederschlag, IMERG
 - Fertig: Temperatur 2003–2024, NDVI, Höhenmodell GLO-90 global
-- Läuft: MERRA-2 Ereignistage
+- Fertig: MERRA-2 Ereignistage (Staubsturm- und Sturmtage)
 - Testorte der Umgebungsklassen: 13 von 14 richtig
 - Offen: Gelände bei 100/463 m mit common/terrain.py, Korrekturen 5, 6, 9–12 aus VERARBEITUNGSPLAN.md
