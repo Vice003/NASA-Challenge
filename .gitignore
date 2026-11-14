@@ -3,5 +3,6 @@
 __pycache__/
 
 # Generated output (re-create with pds_test.py / landing_sites.py)
-data_scripts/output/
+data_scripts/output/*
+!data_scripts/output/parameter_coverage.csv
 data_scripts/output.txt
