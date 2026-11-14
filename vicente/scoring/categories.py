@@ -12,7 +12,7 @@ Drei Ebenen:
 
 Bewertungsprinzip: Die Erde erreicht Mond- und Marswerte fast nie (Mars: 6 hPa, Mond: Vakuum).
 Deshalb wird meist relativ zur Erde bewertet: "wie weit geht dieser Ort in Richtung Ziel, verglichen mit
-allen Landzellen der Erde" (Perzentil-Rang). Nur wo die Erde echte Zielwerte erreicht (z. B. Albedo),
+allen Landzellen der Erde" (Perzentil-Rang, nach Zellflaeche gewichtet). Nur wo die Erde echte Zielwerte erreicht (z. B. Albedo),
 wird gegen den Zielwert selbst gemessen.
 
 Benutzung:
@@ -312,12 +312,26 @@ TARGETS = {
 # =====================================================================================================
 # Bewertung
 # =====================================================================================================
-def _feature_score(x, mode, param):
-    """Wert 0..1 fuer ein Merkmal: Perzentil-Rang unter allen Zeilen oder Glockenkurve um einen Zielwert."""
+def _weighted_pct(x, w):
+    """Flaechengewichteter Perzentil-Rang (0..1). Ohne Gewichtung waeren Polargebiete ueberrepraesentiert,
+    weil 0,05-Grad-Zellen zu den Polen hin kleiner und damit zahlreicher werden."""
+    ok = x.notna().to_numpy()
+    v, ww = x.to_numpy()[ok], w.to_numpy()[ok]
+    o = np.argsort(v, kind="mergesort")
+    cw = np.cumsum(ww[o]) - ww[o] / 2  # Mittelpunkt der eigenen Gewichtsstufe
+    r = np.empty(v.size)
+    r[o] = cw / ww.sum()
+    out = pd.Series(np.nan, index=x.index)
+    out[ok] = r
+    return out
+
+
+def _feature_score(x, mode, param, w):
+    """Wert 0..1 fuer ein Merkmal: flaechengewichteter Perzentil-Rang oder Glockenkurve um einen Zielwert."""
     if mode == "target":
         v, tol = param
         return np.exp(-(((x - v) / tol) ** 2))
-    r = x.rank(pct=True)
+    r = _weighted_pct(x, w)
     return r if mode == "high" else 1 - r
 
 
@@ -339,13 +353,14 @@ def score(df, target):
         d["albedo_snowfree"] = d["albedo_snowfree"].fillna(d["albedo_sw_mean"])
 
     out = pd.DataFrame(index=df.index)
+    area_w = pd.Series(np.cos(np.radians(d["lat"].to_numpy())), index=d.index)  # Zellflaeche ~ cos(Breite)
     for dim, feats in t["features"].items():
         num = pd.Series(0.0, index=d.index)
         den = pd.Series(0.0, index=d.index)
         for col, mode, param, w in feats:
             if col not in d:
                 continue
-            s = _feature_score(d[col].astype("float64"), mode, param)
+            s = _feature_score(d[col].astype("float64"), mode, param, area_w)
             num += s.fillna(0) * w
             den += s.notna() * w  # fehlt ein Wert, zaehlen die uebrigen Merkmale der Dimension
         out[f"dim_{dim}"] = num / den.replace(0, np.nan)

@@ -17,10 +17,42 @@ Bewusst als Alternative gebaut, nichts davon ersetzt die Entscheidungen in `CLAU
 | Staub, Wind, Stürme | nicht enthalten | MERRA-2: Staub-AOD, Staubemission, Staubsturm- und Sturmtage pro Jahr |
 | Niederschlag | WorldClim 2.1 | MERRA-2 `PRECTOTCORR` (IMERG nur Zusatz, misst in der Atacama falsch) |
 | Albedo | MCD43C3 2024 | MCD43C3 2024, zusätzlich **schneefrei** |
-| Scoring | Abstand zum Zielwert, Perzentile 2–98 | Perzentil-Rang Richtung Ziel, Zielwert nur wo die Erde ihn erreicht |
+| Scoring | Abstand zum Zielwert, Perzentile 2–98 | Perzentil-Rang Richtung Ziel (flächengewichtet), Zielwert nur wo die Erde ihn erreicht |
 | Bekannte Analoga | 50-km-Puffer | Radius je Ort (20–300 km), Markierung „bekannt“/„NEU“ |
 
 Alle Quellen sind NASA Earthdata (LP DAAC, NSIDC, GES DISC) oder Copernicus und damit von der Challenge-Seite gedeckt.
+
+## Einbindung in die Team-Pipeline
+
+`derived/` enthält die Merkmale auf dem Gitter von `scripts/pipeline.py`: 10′, 1080 × 2160, Nord oben,
+Zellmitten, Format wie `data/derived/*.npz` (Schlüssel `a`, float32, NaN = keine Daten). Die 0,05°-Pixel sind
+mit derselben Zuordnung gemittelt wie in `scripts/modis_lst.py`, die Zellgrenzen sind also identisch.
+Erzeugt mit `python earth/to_team_grid.py`.
+
+**Direkt austauschbar** (gleicher Dateiname, gleiche Bedeutung, kein Code ändern):
+
+| Datei | Team-Version | Diese Version |
+|---|---|---|
+| `modis_dtr.npz` | Aqua Tag − Nacht, 2023 | 2003–2024, Terra + Aqua, max − min der 4 Überflugwerte |
+| `modis_ndvi.npz` | 2023 | 2003–2024 |
+
+Ausprobieren: diese beiden Dateien nach `data/derived/` kopieren und die Pipeline neu laufen lassen.
+
+**Ersatz für WorldClim-Niederschlag** (gleiche Einheit mm/Jahr): `prec.npz` aus MERRA-2. In `pipeline.py`
+müsste dafür nur die Zeile `prec, _ = packed('prec.rda')` durch `prec = np.load(f'{D}/prec.npz')['a']`
+ersetzt werden (nicht umgesetzt, Team-Datei).
+
+**Neue Merkmale** für zusätzliche Dimensionen: `lst_mean`, `lst_cold`, `lst_seasonal_amp`, `freeze_thaw`,
+`albedo_snowfree`, `ati`, `snow_perm`, `dust_aod`, `dust_emission`, `dust_event_days`, `dust_storm_days`,
+`wind_mean`, `wind_storm_days`, `pressure`, `humidity`. Für eine neue Dimension braucht `pipeline.py` je einen
+Eintrag in `F_raw`, `TR` und `RNG` sowie einen Zielwert in `TARGETS`.
+
+`flat_frac_90m` und `slope_p90_90m` stammen aus 90-m-Pixeln und haben **nicht** die 18,5-km-Basislänge der
+Pipeline. Mit den LOLA/MOLA-Zielwerten sind sie deshalb nicht vergleichbar; sie dienen nur der Beschreibung
+von Kandidaten (z. B. „wie viel landefreundliche Fläche hat die Zelle“).
+
+Stand der Dateien: Temperatur, NDVI und Ereignistage fehlen noch in `derived/`, die Läufe rechnen noch.
+`modis_dtr.npz`, `modis_ndvi.npz`, `lst_*`, `ati` und `dust_*_days` kommen mit dem nächsten Push.
 
 ## Aufbau
 
@@ -33,7 +65,9 @@ vicente/
 │   ├── dem_features.py     Höhe, Relief, Hangneigung, landefreundliche Fläche aus GLO-90
 │   ├── clim_merra.py       monthly | precip | daily: Staub, Wind, Druck, Feuchte, Niederschlag, Ereignistage
 │   ├── clim_imerg.py       IMERG-Niederschlag als Zusatz
-│   └── build_features.py   alles zur Merkmalstabelle (Parquet, 0,05° und 0,25°)
+│   ├── build_features.py   alles zur Merkmalstabelle (Parquet, 0,05° und 0,25°)
+│   └── to_team_grid.py     Merkmale auf das 10′-Gitter der Team-Pipeline -> derived/
+├── derived/                Merkmale im Format von data/derived/ (10′, Schlüssel "a")
 ├── scoring/
 │   └── categories.py       Umgebungsklassen, Flags, 9 Dimensionen, 3 Zielprofile, Bewertung, Testorte
 ├── docs/
