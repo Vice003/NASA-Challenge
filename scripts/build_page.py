@@ -1,6 +1,9 @@
-"""Embed out/data.json into web/template.html -> index.html"""
-import sys
+"""Embed out/data.json (plus out/controls.json, if present) into web/template.html -> index.html
+usage: build_page.py TEMPLATE DATA_JSON OUT_HTML [CONTROLS_JSON]"""
+import sys, json
 tpl, data, out = sys.argv[1:4]
-t = open(tpl, encoding='utf-8').read(); d = open(data, encoding='utf-8').read()
-assert '</script' not in d.lower()
-open(out, 'w', encoding='utf-8').write(t.replace('/*DATA*/', d))
+d = json.load(open(data, encoding='utf-8'))
+if len(sys.argv) > 4: d['controls'] = json.load(open(sys.argv[4], encoding='utf-8'))
+s = json.dumps(d, ensure_ascii=False)
+assert '</script' not in s.lower()
+open(out, 'w', encoding='utf-8').write(open(tpl, encoding='utf-8').read().replace('/*DATA*/', s))

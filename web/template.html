@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Analog-Finder</title>
+<title>Analog Finder</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 /* layout: controls rail left, map as the main object, ranked results and profile below */
@@ -79,13 +79,24 @@ td .bar{width:100%;min-width:60px}
 .method p,.method li{max-width:72ch}
 .method ul{margin:6px 0 12px;padding-left:18px}
 .method h3{font:700 14px var(--display);margin:14px 0 4px}
+
+.tag{display:inline-block;font:500 10.5px var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:1px 5px;border:1px solid var(--line);border-radius:3px;color:var(--muted);margin-left:6px;vertical-align:1px}
+.tag.e{border-style:dashed}
+.chip{font:500 11px var(--mono);padding:1px 6px;border-radius:3px;border:1px solid var(--line);color:var(--muted);margin-left:6px;white-space:nowrap}
+.chip.new{border-color:var(--accent);color:var(--accent)}
+.keys .k3::before{width:10px;height:10px;background:var(--nodata);border-radius:2px}
+.checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.checks div{border-top:2px solid var(--line);padding-top:8px;font-size:13.5px}
+.checks b{display:block;font:700 22px/1.1 var(--display);font-variant-numeric:tabular-nums;margin-bottom:2px}
+.checks small{color:var(--muted);display:block}
+.dim input:disabled{opacity:.35}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
-  <h1>Analog-Finder</h1>
-  <p>Where on Earth looks most like a landing site on the Moon or Mars? The map compares 101,580 land cells (20 arcminutes each, about 37 km) with the fingerprint of the target site across ten dimensions.</p>
+  <h1>Analog Finder</h1>
+  <p id="lede"></p>
 </header>
 
 <div class="grid">
@@ -94,7 +105,7 @@ td .bar{width:100%;min-width:60px}
     <div class="targets" id="targets"></div>
     <h2>Fingerprint and weights</h2>
     <div id="dims"></div>
-    <p class="hint">The target value is on the right. The slider sets how much the dimension counts (0 = off). Slope and relief are measured from MOLA and LOLA elevation data; the other target values are rounded literature values.</p>
+    <p class="hint">The target value is on the right, the slider sets how much the dimension counts (0 = off). <b>Measured</b>: from LOLA or MOLA elevation data with the same method as on Earth. <b>Computed</b>: follows from geometry or physics. <b>Literature</b>: rounded value for a well-established property. <b>Estimate</b>: rough value where instruments differ between the bodies; it counts half by default.</p>
   </section>
 
   <section class="panel">
@@ -105,51 +116,54 @@ td .bar{width:100%;min-width:60px}
     </div>
     <div class="mapbar">
       <div class="legend"><span id="lmin"></span><i></i><span id="lmax"></span><span>points out of 100</span></div>
-      <div class="keys"><span class="k1">Top match</span><span class="k2">Known analog</span></div>
+      <div class="keys"><span class="k1">Top match</span><span class="k2">Known analog</span><span class="k3">Filtered out</span></div>
       <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zreset">Whole Earth</button></div>
     </div>
-    <p class="hint">Click to select a cell, drag to move the map. Sea, ice, forest, farmland and cities are hidden.</p>
+    <p class="hint">Click to select a cell, drag to move the map. Grey land is filtered out before ranking: permanent ice, or more than half water, forest, cropland or city.</p>
   </section>
 </div>
 
 <div class="two">
   <section class="panel">
     <h2>Top matches</h2>
-    <label class="toggle"><input type="checkbox" id="hide"> Hide known analogs (300 km radius)</label>
+    <label class="toggle"><input type="checkbox" id="hide"> Show only new sites (hide known analogs)</label>
     <ol class="hits" id="hits"></ol>
-    <p class="hint">Matches are at least 500 km apart so that one region does not fill the list.</p>
+    <p class="hint">Matches are at least 500 km apart so that one region does not fill the list. "Known" means the cell lies within the radius of an established analog site.</p>
   </section>
   <section class="panel prof" id="prof" aria-live="polite"></section>
 </div>
 
 <section class="panel">
-  <h2>Cross-check with known analogs</h2>
-  <p class="hint" style="margin:0 0 10px">The method does not know these sites. If established analogs for the selected target rank high, the ranking is plausible.</p>
-  <div class="tw"><table id="known"><thead><tr><th>Site</th><th class="num">Points</th><th class="num">Better than</th><th style="width:35%">Share of land area</th></tr></thead><tbody></tbody></table></div>
+  <h2>Checks for this target</h2>
+  <div class="checks" id="checks"></div>
+  <p class="hint">Computed with the default weights. The method is not told which sites are known analogs.</p>
+</section>
+
+<section class="panel">
+  <h2>Where known analogs land</h2>
+  <div class="tw"><table id="known"><thead><tr><th>Site</th><th class="num">Points</th><th class="num">Better than</th><th style="width:35%">Share of ranked land</th></tr></thead><tbody></tbody></table></div>
 </section>
 
 <section class="panel method">
   <h2>Method and limits</h2>
-  <p>For each dimension, 100 points means identical to the target site and 0 points means as unlike it as the least similar land on Earth (2nd to 98th percentile). The total score is the weighted mean. Where the target value lies outside what Earth offers, no cell reaches 100 points. That is intended: for temperature and air pressure the number shows how far the analogy holds.</p>
+  <p>For each dimension, 100 points means identical to the target site and 0 points means as unlike it as the least similar land on Earth (2nd to 98th percentile, weighted by area). The total is the weighted mean over the dimensions that have both a target value and a value for the cell. Where the target lies outside what Earth offers, no cell reaches 100 points. That is intended: for temperature and air pressure the number shows how far the analogy holds.</p>
   <h3>Data</h3>
   <ul>
-    <li>Earth, terrain: ETOPO1 (NOAA), 10 arcminutes. Slope over an 18.5 km baseline, relief as the spread of elevation over about 90 km.</li>
-    <li>Mars, terrain: MOLA spherical harmonic model MarsTopo719, limited to the same wavelength as the Earth data, flattening removed.</li>
-    <li>Moon, terrain: LOLA topography, 10 arcminutes, band-limited in the same way.</li>
-    <li>Earth, climate: WorldClim 2.1, mean annual temperature and annual precipitation (1970 to 2000).</li>
-    <li>Earth, vegetation: NASA MODIS/Terra MOD13C2 (version 061), annual mean NDVI from all twelve months of 2023. Missing values on land count as bare.</li>
-    <li>Earth, albedo: NASA MODIS MCD43C3 (version 061), shortwave, the 15th of each month in 2023. Snow-covered months are left out where snow-free months exist.</li>
-    <li>Earth, apparent thermal inertia: (1 − albedo) divided by the day-night swing of surface temperature from NASA MODIS/Aqua MYD11C3 (version 061, all twelve months of 2023, overpasses at about 13:30 and 01:30 local time). Low values mean loose, dry, dusty ground that heats and cools fast.</li>
-    <li>The target values for albedo and thermal inertia on the Moon and Mars are still rough estimates. They will be replaced by TES and Diviner measurements.</li>
-    <li>Air pressure from elevation (standard atmosphere), sun elevation from latitude and axial tilt, ground ice as a permafrost estimate from mean annual temperature.</li>
-    <li>Earth, land cover filter: NASA MODIS MCD12C1 (version 061, 2023). Cells that are more than half water, forest, cropland or urban are removed, which drops 31% of the ice-free land cells.</li>
-    <li>Glaciers, ice shelves, region and country names: Natural Earth.</li>
+    <li>Moon terrain: LOLA topography. Mars terrain: MOLA spherical harmonic model MarsTopo719, flattening removed. Both are limited to the same 18.5 km wavelength as the Earth data, and slope and relief are computed by the same code.</li>
+    <li>Earth temperature and day-night swing: NASA MODIS Terra and Aqua land surface temperature (MOD11C3, MYD11C3), 2003 to 2024.</li>
+    <li>Earth vegetation: NASA MODIS NDVI (MOD13C2), 2003 to 2024.</li>
+    <li>Earth albedo: NASA MODIS MCD43C3, shortwave, snow-free. Apparent thermal inertia is (1 − albedo) divided by the day-night swing, used only where the swing exceeds 5 K.</li>
+    <li>Earth precipitation, air pressure and dust optical depth: NASA MERRA-2, 2003 to 2024, about 55 km resolution.</li>
+    <li>Filters: NASA MODIS land cover (MCD12C1) for water, forest, cropland, cities and permanent ice.</li>
+    <li>Earth terrain: ETOPO1 (NOAA), 10 arcminutes. This is the one input that is not a NASA or ESA product; the fine pipeline replaces it with the Copernicus DEM.</li>
+    <li>Sun elevation from latitude and axial tilt. Ground ice is an estimate from mean surface temperature. Place names: Natural Earth.</li>
   </ul>
-  <h3>What this prototype cannot do</h3>
+  <h3>What this map cannot do</h3>
   <ul>
-    <li>The 18.5 km baseline describes landscape types, not landing sites. Rover-scale slopes need elevation models at metre resolution.</li>
-    <li>Mineralogy (EMIT, ASTER), dust (MERRA-2) and the subsurface, such as lava tubes, are missing. These are the next dimensions.</li>
-    <li>Ground ice is estimated from temperature and is therefore coupled to it. A real permafrost map would be better.</li>
+    <li>Cells are about 37 km wide and the terrain baseline is 18.5 km. That describes landscape types, not landing sites.</li>
+    <li>Albedo, thermal inertia and dust are measured with different instruments on each body. Their target values are rough estimates until measured TES, OMEGA and Diviner values replace them, and they should then be compared by rank.</li>
+    <li>The lunar temperature target is a rough estimate. Because nothing on Earth comes close, it changes the score but not the order.</li>
+    <li>Mineralogy and the subsurface, such as lava tubes, are not included.</li>
     <li>Gravity, vacuum, radiation and the thin CO₂ atmosphere cannot be reproduced anywhere on Earth.</li>
   </ul>
 </section>
@@ -160,9 +174,9 @@ td .bar{width:100%;min-width:60px}
 (function(){
 "use strict";
 var D=JSON.parse(document.getElementById('data').textContent);
-var NR=D.nr,NC=D.nc,DIMS=D.dims,ND=DIMS.length;
+var NR=D.nr,NC=D.nc,DIMS=D.dims,ND=DIMS.length,MISS=255;
 function b64(s){var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
-var maskB=b64(D.mask),feat=b64(D.feat),labB=b64(D.lab);
+var maskB=b64(D.mask),landB=b64(D.land),feat=b64(D.feat),labB=b64(D.lab);
 var cellOf=new Int32Array(NR*NC).fill(-1),rows=[],cols=[];
 for(var g=0,n=0;g<NR*NC;g++){if(maskB[g>>3]&(128>>(g&7))){cellOf[g]=n++;rows.push((g/NC)|0);cols.push(g%NC);}}
 var N=rows.length,lat=new Float32Array(N),lon=new Float32Array(N),area=new Float32Array(N);
@@ -172,35 +186,39 @@ var META={
  slope:{name:'Slope',unit:'°',inv:function(v){return Math.pow(10,v)-.01;},dig:2},
  relief:{name:'Relief',unit:' m',inv:function(v){return Math.pow(10,v)-1;},dig:0},
  sun:{name:'Highest sun elevation',unit:'°',inv:function(v){return v;},dig:0},
- temp:{name:'Mean annual temperature',unit:' °C',inv:function(v){return v;},dig:0},
+ temp:{name:'Mean surface temperature',unit:' °C',inv:function(v){return v;},dig:0},
  prec:{name:'Annual precipitation',unit:' mm',inv:function(v){return Math.max(0,Math.pow(10,v)-10);},dig:0},
  ndvi:{name:'Vegetation (NDVI)',unit:'',inv:function(v){return v;},dig:2},
  press:{name:'Air pressure',unit:' hPa',inv:function(v){return Math.pow(10,v);},dig:0},
- ice:{name:'Ground ice (estimate)',unit:'',inv:function(v){return v;},dig:1},
+ ice:{name:'Ground ice',unit:'',inv:function(v){return v;},dig:1},
  ati:{name:'Thermal inertia (apparent)',unit:' /K',inv:function(v){return Math.pow(10,v);},dig:3},
- albedo:{name:'Albedo',unit:'',inv:function(v){return v;},dig:2}
+ albedo:{name:'Albedo',unit:'',inv:function(v){return v;},dig:2},
+ dust:{name:'Dust in the air (optical depth)',unit:'',inv:function(v){return Math.pow(10,v);},dig:2}
 };
+var SRC={M:'measured',C:'computed',L:'literature',E:'estimate'};
 function fmt(x,d){return x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
-function fval(k,x){var m=META[k];if(k==='press'&&x<1e-3)return 'practically 0 hPa';if(k==='ice')return x>=.75?'yes':x<=.25?'no':'partly';var d=m.dig;if(k==='press'&&x<100)d=1;return fmt(x,d)+m.unit;}
-var KNOWN=[['Atacama (Yungay), Chile',-24.1,-69.9],['Haughton Crater, Devon Island',75.4,-89.8],['McMurdo Dry Valleys, Antarctica',-77.5,162],['Askja, Iceland',65.05,-16.75],['Mauna Loa (HI-SEAS), Hawaii',19.6,-155.5],['MDRS Hanksville, Utah',38.4,-110.8],['Death Valley, USA',36.5,-117],['Río Tinto, Spain',37.7,-6.55],['Svalbard (AMASE)',79,14],['Pilbara, Australia',-21.5,119],['Danakil, Ethiopia',14.24,40.3],['Qaidam Basin, China',37.5,94],['Lanzarote, Spain',29,-13.7],['Ramon Crater, Negev',30.6,34.8],['Namib, Namibia',-24.5,15.5],['SP Crater near Flagstaff, USA',35.4,-111.5],['Erfoud, Morocco',31.4,-4.2]];
+function fval(k,x){var m=META[k];if(x==null)return 'no target value';if(k==='press'&&x<1e-3)return 'practically 0 hPa';if(k==='ice')return x>=.75?'yes':x<=.25?'no':'partly';if(k==='dust'&&x<=.0011)return x===0?'0':'under 0.01';var d=m.dig;if(k==='press'&&x<100)d=1;return fmt(x,d)+m.unit;}
 function dist(a,b,c,d){var r=Math.PI/180,x=Math.sin(a*r)*Math.sin(c*r)+Math.cos(a*r)*Math.cos(c*r)*Math.cos((d-b)*r);return 6371*Math.acos(Math.max(-1,Math.min(1,x)));}
-KNOWN.forEach(function(k){var best=-1,bd=1e9;for(var i=0;i<N;i++){if(Math.abs(lat[i]-k[1])>2)continue;var d=dist(k[1],k[2],lat[i],lon[i]);if(d<bd){bd=d;best=i;}}k[3]=bd<100?best:-1;});
+var KNOWN=D.known.map(function(k){var best=-1,bd=1e9;for(var i=0;i<N;i++){if(Math.abs(lat[i]-k[1])>1.5)continue;var d=dist(k[1],k[2],lat[i],lon[i]);if(d<bd){bd=d;best=i;}}return {name:k[0],lat:k[1],lon:k[2],r:k[3],cell:bd<100?best:-1};});
+function knownAt(c){for(var k=0;k<KNOWN.length;k++)if(dist(lat[c],lon[c],KNOWN[k].lat,KNOWN[k].lon)<=KNOWN[k].r)return KNOWN[k].name;return null;}
+function defW(T){return DIMS.map(function(k){return T.f[k]==null?0:(T.src[k]==='E'?.5:1);});}
 
-var state={t:0,w:DIMS.map(function(){return 1;}),sel:-1,hide:false};
-var score=new Float32Array(N),pct=new Float32Array(N),order=new Uint32Array(N),lut=[],hits=[],smin=0,smax=1;
-function sim(i,d){return lut[d][feat[i*ND+d]];}
+var state={t:0,w:defW(D.targets[0]),sel:-1,hide:false};
+var score=new Float32Array(N),cover=new Float32Array(N),pct=new Float32Array(N),order=new Uint32Array(N),lut=[],hits=[],smin=0,smax=1,ranked=0;
+function sim(i,d){var q=feat[i*ND+d];return (q===MISS||!lut[d])?NaN:lut[d][q];}
 function compute(){
   var T=D.targets[state.t];lut=[];
-  DIMS.forEach(function(k,d){var a=new Float32Array(256),lo=D.rng[k][0],hi=D.rng[k][1];for(var q=0;q<256;q++){var v=lo+q/255*(hi-lo);a[q]=Math.max(0,Math.min(1,1-Math.abs(v-T.f[k])/T.span[k]));}lut.push(a);});
-  var ws=state.w.reduce(function(a,b){return a+b;},0)||1;
-  for(var i=0;i<N;i++){var s=0,o=i*ND;for(var d=0;d<ND;d++)s+=state.w[d]*lut[d][feat[o+d]];score[i]=100*s/ws;order[i]=i;}
+  DIMS.forEach(function(k){if(T.f[k]==null){lut.push(null);return;}var a=new Float32Array(256),lo=D.rng[k][0],hi=D.rng[k][1];for(var q=0;q<255;q++){var v=lo+q/254*(hi-lo);a[q]=Math.max(0,Math.min(1,1-Math.abs(v-T.f[k])/T.span[k]));}lut.push(a);});
+  var wall=0;for(var d=0;d<ND;d++)if(lut[d])wall+=state.w[d];
+  ranked=0;
+  for(var i=0;i<N;i++){var s=0,ws=0,o=i*ND;for(d=0;d<ND;d++){var q=feat[o+d];if(!lut[d]||q===MISS||!state.w[d])continue;s+=state.w[d]*lut[d][q];ws+=state.w[d];}
+    cover[i]=wall>0?ws/wall:0;score[i]=(wall>0&&cover[i]>=.8)?100*s/ws:-1;order[i]=i;if(score[i]>=0)ranked++;}
   order.sort(function(a,b){return score[b]-score[a];});
-  var tot=0;for(i=0;i<N;i++)tot+=area[i];
-  var acc=0;for(i=N-1;i>=0;i--){acc+=area[order[i]];pct[order[i]]=100*(acc-area[order[i]])/tot;}
-  smax=score[order[0]];smin=score[order[Math.floor(N*.98)]];
+  var tot=0;for(i=0;i<ranked;i++)tot+=area[order[i]];
+  var acc=0;for(i=N-1;i>=0;i--){var c=order[i];if(score[c]<0){pct[c]=0;continue;}pct[c]=100*acc/tot;acc+=area[c];}
+  smax=ranked?score[order[0]]:1;smin=ranked?score[order[Math.floor(ranked*.98)]]:0;
   hits=[];
-  for(i=0;i<N&&hits.length<8;i++){var c=order[i],ok=true;
-    if(state.hide)for(var k=0;k<KNOWN.length&&ok;k++)if(dist(lat[c],lon[c],KNOWN[k][1],KNOWN[k][2])<300)ok=false;
+  for(i=0;i<ranked&&hits.length<8;i++){c=order[i];var ok=!(state.hide&&knownAt(c));
     for(var h=0;h<hits.length&&ok;h++)if(dist(lat[c],lon[c],lat[hits[h]],lon[hits[h]])<500)ok=false;
     if(ok)hits.push(c);}
 }
@@ -211,10 +229,13 @@ var octx=off.getContext('2d'),img=octx.createImageData(NC,NR),view={x:0,y:0,z:1}
 function tok(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
 function rgb(h){h=h.replace('#','');return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
 function paint(){
-  var a=rgb(tok('--ramp-lo')),b=rgb(tok('--ramp-mid')),c=rgb(tok('--ramp-hi')),ramp=new Uint8Array(256*3);
+  var a=rgb(tok('--ramp-lo')),b=rgb(tok('--ramp-mid')),c=rgb(tok('--ramp-hi')),nd=rgb(tok('--nodata')),ramp=new Uint8Array(256*3);
   for(var q=0;q<256;q++){var t=q/255,p=t<.5?a:b,r=t<.5?b:c,u=t<.5?t*2:(t-.5)*2;for(var j=0;j<3;j++)ramp[q*3+j]=p[j]+(r[j]-p[j])*u;}
   var px=img.data;px.fill(0);
-  for(var i=0;i<N;i++){var q2=Math.max(0,Math.min(255,Math.round(255*(score[i]-smin)/(smax-smin||1)))),o=(rows[i]*NC+cols[i])*4;px[o]=ramp[q2*3];px[o+1]=ramp[q2*3+1];px[o+2]=ramp[q2*3+2];px[o+3]=255;}
+  for(var g=0;g<NR*NC;g++){if(landB[g>>3]&(128>>(g&7))){var o=g*4,ci=cellOf[g];
+    if(ci<0||score[ci]<0){px[o]=nd[0];px[o+1]=nd[1];px[o+2]=nd[2];}
+    else{var q2=Math.max(0,Math.min(255,Math.round(255*(score[ci]-smin)/(smax-smin||1))));px[o]=ramp[q2*3];px[o+1]=ramp[q2*3+1];px[o+2]=ramp[q2*3+2];}
+    px[o+3]=255;}}
   octx.putImageData(img,0,0);
 }
 function size(){var r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;W=r.width;H=W/2;cv.style.height=H+'px';cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
@@ -225,7 +246,7 @@ function draw(){
   ctx.drawImage(off,view.x,view.y,NC/view.z,NR/view.z,0,0,W,H);
   var ink=tok('--ink'),pan=tok('--panel');
   ctx.lineWidth=1.5;ctx.strokeStyle=ink;
-  KNOWN.forEach(function(k){var p=toXY(k[1],k[2]);ctx.save();ctx.translate(p[0],p[1]);ctx.rotate(Math.PI/4);ctx.strokeRect(-3.5,-3.5,7,7);ctx.restore();});
+  KNOWN.forEach(function(k){var p=toXY(k.lat,k.lon);ctx.save();ctx.translate(p[0],p[1]);ctx.rotate(Math.PI/4);ctx.strokeRect(-3.5,-3.5,7,7);ctx.restore();});
   ctx.font='600 11px "IBM Plex Mono",monospace';ctx.textAlign='center';ctx.textBaseline='middle';
   hits.forEach(function(c,n){var p=toXY(lat[c],lon[c]);ctx.beginPath();ctx.arc(p[0],p[1],9,0,7);ctx.fillStyle=pan;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=ink;ctx.stroke();ctx.fillStyle=ink;ctx.fillText(n+1,p[0],p[1]+.5);});
   if(state.sel>=0){var s=toXY(lat[state.sel],lon[state.sel]);ctx.lineWidth=2;ctx.strokeStyle=tok('--accent');ctx.beginPath();ctx.arc(s[0],s[1],14,0,7);ctx.stroke();}
@@ -239,7 +260,7 @@ cv.addEventListener('pointerdown',function(e){drag={x:e.clientX,y:e.clientY,vx:v
 cv.addEventListener('pointermove',function(e){
   if(drag){var dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>4)drag.moved=true;if(drag.moved){view.x=drag.vx-dx/W*NC/view.z;view.y=drag.vy-dy/H*NR/view.z;draw();}tip.style.display='none';return;}
   var c=cellAt(e);if(c<0){tip.style.display='none';return;}
-  var r=cv.getBoundingClientRect();tip.textContent=label(c)+' · '+fmt(score[c],1)+' points';tip.style.display='block';
+  var r=cv.getBoundingClientRect();tip.textContent=label(c)+' · '+(score[c]<0?'too little data':fmt(score[c],1)+' points');tip.style.display='block';
   var x=e.clientX-r.left+12;if(x+tip.offsetWidth>W)x=e.clientX-r.left-tip.offsetWidth-12;tip.style.left=x+'px';tip.style.top=(e.clientY-r.top+12)+'px';});
 cv.addEventListener('pointerup',function(e){if(drag&&!drag.moved){var c=cellAt(e);if(c>=0)select(c,false);}drag=null;});
 cv.addEventListener('pointerleave',function(){tip.style.display='none';});
@@ -256,49 +277,63 @@ function select(c,center){state.sel=c;if(center){view.z=Math.max(view.z,4);view.
 function profile(){
   var p=document.getElementById('prof'),c=state.sel,T=D.targets[state.t];p.textContent='';
   p.appendChild(el('h2',null,'Profile of the selected cell'));
-  if(c<0){p.appendChild(el('p','hint','No cell selected yet.'));return;}
-  p.appendChild(el('h3',null,label(c)));p.appendChild(el('div','meta',coords(c)));
-  var b=el('div','big',fmt(score[c],1));b.appendChild(el('small',null,'points, better than '+fmt(Math.min(pct[c],99.9),pct[c]>99?1:0)+'% of the land area'));p.appendChild(b);
-  var weak=[];
-  DIMS.forEach(function(k,d){var s=100*sim(c,d),lo=D.rng[k][0],hi=D.rng[k][1],v=META[k].inv(lo+feat[c*ND+d]/255*(hi-lo));
-    var r=el('div','row');r.appendChild(el('div',null,META[k].name));r.appendChild(el('div','p',fmt(s,0)));
-    var bar=el('div','bar'),f=el('i');f.style.width=s+'%';bar.appendChild(f);r.appendChild(bar);
+  if(c==null||c<0){p.appendChild(el('p','hint','No cell selected yet.'));return;}
+  var h=el('h3',null,label(c)),kn=knownAt(c);h.appendChild(el('span','chip'+(kn?'':' new'),kn?'known':'new'));p.appendChild(h);
+  p.appendChild(el('div','meta',coords(c)+(kn?' · within the radius of '+kn:'')));
+  var b=el('div','big',score[c]<0?'–':fmt(score[c],1));b.appendChild(el('small',null,score[c]<0?'too little data for a score':'points, better than '+fmt(Math.min(pct[c],99.9),pct[c]>99?1:0)+'% of the ranked land'));p.appendChild(b);
+  var weak=[],strong=null,sv=-1;
+  DIMS.forEach(function(k,d){var q=feat[c*ND+d],r=el('div','row');r.appendChild(el('div',null,META[k].name));
+    if(T.f[k]==null){r.appendChild(el('div','p','–'));r.appendChild(el('div','v','No target value for this site, not scored'));p.appendChild(r);return;}
+    if(q===MISS){r.appendChild(el('div','p','–'));r.appendChild(el('div','v','No data for this cell · '+T.name+' '+fval(k,T.raw[k])));p.appendChild(r);return;}
+    var s=100*lut[d][q],lo=D.rng[k][0],hi=D.rng[k][1],v=META[k].inv(lo+q/254*(hi-lo));
+    r.appendChild(el('div','p',fmt(s,0)));var bar=el('div','bar'),f=el('i');f.style.width=s+'%';bar.appendChild(f);r.appendChild(bar);
     r.appendChild(el('div','v','Earth '+fval(k,v)+' · '+T.name+' '+fval(k,T.raw[k])));p.appendChild(r);
-    if(s<40)weak.push(META[k].name);});
-  var br=el('div','breaks');br.textContent=(weak.length?'Where the analogy breaks: '+weak.join(', ')+'. ':'No dimension below 40 points. ')+'Gravity, vacuum and radiation are missing everywhere on Earth.';p.appendChild(br);
+    if(state.w[d]>0){if(s<40)weak.push(META[k].name);if(s>sv){sv=s;strong=META[k].name;}}});
+  var br=el('div','breaks');br.textContent=(strong?'Strongest match: '+strong+'. ':'')+(weak.length?'Where the analogy breaks: '+weak.join(', ')+'. ':'No dimension below 40 points. ')+(cover[c]<.999?'Covered: '+fmt(cover[c]*100,0)+'% of the weighted dimensions. ':'')+'Gravity, vacuum and radiation are missing everywhere on Earth.';p.appendChild(br);
 }
 function lists(){
   var T=D.targets[state.t],ol=document.getElementById('hits');ol.textContent='';
   hits.forEach(function(c,n){var li=el('li'),b=el('button');b.type='button';b.appendChild(el('span','n',n+1));
-    var mid=el('span'),best=0,worst=0;for(var d=1;d<ND;d++){if(state.w[d]>0&&sim(c,d)>sim(c,best))best=d;if(state.w[d]>0&&sim(c,d)<sim(c,worst))worst=d;}
-    mid.appendChild(document.createTextNode(label(c)));mid.appendChild(el('small',null,coords(c)+' · weakest dimension: '+META[DIMS[worst]].name));
+    var mid=el('span'),worst=-1,wv=2;for(var d=0;d<ND;d++){var s=sim(c,d);if(state.w[d]>0&&!isNaN(s)&&s<wv){wv=s;worst=d;}}
+    var kn=knownAt(c);mid.appendChild(document.createTextNode(label(c)));mid.appendChild(el('span','chip'+(kn?'':' new'),kn?'known':'new'));
+    mid.appendChild(el('small',null,coords(c)+(worst>=0?' · weakest: '+META[DIMS[worst]].name:'')));
     b.appendChild(mid);b.appendChild(el('span','s',fmt(score[c],1)));b.onclick=function(){select(c,true);};li.appendChild(b);ol.appendChild(li);});
   var tb=document.querySelector('#known tbody');tb.textContent='';
-  KNOWN.filter(function(k){return k[3]<0;}).forEach(function(k){var tr=el('tr');tr.appendChild(el('td',null,k[0]));var td=el('td',null,'not covered: the cell is mostly ice or water at this resolution');td.colSpan=3;td.style.color='var(--muted)';tr.appendChild(td);tb.appendChild(tr);});
-  KNOWN.filter(function(k){return k[3]>=0;}).sort(function(a,b){return score[b[3]]-score[a[3]];}).forEach(function(k){var tr=el('tr'),c=k[3];
-    tr.appendChild(el('td',null,k[0]));tr.appendChild(el('td','num',fmt(score[c],1)));tr.appendChild(el('td','num',fmt(pct[c],0)+'%'));
+  KNOWN.filter(function(k){return k.cell>=0&&score[k.cell]>=0;}).sort(function(a,b){return score[b.cell]-score[a.cell];}).forEach(function(k){var tr=el('tr'),c=k.cell;
+    tr.appendChild(el('td',null,k.name));tr.appendChild(el('td','num',fmt(score[c],1)));tr.appendChild(el('td','num',fmt(pct[c],0)+'%'));
     var td=el('td'),bar=el('div','bar'),f=el('i');f.style.width=pct[c]+'%';bar.appendChild(f);td.appendChild(bar);tr.appendChild(td);
     tr.style.cursor='pointer';tr.onclick=function(){select(c,true);};tb.appendChild(tr);});
+  KNOWN.filter(function(k){return k.cell<0||score[k.cell]<0;}).forEach(function(k){var tr=el('tr');tr.appendChild(el('td',null,k.name));var td=el('td',null,'not covered: the cell is mostly ice, water, forest or farmland at this resolution');td.colSpan=3;td.style.color='var(--muted)';tr.appendChild(td);tb.appendChild(tr);});
   document.getElementById('maptitle').textContent='Similarity to '+T.body+' · '+T.name;
   document.getElementById('lmin').textContent='≤ '+fmt(smin,0);document.getElementById('lmax').textContent=fmt(smax,0);
+  var ck=document.getElementById('checks'),C=(D.controls||{})[T.id];ck.textContent='';
+  if(!C){ck.appendChild(el('p','hint','No check results in this build.'));return;}
+  function box(big,txt,sub){var d=el('div');d.appendChild(el('b',null,big));d.appendChild(document.createTextNode(txt));if(sub)d.appendChild(el('small',null,sub));ck.appendChild(d);}
+  C.positive.forEach(function(p){if(!p.covered){box('–',p.site,'known analog, not covered at this resolution');return;}
+    box(fmt(p.total_pct,0)+'%',p.site,'Known analog: ranks above this share of the land. Best dimension: '+META[p.best_dim].name+' ('+fmt(p.best_dim_pct,0)+'%).');});
+  box(fmt(C.negative_humid_mean_pct,0)+'%','Humid, vegetated land','Counter-check: should rank low. Mean rank of '+fmt(D.controls.humid_cells,0)+' cells with NDVI above 0.5 and over 800 mm of rain.');
+  box(fmt(C.robustness_top20_kept*100,0)+'%','Top 20 kept','When every weight is varied by ±25% (200 random runs). Worst run: '+fmt(C.robustness_top20_kept_min*100,0)+'%.');
+  box(C.new_in_top20+' of 20','New sites','Top 20 regions outside the radius of every known analog.');
 }
 function controls(){
   var tg=document.getElementById('targets');tg.textContent='';
   D.targets.forEach(function(T,n){var b=el('button');b.type='button';b.setAttribute('aria-pressed',n===state.t);b.appendChild(el('span',null,T.body+' · '+T.name));
-    b.appendChild(el('small',null,fmt(Math.abs(T.lat),1)+'° '+(T.lat>=0?'N':'S')));b.onclick=function(){state.t=n;state.sel=-1;controls();update(true);};tg.appendChild(b);});
+    b.appendChild(el('small',null,fmt(Math.abs(T.lat),1)+'° '+(T.lat>=0?'N':'S')));b.onclick=function(){state.t=n;state.w=defW(T);state.sel=-1;controls();update(true);};tg.appendChild(b);});
   var dm=document.getElementById('dims'),T=D.targets[state.t];dm.textContent='';
-  DIMS.forEach(function(k,d){var r=el('div','dim'),l=el('label',null,META[k].name);l.htmlFor='w-'+k;r.appendChild(l);r.appendChild(el('div','tv',fval(k,T.raw[k])));
-    var inp=el('input');inp.type='range';inp.min=0;inp.max=3;inp.step=.5;inp.value=state.w[d];inp.id='w-'+k;var wv=el('div','wv','×'+fmt(state.w[d],1));
+  DIMS.forEach(function(k,d){var r=el('div','dim'),l=el('label',null,META[k].name);l.htmlFor='w-'+k;
+    if(T.f[k]!=null)l.appendChild(el('span','tag'+(T.src[k]==='E'?' e':''),SRC[T.src[k]]));r.appendChild(l);r.appendChild(el('div','tv',fval(k,T.raw[k])));
+    var inp=el('input');inp.type='range';inp.min=0;inp.max=3;inp.step=.5;inp.value=state.w[d];inp.id='w-'+k;inp.disabled=T.f[k]==null;var wv=el('div','wv',T.f[k]==null?'off':'×'+fmt(state.w[d],1));
     inp.oninput=function(){state.w[d]=+inp.value;wv.textContent='×'+fmt(state.w[d],1);update(false);};r.appendChild(inp);r.appendChild(wv);dm.appendChild(r);});
 }
 var raf=0;
-function update(pick){cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){compute();if(pick||state.sel<0)state.sel=hits[0];paint();draw();lists();profile();});}
+function update(pick){cancelAnimationFrame(raf);raf=requestAnimationFrame(function(){compute();if(pick||state.sel<0||score[state.sel]<0)state.sel=hits.length?hits[0]:-1;paint();draw();lists();profile();});}
 document.getElementById('hide').onchange=function(e){state.hide=e.target.checked;update(true);};
 window.addEventListener('resize',function(){size();draw();});
 function retheme(){paint();draw();}
 if(window.matchMedia)window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',retheme);
 new MutationObserver(retheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
-size();controls();compute();state.sel=hits[0];paint();draw();lists();profile();
+document.getElementById('lede').textContent='Where on Earth looks most like a landing site on the Moon or Mars? The map compares '+fmt(N,0)+' land cells (20 arcminutes each, about 37 km) with the fingerprint of the target site across '+ND+' dimensions, and says for every cell where the analogy holds and where it breaks.';
+size();controls();compute();state.sel=hits.length?hits[0]:-1;paint();draw();lists();profile();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
 })();
 </script>

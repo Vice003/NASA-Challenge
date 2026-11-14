@@ -1,10 +1,14 @@
 # Analog Finder
 
 Where on Earth looks most like a landing site on the Moon or Mars?
-The Analog Finder compares 101,580 land cells on Earth (20 arcminutes each, about 37 km)
-with the fingerprint of a target site across ten dimensions and ranks them by similarity.
+The Analog Finder compares 101,278 land cells on Earth (20 arcminutes each, about 37 km) with the
+fingerprint of a target site across eleven dimensions, ranks them, and says for every cell where the
+analogy holds and where it breaks.
 
 `index.html` is the finished interactive map. It needs no server: open the file in a browser.
+
+This is the coarse first pipeline (`scripts/`). The team's fine pipeline (about 5 km cells, see
+`VERARBEITUNGSPLAN.md`) is replacing it; until that passes its checks, this one is the fallback.
 
 ## Target sites
 
@@ -16,84 +20,93 @@ with the fingerprint of a target site across ten dimensions and ranks them by si
 
 ## Dimensions
 
-| Dimension | Earth | Moon / Mars |
+Target values carry a label: **measured** (from LOLA or MOLA with the same code as on Earth),
+**computed** (geometry or physics), **literature** (rounded value for a well-established property)
+or **estimate** (rough value where instruments differ between the bodies; counts half by default).
+
+| Dimension | Earth | Target value |
 |---|---|---|
-| Slope (18.5 km baseline) | ETOPO1 | LOLA, MOLA (measured) |
-| Relief (spread of elevation over about 90 km) | ETOPO1 | LOLA, MOLA (measured) |
-| Highest sun elevation | from latitude and axial tilt | from latitude and axial tilt |
-| Mean annual temperature | WorldClim 2.1 | literature value, rounded |
-| Annual precipitation | WorldClim 2.1 | 0 |
-| Vegetation (NDVI) | NASA MODIS/Terra MOD13C2, 2023 | 0 |
-| Air pressure | from elevation (standard atmosphere) | literature value, rounded |
-| Ground ice | estimate from mean annual temperature | yes / no |
-| Apparent thermal inertia, (1 − albedo) / day-night swing | NASA MODIS MCD43C3 and Aqua MYD11C3, 2023 | rough estimate |
-| Albedo | NASA MODIS MCD43C3, 2023 | rough estimate |
+| Slope (18.5 km baseline) | ETOPO1 | measured |
+| Relief (spread of elevation over about 90 km) | ETOPO1 | measured |
+| Highest sun elevation | latitude and axial tilt | computed |
+| Mean surface temperature | MODIS Terra + Aqua LST, 2003–2024 | literature (Mars), estimate (Moon) |
+| Annual precipitation | MERRA-2, 2003–2024 | computed (0) |
+| Vegetation (NDVI) | MODIS MOD13C2, 2003–2024 | computed (0) |
+| Air pressure | MERRA-2 | literature (Mars), computed (Moon) |
+| Ground ice | estimate from mean surface temperature | literature |
+| Apparent thermal inertia, (1 − albedo) / day-night swing | MODIS MCD43C3 and LST | estimate (Mars), none (Moon) |
+| Albedo | MODIS MCD43C3, snow-free | estimate |
+| Dust optical depth | MERRA-2 | estimate (Mars), computed (Moon) |
+
+The multi-year Earth layers come from `vicente/derived/`. Cells that are permanent ice, or more than
+half water, forest, cropland or city (MODIS MCD12C1), are removed before ranking.
 
 ## Method
 
 For each dimension, 100 points means identical to the target site and 0 points means as unlike it
-as the least similar land on Earth (2nd to 98th percentile, area-weighted). The total score is the
-weighted mean, and the weights can be changed in the map. Where a target value lies outside what
-Earth offers, no cell reaches 100 points, so the number shows how far the analogy holds.
+as the least similar land on Earth (2nd to 98th percentile, area-weighted). The total is the weighted
+mean over the dimensions that have both a target value and a value for the cell; missing values stay
+missing and are never replaced by 0. A cell is ranked when at least 80% of the weight is covered.
+Where a target value lies outside what Earth offers, no cell reaches 100 points, so the number shows
+how far the analogy holds.
 
-The terrain of all three bodies is limited to the same wavelength (18.5 km) so that slope and
-relief are comparable. Sea, glaciers and ice shelves are hidden, and so are cells that are more than
-half water, forest, cropland or urban (MODIS MCD12C1). That filter removes 31% of the ice-free land cells.
+The terrain of all three bodies is limited to the same wavelength (18.5 km) so that slope and relief
+are comparable.
 
-Cross-check: the method does not know the established analog sites. For Jezero the Atacama comes
-out first, and for the lunar south pole Svalbard ranks above 99% and Haughton Crater above 94% of
-the land area. The McMurdo Dry Valleys are not covered: at 37 km the cell is mostly ice.
+## Result (default weights)
 
-## Result (all weights equal)
+| Target | Best match | Points | Known analog check |
+|---|---|---|---|
+| Mars, Arcadia Planitia | Kunlun Mountains, northern Tibet | 69 | Qaidam Basin ahead of nearly all land (above 99.5%), Haughton Crater above 93% |
+| Mars, Jezero Crater | Tibesti Mountains, Chad | 73 | Atacama above 99%, Death Valley above 93% |
+| Moon, South Pole | Ellesmere Island, Canada | 66 | Svalbard and Haughton Crater above 99% |
 
-| Target | Best match | Points |
-|---|---|---|
-| Mars, Arcadia Planitia | Kunlun Mountains, northern Tibet | 71 |
-| Mars, Jezero Crater | Atacama | 78 |
-| Moon, South Pole | Ellesmere Island | 60 |
+Checks (`python scripts/rank.py out`, also shown in the map):
+
+| Check | Arcadia | Jezero | Moon |
+|---|---|---|---|
+| Humid, vegetated land: mean rank (should be low) | 17% | 37% | 23% |
+| Top 20 regions kept when all weights vary by ±25% (mean of 200 runs) | 91% | 95% | 91% |
+| Same, worst run | 45% | 85% | 80% |
+| Top 20 regions outside every known analog | 19 | 18 | 19 |
+
+The method is not told which sites are known analogs. The list of known sites is the team's
+(`vicente/scoring/categories.py`).
 
 ## Limits
 
-- The 18.5 km baseline describes landscape types, not landing sites.
-- MODIS/Aqua observes at about 13:30 and 01:30 local time, close to but not exactly at the daily
-  maximum and minimum.
-- The target values for temperature, air pressure, ground ice, albedo and thermal inertia are
-  rounded estimates. TES and Diviner measurements should replace them.
-- Mineralogy, dust and the subsurface (lava tubes) are missing.
+- Cells are about 37 km wide and the terrain baseline is 18.5 km: landscape types, not landing sites.
+- ETOPO1 (NOAA) is the one input that is not a NASA or ESA product. The fine pipeline uses the
+  Copernicus DEM.
+- Albedo, thermal inertia and dust are measured with different instruments on each body. Their target
+  values are rough estimates and should be compared by rank once measured values exist
+  (`planetary/targets.json`).
+- The lunar temperature target is a rough estimate. Nothing on Earth comes close, so it changes the
+  score but not the order.
+- Ground ice on Earth is estimated from temperature.
+- Mineralogy and the subsurface (lava tubes) are missing.
 - Gravity, vacuum and radiation cannot be reproduced anywhere on Earth.
 
 ## Run it yourself
 
 ```bash
 pip install -r requirements.txt
-bash scripts/fetch_data.sh data/raw                 # terrain, climate, Natural Earth
-cp data/derived/*.npz data/raw/                     # ready-made MODIS layers
+bash scripts/fetch_data.sh data/raw      # elevation models and place names
 mkdir -p out
-python scripts/pipeline.py data/raw out             # features and fingerprints -> out/data.json
-python scripts/rank.py out                          # ranking and cross-check in the terminal
-python scripts/build_page.py web/template.html out/data.json index.html
+python scripts/pipeline.py data/raw out data/derived vicente/derived   # -> out/data.json
+python scripts/rank.py out                                             # ranking and checks -> out/controls.json
+python scripts/build_page.py web/template.html out/data.json index.html out/controls.json
 ```
 
-The raw MODIS data (37 files, about 5.5 GB) is not in the repo. To rebuild the layers in
-`data/derived`, download the products `MYD11C3`, `MOD13C2` (version 061, all months of 2023), `MCD12C1` (2023) and
-`MCD43C3` (the 15th of each month in 2023)
-through [Earthdata Search](https://search.earthdata.nasa.gov/) into one folder and run:
-
-```bash
-python scripts/modis_lst.py  FOLDER_WITH_HDF data/raw   # day-night swing  -> modis_dtr.npz
-python scripts/modis_ndvi.py FOLDER_WITH_HDF data/raw   # annual mean NDVI -> modis_ndvi.npz
-python scripts/modis_landcover.py FOLDER_WITH_HDF data/raw   # land cover shares -> modis_landcover.npz
-python scripts/modis_albedo.py FOLDER_WITH_HDF data/raw   # annual mean albedo -> modis_albedo.npz
-```
+`scripts/modis_landcover.py` builds `data/derived/modis_landcover.npz` from MCD12C1. The scripts
+`modis_lst.py`, `modis_ndvi.py` and `modis_albedo.py` produced the single-year 2023 layers the first
+version used; the pipeline now reads the 2003–2024 layers in `vicente/derived/` instead.
 
 ## Data sources
 
-- NASA MODIS/Aqua MYD11C3, MODIS/Terra MOD13C2, MODIS MCD12C1 and MCD43C3, version 061 (LP DAAC)
+- NASA MODIS: MOD11C3, MYD11C3, MOD13C2, MCD43C3, MCD12C1, version 061 (LP DAAC)
+- NASA MERRA-2 (GES DISC)
 - LOLA topography of the Moon, 10 arcminutes (fatiando-data)
 - MOLA spherical harmonic model MarsTopo719 (SHTOOLS example data)
 - ETOPO1 (NOAA), 10 arcminutes (fatiando-data)
-- WorldClim 2.1, bio1 and bio12 (via the R package letsR)
-- Natural Earth (glaciers, ice shelves, regions, countries, places)
-
-The terms of use of each source still apply. The input data is therefore fetched by script and
-not redistributed in the repo.
+- Natural Earth, for place names only

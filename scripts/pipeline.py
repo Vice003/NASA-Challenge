@@ -1,32 +1,38 @@
-import sys, json, re, base64, warnings
-import numpy as np, xarray as xr, rdata, pyshtools as pysh, shapefile
+"""Analog Finder, coarse pipeline (20 arcmin cells): Earth features + Moon/Mars fingerprints -> out/data.json
+
+usage: pipeline.py RAW_DIR OUT_DIR [DERIVED_DIR] [VICENTE_DERIVED_DIR]
+
+Earth inputs are NASA/ESA products only, except the elevation model (ETOPO1, NOAA) that the
+18.5 km terrain baseline needs, and Natural Earth, which is used for place names only.
+Missing values stay missing (NaN -> code 255); they are never replaced by 0."""
+import sys, json, ast, base64, warnings
+import numpy as np, xarray as xr, pyshtools as pysh, shapefile
 from scipy.ndimage import uniform_filter
-from shapely.geometry import shape, Point
+from shapely.geometry import shape
 from shapely import STRtree, points as shp_points
 warnings.filterwarnings('ignore')
 D, OUT = sys.argv[1], sys.argv[2]
-KM = 18.53  # common baseline in km (10 arcmin on Earth)
-
-# ---------- Earth rasters on the 10' grid (1080 x 2160, north-up, lon -180..180, cell centres)
-def packed(f):
-    o = rdata.conversion.convert(rdata.parser.parse_file(f'{D}/{f}'))
-    if isinstance(o, dict): o = list(o.values())[0]
-    d = o.definition[0]
-    g = {k: float(v) for k, v in re.findall(r'(ncols|nrows|xmin|xmax|ymin|ymax)=([-\d.]+)', d)}
-    return np.asarray(o.values).ravel().reshape(int(g['nrows']), int(g['ncols'])), g
-temp, _ = packed('temp.rda'); prec, _ = packed('prec.rda')
-NR, NC = temp.shape
+DER = sys.argv[3] if len(sys.argv) > 3 else 'data/derived'
+VIC = sys.argv[4] if len(sys.argv) > 4 else 'vicente/derived'
+KM = 18.53            # common terrain baseline in km (10 arcmin on Earth)
+NR, NC = 1080, 2160   # 10 arcmin grid, north-up, lon -180..180, cell centres
 lat = 90 - (np.arange(NR) + .5) / 6; lon = -180 + (np.arange(NC) + .5) / 6
+def layer(folder, name, key='a'): return np.load(f'{folder}/{name}.npz')[key].astype(float)
+
+# ---------- Earth layers (2003-2024 climatologies from vicente/derived, same grid)
+temp = layer(VIC, 'lst_mean')            # MODIS Terra+Aqua land surface temperature, deg C
+prec = layer(VIC, 'prec')                # MERRA-2 precipitation, mm/yr
+press = layer(VIC, 'pressure')           # MERRA-2 surface pressure, hPa
+dtr = layer(VIC, 'modis_dtr')            # MODIS day-night swing, max - min of 4 overpasses, K
+ndvi = layer(VIC, 'modis_ndvi').clip(0, None)   # MODIS NDVI
+albedo = layer(VIC, 'albedo_snowfree')   # MODIS MCD43C3 shortwave albedo, snow-free
+dust = layer(VIC, 'dust_aod')            # MERRA-2 dust aerosol optical depth
+snow = np.nan_to_num(layer(DER, 'modis_landcover', 'snow'), nan=0.0)   # MCD12C1 share of permanent snow and ice
+lc_excl = np.nan_to_num(layer(DER, 'modis_landcover', 'excluded'), nan=0.0)  # MCD12C1: water+forest+crop+urban share
 land = ~np.isnan(temp)
 
-topo = xr.open_dataset(f'{D}/earth_topo.nc').topography  # grid-registered, lat asc
-topo = topo.interp(latitude=lat, longitude=lon).values
+topo = xr.open_dataset(f'{D}/earth_topo.nc').topography.interp(latitude=lat, longitude=lon).values
 elev = np.where(topo > 0, topo, 0.0)
-
-# NDVI: MODIS MOD13C2 2023 annual mean (see modis_ndvi.py); missing on land -> bare
-ndvi = np.load(f'{D}/modis_ndvi.npz')['a'].astype(float)
-ndvi_missing = np.isnan(ndvi) & land
-ndvi = np.where(np.isnan(ndvi), 0.0, ndvi).clip(0, None)
 
 # ---------- terrain metrics at a constant ~18.5 km baseline
 coslat = np.cos(np.radians(lat))
@@ -48,55 +54,38 @@ def std_win(kk):
     return np.sqrt(np.clip(m2 - m ** 2, 0, None))
 relief = band(std_win)
 
-# ---------- other dimensions
+# ---------- derived dimensions
 sun = np.minimum(90, 90 - np.abs(lat) + 23.44)[:, None] * np.ones((1, NC))
-press = 1013.25 * (1 - 2.25577e-5 * elev) ** 5.25588
-ice = np.clip((-1 - temp) / 7, 0, 1)    # permafrost proxy from mean annual air temperature
-dtr = np.load(f'{D}/modis_dtr.npz')['a'].astype(float)      # MODIS MOD11C3 2023: mean of (day LST - night LST)
-print('dtr missing on land', float((np.isnan(dtr) & land).sum() / land.sum()))
-dtr = np.where(np.isnan(dtr), 0.0, dtr).clip(0, None)
-albedo = np.load(f'{D}/modis_albedo.npz')['a'].astype(float)   # MODIS MCD43C3 2023, shortwave, snow-free where possible
-print('albedo missing on land', float((np.isnan(albedo) & land).sum() / land.sum()))
-albedo = np.where(np.isnan(albedo), np.nanmedian(albedo[land]), albedo)
-ati = (1 - albedo) / np.maximum(dtr, 1.0)      # apparent thermal inertia, 1/K
+ice = np.clip((1 - temp) / 6, 0, 1)      # ground-ice estimate: 1 at mean surface temp <= -5 C, 0 above +1 C
+ati = np.where(dtr > 5, (1 - albedo) / dtr, np.nan)   # apparent thermal inertia; meaningless at small swings
 
-# ---------- glacier mask + names
-def read(name):
-    sf = shapefile.Reader(f'{D}/{name}', encoding='utf-8')
-    fields = [f[0] for f in sf.fields[1:]]
-    return [(shape(s.shape.__geo_interface__), dict(zip(fields, s.record))) for s in sf.iterShapeRecords()]
-LON, LAT = np.meshgrid(lon, lat)
-gl = [g for g, _ in read('ne_10m_glaciated_areas')] + [g for g, _ in read('ne_10m_antarctic_ice_shelves_polys')]
-tree = STRtree(gl)
-idx = np.where(land.ravel())[0]
-pts = shp_points(LON.ravel()[idx], LAT.ravel()[idx])
-hit = tree.query(pts, predicate='within')[0]
-glac = np.zeros(NR * NC, bool); glac[idx[np.unique(hit)]] = True; glac = glac.reshape(NR, NC)
-
-# ---------- aggregate 2x2 -> 20' grid
-def agg(a, w):
-    a = np.where(w, a, np.nan).reshape(NR // 2, 2, NC // 2, 2)
+# ---------- masks and aggregation 2x2 -> 20 arcmin
+valid = land & (snow < 0.5) & (lc_excl <= 0.5)
+print('land 10min cells', int(land.sum()), '| permanent snow/ice', round(float((land & (snow >= .5)).sum() / land.sum()), 3),
+      '| dropped by land cover filter', round(float((land & (snow < .5) & (lc_excl > .5)).sum() / land.sum()), 3))
+def agg(a):
+    a = np.where(valid, a, np.nan).reshape(NR // 2, 2, NC // 2, 2)
     return np.nanmean(a, axis=(1, 3))
-# land cover prefilter (CLAUDE.md): drop cells with > 50 % water + forest + cropland + urban (MCD12C1)
-lc_excl = np.nan_to_num(np.load(f'{D}/modis_landcover.npz')['excluded'].astype(float), nan=0.0)
-print('land cells dropped by land cover filter', float((land & ~glac & (lc_excl > 0.5)).sum() / (land & ~glac).sum()))
-valid = land & ~glac & (lc_excl <= 0.5)
-n_valid = valid.reshape(NR // 2, 2, NC // 2, 2).sum(axis=(1, 3))
-mask = n_valid >= 2
-F_raw = dict(slope=agg(slope55, valid), relief=agg(relief, valid), sun=agg(sun, valid), temp=agg(temp, valid),
-             prec=agg(prec, valid), ndvi=agg(ndvi, valid), press=agg(press, valid), ice=agg(ice, valid), ati=agg(ati, valid), albedo=agg(albedo, valid))
+mask = valid.reshape(NR // 2, 2, NC // 2, 2).sum(axis=(1, 3)) >= 2
+landmask = land.reshape(NR // 2, 2, NC // 2, 2).any(axis=(1, 3))
+F_raw = dict(slope=agg(slope55), relief=agg(relief), sun=agg(sun), temp=agg(temp), prec=agg(prec), ndvi=agg(ndvi),
+             press=agg(press), ice=agg(ice), ati=agg(ati), albedo=agg(albedo), dust=agg(dust))
 lat2 = lat.reshape(-1, 2).mean(1); lon2 = lon.reshape(-1, 2).mean(1)
 
 TR = dict(slope=lambda x: np.log10(x + .01), relief=lambda x: np.log10(x + 1), sun=lambda x: x, temp=lambda x: x,
-          prec=lambda x: np.log10(x + 10), ndvi=lambda x: x, press=lambda x: np.log10(np.maximum(x, 1e-9)), ice=lambda x: x, ati=lambda x: np.log10(np.maximum(x, 1e-4)), albedo=lambda x: x)
-RNG = dict(slope=(-2, 1.2), relief=(0, 3.6), sun=(0, 90), temp=(-60, 35), prec=(1, 4.1), ndvi=(0, 0.92), press=(2.6, 3.01), ice=(0, 1), ati=(-2.3, 0), albedo=(0, 0.9))
+          prec=lambda x: np.log10(x + 10), ndvi=lambda x: x, press=lambda x: np.log10(np.maximum(x, 1e-9)), ice=lambda x: x,
+          ati=lambda x: np.log10(np.maximum(x, 1e-4)), albedo=lambda x: x, dust=lambda x: np.log10(np.maximum(x, 1e-3)))
+RNG = dict(slope=(-2, 1.2), relief=(0, 3.6), sun=(0, 90), temp=(-60, 50), prec=(1, 4.1), ndvi=(0, 0.92), press=(2.6, 3.03),
+           ice=(0, 1), ati=(-2.3, 0), albedo=(0, 0.9), dust=(-3, 0))
 DIMS = list(RNG)
 Q = {}
 for d in DIMS:
     lo, hi = RNG[d]
-    Q[d] = np.round((np.clip(TR[d](F_raw[d]), lo, hi) - lo) / (hi - lo) * 255)
+    q = np.round((np.clip(TR[d](F_raw[d]), lo, hi) - lo) / (hi - lo) * 254)
+    Q[d] = np.where(np.isnan(F_raw[d]), 255, q)
+    print(f'{d:7s} missing in {float((Q[d][mask] == 255).mean()) * 100:5.1f} % of cells')
 
-# ---------- Moon / Mars targets: same metrics, same baseline, from LOLA / MOLA
+# ---------- Moon / Mars targets: same terrain metrics, same baseline, from LOLA / MOLA
 def patch_metrics(coeffs, radius_km, lat0, lon0, n=9):
     """slope (mean over 55 km) and relief (std over 92 km) at the site, sampled on an 18.53 km grid"""
     h = (n - 1) / 2
@@ -110,7 +99,7 @@ def patch_metrics(coeffs, radius_km, lat0, lon0, n=9):
     gy, gx = np.gradient(z, KM * 1000)
     sl = np.degrees(np.arctan(np.hypot(gx, gy)))
     c = int(h)
-    return float(sl[c-1:c+2, c-1:c+2].mean()), float(z[c-2:c+3, c-2:c+3].std()), float(z[c, c])
+    return float(sl[c-1:c+2, c-1:c+2].mean()), float(z[c-2:c+3, c-2:c+3].std())
 
 mars = pysh.SHCoeffs.from_file(f'{D}/MarsTopo719.shape', lmax=719)
 mars.coeffs[:, 0, 0] = 0; mars.coeffs[0, 2, 0] = 0          # drop mean radius and flattening
@@ -119,40 +108,63 @@ moon_grid = xr.open_dataset(f'{D}/moon_topo.nc').topography.values[:-1, :-1]
 moon = pysh.SHGrid.from_array(moon_grid).expand()
 moon = pysh.SHCoeffs.from_array(moon.coeffs[:, :296, :296]); moon.coeffs[:, 0, 0] = 0
 
-def earth_check(lat0, lon0):
-    i = np.abs(lat2 - lat0).argmin(); j = np.abs(lon2 - lon0).argmin()
-    return {d: float(F_raw[d][i, j]) for d in DIMS}
-
+# Where each target value comes from: M = measured here from LOLA/MOLA, C = computed or physical,
+# L = rounded literature value for a well-established property (still needs a citable source),
+# E = rough estimate where instruments or methods differ between the bodies; counts half by default.
+# None = no usable target value; the dimension is then not scored for that target.
+MARS_SRC = dict(slope='M', relief='M', sun='C', prec='C', ndvi='C', temp='L', press='L', ice='L', ati='E', albedo='E', dust='E')
+MOON_SRC = dict(slope='M', relief='M', sun='C', prec='C', ndvi='C', press='C', dust='C', temp='E', ice='L', albedo='E', ati='E')
 TARGETS = [
-  dict(id='arcadia', body='Mars', name='Arcadia Planitia', lat=40.0, lon=200.0, R=3389.5, co=mars,
-       temp=-70, prec=0, ndvi=0, press=8.5, ice=1, ati=(1 - 0.25) / 60, albedo=0.25, sun=min(90, 90 - 40 + 25.19)),
-  dict(id='jezero', body='Mars', name='Jezero Crater', lat=18.44, lon=77.45, R=3389.5, co=mars,
-       temp=-55, prec=0, ndvi=0, press=7.5, ice=0, ati=(1 - 0.17) / 75, albedo=0.17, sun=90.0),
-  dict(id='shackleton', body='Moon', name='South Pole (Shackleton)', lat=-89.67, lon=129.8, R=1737.4, co=moon,
-       temp=-170, prec=0, ndvi=0, press=1e-9, ice=1, ati=(1 - 0.15) / 150, albedo=0.15, sun=90 - 89.67 + 1.54),
+  dict(id='arcadia', body='Mars', name='Arcadia Planitia', lat=40.0, lon=200.0, R=3389.5, co=mars, src=MARS_SRC,
+       v=dict(temp=-70, prec=0, ndvi=0, press=8.5, ice=1, ati=(1 - 0.25) / 60, albedo=0.25, dust=0.5, sun=min(90, 90 - 40 + 25.19))),
+  dict(id='jezero', body='Mars', name='Jezero Crater', lat=18.44, lon=77.45, R=3389.5, co=mars, src=MARS_SRC,
+       v=dict(temp=-55, prec=0, ndvi=0, press=7.5, ice=0, ati=(1 - 0.17) / 75, albedo=0.17, dust=0.5, sun=90.0)),
+  dict(id='shackleton', body='Moon', name='South Pole (Shackleton)', lat=-89.67, lon=129.8, R=1737.4, co=moon, src=MOON_SRC,
+       v=dict(temp=-170, prec=0, ndvi=0, press=1e-9, ice=1, ati=None, albedo=0.15, dust=0, sun=90 - 89.67 + 1.54)),
 ]
+w = np.cos(np.radians(lat2))[:, None] * np.ones((NR // 2, NC // 2))
 for t in TARGETS:
-    t['slope'], t['relief'], t['z'] = patch_metrics(t.pop('co'), t.pop('R'), t['lat'], t['lon'])
-    t['raw'] = {d: t[d] for d in DIMS}
-    t['f'] = {d: float(TR[d](np.float64(t[d]))) for d in DIMS}
-    # span: target -> least similar land on Earth (2nd..98th percentile, area weighted)
-    w = np.cos(np.radians(lat2))[:, None] * np.ones_like(F_raw['temp'])
+    v = t.pop('v'); v['slope'], v['relief'] = patch_metrics(t.pop('co'), t.pop('R'), t['lat'], t['lon'])
+    t['raw'] = {d: v[d] for d in DIMS}
+    t['f'] = {d: (None if v[d] is None else float(TR[d](np.float64(v[d])))) for d in DIMS}
     t['span'] = {}
-    for d in DIMS:
-        v = (Q[d][mask] / 255) * (RNG[d][1] - RNG[d][0]) + RNG[d][0]
-        o = np.argsort(v); cw = np.cumsum(w[mask][o]); cw /= cw[-1]
-        p2, p98 = v[o][np.searchsorted(cw, .02)], v[o][np.searchsorted(cw, .98)]
+    for d in DIMS:   # span: target -> least similar land on Earth (2nd..98th percentile, area weighted)
+        if t['f'][d] is None: t['span'][d] = None; continue
+        ok = mask & (Q[d] != 255)
+        x = (Q[d][ok] / 254) * (RNG[d][1] - RNG[d][0]) + RNG[d][0]
+        o = np.argsort(x); cw = np.cumsum(w[ok][o]); cw /= cw[-1]
+        p2, p98 = x[o][np.searchsorted(cw, .02)], x[o][np.searchsorted(cw, .98)]
         t['span'][d] = float(max(abs(p2 - t['f'][d]), abs(p98 - t['f'][d])))
-    for d in DIMS: t.pop(d, None)
-    print(t['id'], {k: round(v, 3) for k, v in t['raw'].items()}, 'z', round(t['z']))
+    print(t['id'], {kk: (None if vv is None else round(vv, 3)) for kk, vv in t['raw'].items()})
 
-# ---------- labels
+# ---------- known analog sites: one list for the whole team (vicente/scoring/categories.py)
+EN = {'Atacama-Wueste (Yungay, Kern)': 'Atacama (Yungay), Chile', 'Altiplano / Licancabur': 'Altiplano / Licancabur',
+      'McMurdo Dry Valleys': 'McMurdo Dry Valleys, Antarctica', 'Dome C / Concordia': 'Dome C / Concordia, Antarctica',
+      'Haughton-Krater / Devon Island': 'Haughton Crater, Devon Island', 'Island, Hochland': 'Iceland highlands',
+      'Utah, MDRS Hanksville': 'MDRS Hanksville, Utah', 'Mojave-Wueste': 'Mojave Desert', 'Ries-Krater': 'Ries Crater, Germany',
+      'Mistastin-Krater': 'Mistastin Crater, Canada', 'Qaidam-Becken': 'Qaidam Basin, China', 'Namib-Wueste': 'Namib Desert',
+      'Negev / Ramon-Krater (D-MARS)': 'Negev / Ramon Crater (D-MARS)', 'Lonar-Krater': 'Lonar Crater, India',
+      'Rio Tinto': 'Río Tinto, Spain', 'Sudbury': 'Sudbury, Canada', 'Pilbara': 'Pilbara, Australia'}
+known = []
+try:
+    src = open(f'{VIC}/../scoring/categories.py', encoding='utf-8').read()
+    for node in ast.walk(ast.parse(src)):
+        if isinstance(node, ast.Assign) and getattr(node.targets[0], 'id', '') == 'KNOWN_ANALOGS':
+            known = [[EN.get(n, n), float(la), float(lo), float(r)] for n, la, lo, r, *_ in ast.literal_eval(node.value)]
+except OSError:
+    pass
+print('known analog sites', len(known))
+
+# ---------- labels (Natural Earth, names only)
+def read(name):
+    sf = shapefile.Reader(f'{D}/{name}', encoding='utf-8')
+    fields = [f[0] for f in sf.fields[1:]]
+    return [(shape(s.shape.__geo_interface__), dict(zip(fields, s.record))) for s in sf.iterShapeRecords()]
 regions = read('ne_10m_geography_regions_polys'); countries = read('ne_50m_admin_0_countries')
 places = shapefile.Reader(f'{D}/ne_10m_populated_places_simple', encoding='utf-8')
 pf = [f[0] for f in places.fields[1:]]
 P = [dict(zip(pf, r)) for r in places.records()]
 plat = np.radians([p['latitude'] for p in P]); plon = np.radians([p['longitude'] for p in P])
-print('region fields', [k for k in regions[0][1]][:30]); print('country fields de', [k for k in countries[0][1] if 'DE' in k.upper()][:5])
 def nm(rec, *keys):
     for kx in keys:
         for kk in (kx, kx.lower(), kx.upper()):
@@ -183,14 +195,14 @@ for n in range(len(pts)):
         lab = f"near {P[m]['name']}, {cn}" if dd[m] < 400 else cn
     if lab not in lab_idx: lab_idx[lab] = len(labels); labels.append(lab)
     lab_of[n] = lab_idx[lab]
-print('cells', len(pts), 'labels', len(labels), 'glaciated 10min cells', int(glac.sum()), 'ndvi missing on valid land', float((ndvi_missing & valid).sum() / valid.sum()))
+print('cells', len(pts), 'labels', len(labels))
 
 feat = np.stack([Q[d][mask] for d in DIMS], 1).astype(np.uint8)
-out = dict(nr=NR // 2, nc=NC // 2, dims=DIMS, rng=RNG, targets=TARGETS, labels=labels,
-           mask=base64.b64encode(np.packbits(mask.ravel()).tobytes()).decode(),
-           feat=base64.b64encode(feat.tobytes()).decode(),
-           lab=base64.b64encode(lab_of.astype('<u2').tobytes()).decode())
+b64 = lambda a: base64.b64encode(a).decode()
+out = dict(nr=NR // 2, nc=NC // 2, dims=DIMS, rng=RNG, targets=TARGETS, labels=labels, known=known,
+           mask=b64(np.packbits(mask.ravel()).tobytes()), land=b64(np.packbits(landmask.ravel()).tobytes()),
+           feat=b64(feat.tobytes()), lab=b64(lab_of.astype('<u2').tobytes()))
 json.dump(out, open(f'{OUT}/data.json', 'w'), ensure_ascii=False)
-np.savez(f'{OUT}/check.npz', mask=mask, feat=feat, lat2=lat2, lon2=lon2, lab=lab_of, **{f'raw_{d}': F_raw[d] for d in DIMS})
-for nme, la, lo in [('Atacama', -24.1, -69.9), ('Haughton', 75.4, -89.8), ('Lhasa-Plateau', 33, 88), ('Sahara', 23, 12), ('Amazon', -3, -60)]:
-    print(nme, {k: round(v, 2) for k, v in earth_check(la, lo).items()})
+for nme, la, lo in [('Atacama', -22.17, -69.83), ('Haughton', 75.4, -89.8), ('Kunlun', 35.5, 84.83), ('Sahara', 23, 12), ('Ireland', 53, -8)]:
+    i = np.abs(lat2 - la).argmin(); j = np.abs(lon2 - lo).argmin()
+    print(nme, mask[i, j], {d: round(float(F_raw[d][i, j]), 3) for d in DIMS})
