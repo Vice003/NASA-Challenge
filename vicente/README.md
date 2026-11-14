@@ -54,6 +54,18 @@ von Kandidaten (z. B. „wie viel landefreundliche Fläche hat die Zelle“).
 Stand der Dateien: Temperatur, NDVI und Ereignistage fehlen noch in `derived/`, die Läufe rechnen noch.
 `modis_dtr.npz`, `modis_ndvi.npz`, `lst_*`, `ati` und `dust_*_days` kommen mit dem nächsten Push.
 
+## Mond- und Mars-Zielsignaturen
+
+Die Planetendaten kommen über [`../planetary/`](../planetary/): Dort tragen die Mond/Mars-Verantwortlichen die
+Werte der Zielgebiete in `planetary/targets.json` ein (Spezifikation `planetary/ZIELSIGNATUREN.md`).
+`scoring/target_scoring.py` liest die Datei und bewertet jede Erdzelle je Merkmal auf eine von drei Arten:
+direkter Wertvergleich (gleiche Größe), Rang-Abgleich (anderes Instrument, z. B. TES-Trägheit gegen ATI)
+oder Richtung (die Erde erreicht den Wert nie, z. B. Luftdruck).
+
+```bash
+python scoring/target_scoring.py ../planetary/targets.json
+```
+
 ## Aufbau
 
 ```
@@ -69,7 +81,8 @@ vicente/
 │   └── to_team_grid.py     Merkmale auf das 10′-Gitter der Team-Pipeline -> derived/
 ├── derived/                Merkmale im Format von data/derived/ (10′, Schlüssel "a")
 ├── scoring/
-│   └── categories.py       Umgebungsklassen, Flags, 9 Dimensionen, 3 Zielprofile, Bewertung, Testorte
+│   ├── categories.py       Umgebungsklassen, Flags, 9 Dimensionen, 3 Zielprofile, Bewertung, Testorte
+│   └── target_scoring.py   Bewertung gegen die gemessenen Zielsignaturen aus planetary/targets.json
 ├── docs/
 │   ├── datenbasis.html     ausführliche Beschreibung
 │   └── earth_features_quicklook.png   Kontrollkarte (vorläufig, noch mit Teildaten)
