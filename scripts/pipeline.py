@@ -55,6 +55,10 @@ ice = np.clip((-1 - temp) / 7, 0, 1)    # permafrost proxy from mean annual air 
 dtr = np.load(f'{D}/modis_dtr.npz')['a'].astype(float)      # MODIS MOD11C3 2023: mean of (day LST - night LST)
 print('dtr missing on land', float((np.isnan(dtr) & land).sum() / land.sum()))
 dtr = np.where(np.isnan(dtr), 0.0, dtr).clip(0, None)
+albedo = np.load(f'{D}/modis_albedo.npz')['a'].astype(float)   # MODIS MCD43C3 2023, shortwave, snow-free where possible
+print('albedo missing on land', float((np.isnan(albedo) & land).sum() / land.sum()))
+albedo = np.where(np.isnan(albedo), np.nanmedian(albedo[land]), albedo)
+ati = (1 - albedo) / np.maximum(dtr, 1.0)      # apparent thermal inertia, 1/K
 
 # ---------- glacier mask + names
 def read(name):
@@ -80,12 +84,12 @@ valid = land & ~glac & (lc_excl <= 0.5)
 n_valid = valid.reshape(NR // 2, 2, NC // 2, 2).sum(axis=(1, 3))
 mask = n_valid >= 2
 F_raw = dict(slope=agg(slope55, valid), relief=agg(relief, valid), sun=agg(sun, valid), temp=agg(temp, valid),
-             prec=agg(prec, valid), ndvi=agg(ndvi, valid), press=agg(press, valid), ice=agg(ice, valid), dtr=agg(dtr, valid))
+             prec=agg(prec, valid), ndvi=agg(ndvi, valid), press=agg(press, valid), ice=agg(ice, valid), ati=agg(ati, valid), albedo=agg(albedo, valid))
 lat2 = lat.reshape(-1, 2).mean(1); lon2 = lon.reshape(-1, 2).mean(1)
 
 TR = dict(slope=lambda x: np.log10(x + .01), relief=lambda x: np.log10(x + 1), sun=lambda x: x, temp=lambda x: x,
-          prec=lambda x: np.log10(x + 10), ndvi=lambda x: x, press=lambda x: np.log10(np.maximum(x, 1e-9)), ice=lambda x: x, dtr=lambda x: x)
-RNG = dict(slope=(-2, 1.2), relief=(0, 3.6), sun=(0, 90), temp=(-60, 35), prec=(1, 4.1), ndvi=(0, 0.92), press=(2.6, 3.01), ice=(0, 1), dtr=(0, 45))
+          prec=lambda x: np.log10(x + 10), ndvi=lambda x: x, press=lambda x: np.log10(np.maximum(x, 1e-9)), ice=lambda x: x, ati=lambda x: np.log10(np.maximum(x, 1e-4)), albedo=lambda x: x)
+RNG = dict(slope=(-2, 1.2), relief=(0, 3.6), sun=(0, 90), temp=(-60, 35), prec=(1, 4.1), ndvi=(0, 0.92), press=(2.6, 3.01), ice=(0, 1), ati=(-2.3, 0), albedo=(0, 0.9))
 DIMS = list(RNG)
 Q = {}
 for d in DIMS:
@@ -121,11 +125,11 @@ def earth_check(lat0, lon0):
 
 TARGETS = [
   dict(id='arcadia', body='Mars', name='Arcadia Planitia', lat=40.0, lon=200.0, R=3389.5, co=mars,
-       temp=-70, prec=0, ndvi=0, press=8.5, ice=1, dtr=60, sun=min(90, 90 - 40 + 25.19)),
+       temp=-70, prec=0, ndvi=0, press=8.5, ice=1, ati=(1 - 0.25) / 60, albedo=0.25, sun=min(90, 90 - 40 + 25.19)),
   dict(id='jezero', body='Mars', name='Jezero Crater', lat=18.44, lon=77.45, R=3389.5, co=mars,
-       temp=-55, prec=0, ndvi=0, press=7.5, ice=0, dtr=75, sun=90.0),
+       temp=-55, prec=0, ndvi=0, press=7.5, ice=0, ati=(1 - 0.17) / 75, albedo=0.17, sun=90.0),
   dict(id='shackleton', body='Moon', name='South Pole (Shackleton)', lat=-89.67, lon=129.8, R=1737.4, co=moon,
-       temp=-170, prec=0, ndvi=0, press=1e-9, ice=1, dtr=150, sun=90 - 89.67 + 1.54),
+       temp=-170, prec=0, ndvi=0, press=1e-9, ice=1, ati=(1 - 0.15) / 150, albedo=0.15, sun=90 - 89.67 + 1.54),
 ]
 for t in TARGETS:
     t['slope'], t['relief'], t['z'] = patch_metrics(t.pop('co'), t.pop('R'), t['lat'], t['lon'])

@@ -85,7 +85,7 @@ td .bar{width:100%;min-width:60px}
 <div class="wrap">
 <header>
   <h1>Analog-Finder</h1>
-  <p>Where on Earth looks most like a landing site on the Moon or Mars? The map compares 101,580 land cells (20 arcminutes each, about 37 km) with the fingerprint of the target site across nine dimensions.</p>
+  <p>Where on Earth looks most like a landing site on the Moon or Mars? The map compares 101,580 land cells (20 arcminutes each, about 37 km) with the fingerprint of the target site across ten dimensions.</p>
 </header>
 
 <div class="grid">
@@ -138,7 +138,9 @@ td .bar{width:100%;min-width:60px}
     <li>Moon, terrain: LOLA topography, 10 arcminutes, band-limited in the same way.</li>
     <li>Earth, climate: WorldClim 2.1, mean annual temperature and annual precipitation (1970 to 2000).</li>
     <li>Earth, vegetation: NASA MODIS/Terra MOD13C2 (version 061), annual mean NDVI from all twelve months of 2023. Missing values on land count as bare.</li>
-    <li>Earth, day-night swing: NASA MODIS/Aqua MYD11C3 (version 061), all twelve months of 2023. Annual mean of the difference between the day and night overpass (about 13:30 and 01:30 local time, close to the daily maximum and minimum). The target values for the Moon and Mars are rough estimates.</li>
+    <li>Earth, albedo: NASA MODIS MCD43C3 (version 061), shortwave, the 15th of each month in 2023. Snow-covered months are left out where snow-free months exist.</li>
+    <li>Earth, apparent thermal inertia: (1 − albedo) divided by the day-night swing of surface temperature from NASA MODIS/Aqua MYD11C3 (version 061, all twelve months of 2023, overpasses at about 13:30 and 01:30 local time). Low values mean loose, dry, dusty ground that heats and cools fast.</li>
+    <li>The target values for albedo and thermal inertia on the Moon and Mars are still rough estimates. They will be replaced by TES and Diviner measurements.</li>
     <li>Air pressure from elevation (standard atmosphere), sun elevation from latitude and axial tilt, ground ice as a permafrost estimate from mean annual temperature.</li>
     <li>Earth, land cover filter: NASA MODIS MCD12C1 (version 061, 2023). Cells that are more than half water, forest, cropland or urban are removed, which drops 31% of the ice-free land cells.</li>
     <li>Glaciers, ice shelves, region and country names: Natural Earth.</li>
@@ -175,7 +177,8 @@ var META={
  ndvi:{name:'Vegetation (NDVI)',unit:'',inv:function(v){return v;},dig:2},
  press:{name:'Air pressure',unit:' hPa',inv:function(v){return Math.pow(10,v);},dig:0},
  ice:{name:'Ground ice (estimate)',unit:'',inv:function(v){return v;},dig:1},
- dtr:{name:'Day-night swing (MODIS)',unit:' K',inv:function(v){return v;},dig:0}
+ ati:{name:'Thermal inertia (apparent)',unit:' /K',inv:function(v){return Math.pow(10,v);},dig:3},
+ albedo:{name:'Albedo',unit:'',inv:function(v){return v;},dig:2}
 };
 function fmt(x,d){return x.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});}
 function fval(k,x){var m=META[k];if(k==='press'&&x<1e-3)return 'practically 0 hPa';if(k==='ice')return x>=.75?'yes':x<=.25?'no':'partly';var d=m.dig;if(k==='press'&&x<100)d=1;return fmt(x,d)+m.unit;}
