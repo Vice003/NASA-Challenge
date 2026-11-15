@@ -112,23 +112,26 @@ moon = pysh.SHCoeffs.from_array(moon.coeffs[:, :296, :296]); moon.coeffs[:, 0, 0
 # L = rounded literature value for a well-established property (still needs a citable source),
 # E = rough estimate where instruments or methods differ between the bodies; counts half by default.
 # None = no usable target value; the dimension is then not scored for that target.
-MARS_SRC = dict(slope='M', relief='M', sun='C', prec='C', ndvi='C', temp='L', press='L', ice='L', ati='E', albedo='E', dust='E')
+MARS_SRC = dict(slope='M', relief='M', sun='C', prec='C', ndvi='C', temp='L', press='L', ice='L', ati='E', albedo='E', dust='M')
 MOON_SRC = dict(slope='M', relief='M', sun='C', prec='C', ndvi='C', press='C', dust='C', temp='E', ice='L', albedo='E', ati='E')
 MARS_EST = dict(MARS_SRC, temp='E', press='E')   # sites where even temperature and pressure are my rough values
 def mars(id, name, lat, lon, kind, src=MARS_SRC, **v):
-    v.setdefault('prec', 0); v.setdefault('ndvi', 0); v.setdefault('dust', 0.5); v['sun'] = min(90, 90 - abs(lat) + 25.19)
+    v.setdefault('prec', 0); v.setdefault('ndvi', 0); v['dust'] = 2.6 * v.pop('dust_ir'); v['sun'] = min(90, 90 - abs(lat) + 25.19)
     return dict(id=id, body='Mars', name=name, lat=lat, lon=lon, kind=kind, approx=False, R=3389.5, co=mars_sh, src=src, v=v)
 def moonsite(id, name, lat, lon, approx=True, kind='Artemis candidate region'):
     v = dict(temp=-170, prec=0, ndvi=0, press=1e-9, ice=1, ati=None, albedo=0.15, dust=0, sun=90 - abs(lat) + 1.54)
     return dict(id=id, body='Moon', name=name, lat=lat, lon=lon % 360, kind=kind, approx=approx, R=1737.4, co=moon, src=MOON_SRC, v=v)
 ICE, ROVER = 'Base candidate with shallow ice', 'Rover landing site, for comparison'
+# dust_ir: TES column dust optical depth (9.3 micron absorption), median of MY24-27 at the site's grid cell, from
+# scripts/mars_dust_targets.py (PDS bundle mgs_tes_atmos_dust-ice). x 2.6 = equivalent visible optical depth, the
+# quantity MERRA-2 gives for Earth. The TES grid is 6 x 3 degrees, so this is a regional value.
 # Lunar region centres are approximate: NASA has published names and maps of the nine regions (Oct 2024), not
 # coordinates. Centres follow the named features and the 2022 region list; Slater Plain from Wueller et al. 2026.
 TARGETS = [
-  mars('arcadia', 'Arcadia Planitia', 40.0, 200.0, ICE, temp=-70, press=8.5, ice=1, ati=(1 - 0.25) / 60, albedo=0.25),
-  mars('deuteronilus', 'Deuteronilus Mensae', 44.9, 24.5, ICE, src=MARS_EST, temp=-65, press=8.0, ice=1, ati=(1 - 0.20) / 60, albedo=0.20),
-  mars('jezero', 'Jezero Crater', 18.44, 77.45, ROVER, temp=-55, press=7.5, ice=0, ati=(1 - 0.17) / 75, albedo=0.17),
-  mars('gale', 'Gale Crater', -4.59, 137.44, ROVER, temp=-50, press=8.4, ice=0, ati=(1 - 0.20) / 75, albedo=0.20),
+  mars('arcadia', 'Arcadia Planitia', 40.0, 200.0, ICE, temp=-70, press=8.5, ice=1, ati=(1 - 0.25) / 60, albedo=0.25, dust_ir=0.14),
+  mars('deuteronilus', 'Deuteronilus Mensae', 44.9, 24.5, ICE, src=MARS_EST, temp=-65, press=8.0, ice=1, ati=(1 - 0.20) / 60, albedo=0.20, dust_ir=0.14),
+  mars('jezero', 'Jezero Crater', 18.44, 77.45, ROVER, temp=-55, press=7.5, ice=0, ati=(1 - 0.17) / 75, albedo=0.17, dust_ir=0.145),
+  mars('gale', 'Gale Crater', -4.59, 137.44, ROVER, temp=-50, press=8.4, ice=0, ati=(1 - 0.20) / 75, albedo=0.20, dust_ir=0.16),
   moonsite('cabeus_b', 'Peak near Cabeus B', -83.5, -60.0),
   moonsite('haworth', 'Haworth', -86.8, -22.6),
   moonsite('malapert', 'Malapert Massif', -85.99, -0.23),

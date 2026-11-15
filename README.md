@@ -59,7 +59,7 @@ or **estimate** (rough value where instruments differ between the bodies; counts
 | Ground ice | estimate from mean surface temperature | literature |
 | Apparent thermal inertia, (1 − albedo) / day-night swing | MODIS MCD43C3 and LST | estimate (Mars), none (Moon) |
 | Albedo | MODIS MCD43C3, snow-free | estimate |
-| Dust optical depth | MERRA-2 | estimate (Mars), computed (Moon) |
+| Dust optical depth | MERRA-2 | measured (Mars, TES dust maps from the PDS), computed (Moon) |
 
 The multi-year Earth layers come from `vicente/derived/`. Cells that are permanent ice, or more than
 half water, forest, cropland or city (MODIS MCD12C1), are removed before ranking.
@@ -80,10 +80,10 @@ are comparable.
 
 | Target | Best match | Points | New in top 20 | Top 20 kept |
 |---|---|---|---|---|
-| Mars, Arcadia Planitia | Kunlun Mountains, China | 69 | 19 | 92% |
-| Mars, Deuteronilus Mensae | Kunlun Mountains, China | 78 | 19 | 91% |
-| Mars, Jezero Crater | Tibesti Mountains, Chad | 73 | 18 | 95% |
-| Mars, Gale Crater | Atacama Desert, Chile | 71 | 18 | 94% |
+| Mars, Arcadia Planitia | Kunlun Mountains, China | 68 | 19 | 96% |
+| Mars, Deuteronilus Mensae | Kunlun Mountains, China | 77 | 19 | 92% |
+| Mars, Jezero Crater | Tibesti Mountains, Chad | 74 | 18 | 97% |
+| Mars, Gale Crater | Kunlun Mountains, China | 71 | 18 | 92% |
 | Moon, all ten sites | Ellesmere Island, Canada | 63–67 | 17–19 | 91–96% |
 
 "New in top 20": regions outside the radius of every known analog. "Top 20 kept": share of the top 20
@@ -95,7 +95,7 @@ small to change the order. Telling the Artemis regions apart needs the fine pipe
 Diviner and LOLA values.
 
 Known analogs as a check (`python scripts/rank.py out`, also shown in the map): the Atacama ranks above
-99% of the land for Jezero and Gale, the Qaidam Basin above 99.5% for Arcadia and 83% for Deuteronilus,
+97% of the land for Jezero and 99% for Gale, the Qaidam Basin above 99.5% for Arcadia and 86% for Deuteronilus,
 Haughton Crater and Svalbard above 99% for every lunar site. Humid, vegetated land ranks at 17% (ice
 sites), 35–37% (rover sites) and 21–23% (Moon) on average; it should be low.
 
@@ -107,9 +107,10 @@ The method is not told which sites are known analogs. The list of known sites is
 - Cells are about 37 km wide and the terrain baseline is 18.5 km: landscape types, not landing sites.
 - ETOPO1 (NOAA) is the one input that is not a NASA or ESA product. The fine pipeline uses the
   Copernicus DEM.
-- Albedo, thermal inertia and dust are measured with different instruments on each body. Their target
-  values are rough estimates and should be compared by rank once measured values exist
-  (`planetary/targets.json`).
+- Albedo and thermal inertia are measured with different instruments on each body. Their target values
+  here are rough estimates and should be compared by rank (`planetary/targets.json` has measured values).
+- Mars dust is measured (TES) but regional: the grid cells are about 350 by 180 km. It is converted
+  from 9.3 µm infrared to visible optical depth with the factor 2.6 the data authors give.
 - The lunar temperature target is a rough estimate. Nothing on Earth comes close, so it changes the
   score but not the order.
 - Ground ice on Earth is estimated from temperature.
@@ -131,10 +132,26 @@ python scripts/build_page.py web/template.html out/data.json index.html out/cont
 `modis_lst.py`, `modis_ndvi.py` and `modis_albedo.py` produced the single-year 2023 layers the first
 version used; the pipeline now reads the 2003–2024 layers in `vicente/derived/` instead.
 
+## Mars dust target values for the team
+
+`scripts/mars_dust_targets.py` computes `dust_opacity` for the 14 Mars sites in `planetary/targets.json`
+from the PDS TES dust maps and writes `data/mars_dust_targets.json` (same fields as the features in
+`targets.json`: value, p10, p90, body_percentile, source, reliability, notes) and `data/mars_dust_targets.csv`.
+
+```bash
+python scripts/mars_dust_targets.py FOLDER_WITH_DAT_FILES planetary/targets.json data
+```
+
+The `.dat` files come from
+https://pds-atmospheres.nmsu.edu/PDS/data/PDS4/mgs_tes_atmos_dust-ice/data_IR_Dust_Optical_Depth_Maps/
+(every tenth sol of Mars years 24 to 27, 193 files).
+
 ## Data sources
 
 - NASA MODIS: MOD11C3, MYD11C3, MOD13C2, MCD43C3, MCD12C1, version 061 (LP DAAC)
 - NASA MERRA-2 (GES DISC)
+- Mars dust: MGS TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle
+  `mgs_tes_atmos_dust-ice` (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)
 - LOLA topography of the Moon, 10 arcminutes (fatiando-data)
 - MOLA spherical harmonic model MarsTopo719 (SHTOOLS example data)
 - ETOPO1 (NOAA), 10 arcminutes (fatiando-data)

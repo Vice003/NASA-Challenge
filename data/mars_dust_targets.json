@@ -1,0 +1,161 @@
+{
+ "feature": "dust_opacity",
+ "method": "quantile",
+ "generated_by": "scripts/mars_dust_targets.py",
+ "targets": {
+  "jezero_crater": {
+   "value": 0.145,
+   "p10": 0.07,
+   "p90": 0.412,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.5633,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 180 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 19.5 N, 78 E, so a regional value; median without MY25 (global dust storm) 0.15; normalised to 610 Pa: 0.14; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "gale_crater": {
+   "value": 0.16,
+   "p10": 0.08,
+   "p90": 0.334,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.7178,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 179 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred -4.5 N, 138 E, so a regional value; median without MY25 (global dust storm) 0.16; normalised to 610 Pa: 0.17; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "meridiani_planum": {
+   "value": 0.17,
+   "p10": 0.08,
+   "p90": 0.388,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.8007,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 177 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred -1.5 N, -6 E, so a regional value; median without MY25 (global dust storm) 0.18; normalised to 610 Pa: 0.17; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "gusev": {
+   "value": 0.15,
+   "p10": 0.07,
+   "p90": 0.324,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.6189,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 184 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred -13.5 N, 174 E, so a regional value; median without MY25 (global dust storm) 0.15; normalised to 610 Pa: 0.155; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "elysium_planitia": {
+   "value": 0.19,
+   "p10": 0.09,
+   "p90": 0.4,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.9251,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 182 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 4.5 N, 138 E, so a regional value; median without MY25 (global dust storm) 0.19; normalised to 610 Pa: 0.17; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "phoenix_site": {
+   "value": 0.14,
+   "p10": 0.06,
+   "p90": 0.267,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.5053,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 104 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 67.5 N, -126 E, so a regional value; median without MY25 (global dust storm) 0.14; normalised to 610 Pa: 0.11; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "utopia_planitia": {
+   "value": 0.165,
+   "p10": 0.1,
+   "p90": 0.53,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.7629,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 178 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 25.5 N, 108 E, so a regional value; median without MY25 (global dust storm) 0.17; normalised to 610 Pa: 0.12; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "ne_syrtis": {
+   "value": 0.15,
+   "p10": 0.077,
+   "p90": 0.44,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.6189,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 178 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 16.5 N, 78 E, so a regional value; median without MY25 (global dust storm) 0.16; normalised to 610 Pa: 0.145; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "mawrth_vallis": {
+   "value": 0.15,
+   "p10": 0.09,
+   "p90": 0.4,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.6189,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 181 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 25.5 N, -18 E, so a regional value; median without MY25 (global dust storm) 0.15; normalised to 610 Pa: 0.12; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "eberswalde_crater": {
+   "value": 0.145,
+   "p10": 0.04,
+   "p90": 0.293,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.5633,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 178 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred -22.5 N, -36 E, so a regional value; median without MY25 (global dust storm) 0.15; normalised to 610 Pa: 0.16; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "holden_crater": {
+   "value": 0.14,
+   "p10": 0.03,
+   "p90": 0.29,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.5053,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 178 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred -25.5 N, -36 E, so a regional value; median without MY25 (global dust storm) 0.15; normalised to 610 Pa: 0.16; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "oxia_planum": {
+   "value": 0.16,
+   "p10": 0.09,
+   "p90": 0.423,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.7178,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 178 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 19.5 N, -24 E, so a regional value; median without MY25 (global dust storm) 0.17; normalised to 610 Pa: 0.13; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "arcadia_planitia": {
+   "value": 0.14,
+   "p10": 0.09,
+   "p90": 0.377,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.5053,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 174 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 40.5 N, -162 E, so a regional value; median without MY25 (global dust storm) 0.15; normalised to 610 Pa: 0.1; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  },
+  "deuteronilus_mensae": {
+   "value": 0.14,
+   "p10": 0.07,
+   "p90": 0.31,
+   "unit": "1",
+   "pixel_m": 178000,
+   "body_percentile": 0.5053,
+   "source": "TES column dust optical depth maps, NASA PDS Atmospheres Node, bundle mgs_tes_atmos_dust-ice (Montabone, Smith, Wolff, Cantor 2023, doi:10.17189/kwez-jq47)",
+   "reliability": "B",
+   "notes": "9.3 micron absorption optical depth, total column (CDODTOT); median of 161 sols (every 10th sol, MY24-27); grid cell 6 x 3 deg centred 43.5 N, 24 E, so a regional value; median without MY25 (global dust storm) 0.14; normalised to 610 Pa: 0.11; x 2.6 gives an equivalent visible optical depth; compare with Earth by rank only"
+  }
+ }
+}

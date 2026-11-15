@@ -1,0 +1,15 @@
+id,name,lat,lon_e,dust_opacity_median,p10,p90,median_without_MY25,median_cdod610,mars_percentile,valid_sols,cell_lat,cell_lon
+jezero_crater,Jezero crater (Perseverance),18.4,77.5,0.145,0.07,0.412,0.15,0.14,0.5633,180,19.5,78
+gale_crater,Gale crater (Curiosity),-4.5895,137.4417,0.16,0.08,0.334,0.16,0.17,0.7178,179,-4.5,138
+meridiani_planum,Meridiani Planum (Opportunity),-1.9,354.5,0.17,0.08,0.388,0.18,0.17,0.8007,177,-1.5,-6
+gusev,Gusev / Columbia Hills (Spirit),-14.6,175.5,0.15,0.07,0.324,0.15,0.155,0.6189,184,-13.5,174
+elysium_planitia,Elysium Planitia (InSight),4.5,135.6,0.19,0.09,0.4,0.19,0.17,0.9251,182,4.5,138
+phoenix_site,Phoenix site (Vastitas Borealis),68.2,234.3,0.14,0.06,0.267,0.14,0.11,0.5053,104,67.5,-126
+utopia_planitia,"Utopia Planitia (Zhurong, CNSA)",25.1,109.9,0.165,0.1,0.53,0.17,0.12,0.7629,178,25.5,108
+ne_syrtis,NE Syrtis,17.8,77.1,0.15,0.077,0.44,0.16,0.145,0.6189,178,16.5,78
+mawrth_vallis,Mawrth Vallis,24.0,341.0,0.15,0.09,0.4,0.15,0.12,0.6189,181,25.5,-18
+eberswalde_crater,Eberswalde crater (delta),-23.9,326.7,0.145,0.04,0.293,0.15,0.16,0.5633,178,-22.5,-36
+holden_crater,Holden crater,-26.4,325.1,0.14,0.03,0.29,0.15,0.16,0.5053,178,-25.5,-36
+oxia_planum,"Oxia Planum (Rosalind Franklin, ESA)",18.3,335.4,0.16,0.09,0.423,0.17,0.13,0.7178,178,19.5,-24
+arcadia_planitia,Arcadia Planitia,40.0,200.0,0.14,0.09,0.377,0.15,0.1,0.5053,174,40.5,-162
+deuteronilus_mensae,Deuteronilus Mensae,44.0,22.0,0.14,0.07,0.31,0.14,0.11,0.5053,161,43.5,24

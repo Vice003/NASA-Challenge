@@ -107,7 +107,7 @@ td .bar{width:100%;min-width:60px}
     <div class="targets" id="targets"></div>
     <h2>Fingerprint and weights</h2>
     <div id="dims"></div>
-    <p class="hint">The target value is on the right, the slider sets how much the dimension counts (0 = off). <b>Measured</b>: from LOLA or MOLA elevation data with the same method as on Earth. <b>Computed</b>: follows from geometry or physics. <b>Literature</b>: rounded value for a well-established property. <b>Estimate</b>: rough value where instruments differ between the bodies; it counts half by default.</p>
+    <p class="hint">The target value is on the right, the slider sets how much the dimension counts (0 = off). <b>Measured</b>: from spacecraft data in NASA's archive (LOLA and MOLA elevation, TES dust maps). <b>Computed</b>: follows from geometry or physics. <b>Literature</b>: rounded value for a well-established property. <b>Estimate</b>: rough value where instruments differ between the bodies; it counts half by default.</p>
   </section>
 
   <section class="panel">
@@ -156,6 +156,7 @@ td .bar{width:100%;min-width:60px}
     <li>Earth vegetation: NASA MODIS NDVI (MOD13C2), 2003 to 2024.</li>
     <li>Earth albedo: NASA MODIS MCD43C3, shortwave, snow-free. Apparent thermal inertia is (1 − albedo) divided by the day-night swing, used only where the swing exceeds 5 K.</li>
     <li>Earth precipitation, air pressure and dust optical depth: NASA MERRA-2, 2003 to 2024, about 55 km resolution.</li>
+    <li>Mars dust: column dust optical depth maps from the TES instrument, NASA PDS Atmospheres Node (Montabone, Smith, Wolff and Cantor 2023). Median over Mars years 24 to 27 at each site, multiplied by 2.6 to convert the 9.3 µm infrared value to visible light.</li>
     <li>Filters: NASA MODIS land cover (MCD12C1) for water, forest, cropland, cities and permanent ice.</li>
     <li>Earth terrain: ETOPO1 (NOAA), 10 arcminutes. This is the one input that is not a NASA or ESA product; the fine pipeline replaces it with the Copernicus DEM.</li>
     <li>Sun elevation from latitude and axial tilt. Ground ice is an estimate from mean surface temperature. Place names: Natural Earth.</li>
@@ -163,7 +164,7 @@ td .bar{width:100%;min-width:60px}
   <h3>What this map cannot do</h3>
   <ul>
     <li>Cells are about 37 km wide and the terrain baseline is 18.5 km. That describes landscape types, not landing sites.</li>
-    <li>Albedo, thermal inertia and dust are measured with different instruments on each body. Their target values are rough estimates until measured TES, OMEGA and Diviner values replace them, and they should then be compared by rank.</li>
+    <li>Albedo, thermal inertia and dust are measured with different instruments on each body. The Mars dust value is measured (TES, converted to visible light) but regional: its grid cells are about 350 by 180 km. Albedo and thermal inertia targets are still rough estimates until measured TES, OMEGA and Diviner values replace them.</li>
     <li>The lunar temperature target is a rough estimate. Because nothing on Earth comes close, it changes the score but not the order.</li>
     <li>The nine Artemis regions are each about 15 km across, smaller than one cell here. Their centres are approximate, and neighbouring regions such as Mons Mouton, its plateau and Nobile Rim 1 get almost the same fingerprint at this resolution. All lunar sites share the same estimated temperature, ice and albedo values and differ only in terrain and sun elevation.</li>
     <li>Mineralogy and the subsurface, such as lava tubes, are not included.</li>
