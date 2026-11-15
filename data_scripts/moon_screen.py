@@ -18,13 +18,26 @@ fall on PSR pixels).
 Rock abundance: NOT available here (Diviner rock abundance only reaches 80 S);
 LOLA roughness is used instead.
 
+Sunlight (v2): scored on the best-lit 60 m pixel of each 240 m cell, stretched between the
+minimum allowed value (--min-sun) and the best usable cell on the map. The cell average
+barely differs between usable cells (0.30-0.62), so with the old raw average sunlight did
+not influence the ranking (--sun-measure raw reproduces the old list). Length of the
+longest night is NOT scored: no such product exists in the LOLA archive.
+
+Cells outside 85 S (corners of the square map) are excluded: no Diviner data there.
+
+NASA's Artemis regions are compared as rough areas (landing_sites.MOON_SOUTH_AREAS), not as
+points: crater centres are permanently shadowed ice targets, the regions lie beside them.
+
 Output (output/moon_south/):
-  features.npz      all per-cell layers + lat/lon
-  candidates.csv    ranked candidate sites (connected groups of good cells)
-  map.png           score map with candidates and NASA Artemis regions
+  features.npz            all per-cell layers + lat/lon
+  candidates.csv          ranked candidate sites (connected groups of good cells)
+  nasa_vs_candidates.csv  best usable cell of every NASA area under the same scoring, next to the candidates
+  map.png                 score map with candidates and NASA areas
 
     python moon_screen.py                     # default weights / thresholds
     python moon_screen.py --max-slope 8 --top 30
+    python moon_screen.py --sun-measure raw   # old sunlight term
 """
 
 import argparse
@@ -34,7 +47,7 @@ import numpy as np
 import pandas as pd
 from scipy import ndimage
 
-from landing_sites import SITES
+from landing_sites import MOON_SOUTH_AREAS
 
 HERE = Path(__file__).resolve().parent
 RAW = HERE / "output" / "raw" / "moon"
@@ -189,8 +202,17 @@ def score(f, args):
         & (f["sun_mean"] >= args.min_sun)
         & ~np.isnan(f["rough_med"])
         & (f["slope_cov"] >= args.min_coverage)   # avoid cells with only a few LOLA track pixels
+        & (f["lat"] <= -85.0)                     # corners of the square map: no Diviner data beyond 85 S
     )
-    s_sun = np.clip(f["sun_mean"], 0, 1)                                   # 0..1 directly
+    # Sunlight. "best" (default): best-lit 60 m pixel of the cell (where a solar array would stand),
+    # stretched so that the minimum allowed value scores 0 and the best usable cell on the map 1.
+    # "mean": same stretch on the 240 m cell average. "raw": cell average used directly (old behaviour).
+    if args.sun_measure == "raw":
+        s_sun = np.clip(f["sun_mean"], 0, 1)
+    else:
+        sun = f["sun_max"] if args.sun_measure == "best" else f["sun_mean"]
+        hi = float(np.nanmax(np.where(ok, sun, np.nan)))
+        s_sun = np.clip((sun - args.min_sun) / (hi - args.min_sun), 0, 1)
     # 1 at a surface cold trap (Diviner PRP: ice stable at surface), 0.37 at the EVA radius
     s_ice = np.exp(-f["dist_coldtrap_km"] / args.eva_km)
     s_slope = np.clip(1 - f["slope_mean"] / args.max_slope, 0, 1)
@@ -204,6 +226,18 @@ def score(f, args):
     return total, ok, W, dict(sun=s_sun, ice=s_ice, slope=s_slope, rough=s_rough, earth=s_earth)
 
 
+def area_xy(lat, lon):
+    """Polar-stereographic x/y (km) of a lat/lon point, same frame as the grid."""
+    d = 2 * R_MOON * np.tan(np.radians(90 - abs(lat)) / 2)
+    return d * np.sin(np.radians(lon)), d * np.cos(np.radians(lon))
+
+
+def nearest_area(x, y):
+    """(distance to the edge of the nearest NASA rough area in km, 0 = inside; its name)."""
+    return min((max(float(np.hypot(x - area_xy(la, lo)[0], y - area_xy(la, lo)[1])) - R, 0.0), name)
+               for name, lst, la, lo, R, note in MOON_SOUTH_AREAS)
+
+
 def find_sites(f, total, args):
     thr = np.nanpercentile(total, 100 - args.top_percent)
     good = total >= thr
@@ -211,26 +245,20 @@ def find_sites(f, total, args):
     idx = np.arange(1, n + 1)
     size = ndimage.sum(good, lab, idx)
     keep = idx[size >= args.min_cells]
-    known = [(name, lat, lon) for name, body, lat, lon, cat, src in SITES if body == "moon"]
     rows = []
     for k in keep:
         m = lab == k
         best = np.nanargmax(np.where(m, total, np.nan))
         r, c = divmod(best, N_CELL)
         lat, lon = float(f["lat"][r, c]), float(f["lon"][r, c])
-        # distance to the (approximate) NASA region anchors, great-circle on a sphere
-        dists = []
-        for name, la, lo in known:
-            p1, p2 = np.radians(lat), np.radians(la)
-            dl = np.radians(lon - lo)
-            ang = np.arccos(np.clip(np.sin(p1) * np.sin(p2) + np.cos(p1) * np.cos(p2) * np.cos(dl), -1, 1))
-            dists.append((ang * R_MOON, name))
-        dmin, near = min(dists)
+        # distance to the edge of the nearest NASA rough area (0 = inside it)
+        dmin, near = nearest_area((c + 0.5) * CELL - HALF, HALF - (r + 0.5) * CELL)
         rows.append({
             "lat": round(lat, 3), "lon_E": round(lon, 2),
             "score": round(float(total[r, c]), 3),
             "area_km2": round(float(m.sum() * CELL ** 2), 2),
             "sun_visibility": round(float(f["sun_mean"][r, c]), 3),
+            "sun_best_60m": round(float(f["sun_max"][r, c]), 3),
             "earth_visibility": round(float(f["earth_mean"][r, c]), 3),
             "slope_mean_deg": round(float(f["slope_mean"][r, c]), 2),
             "slope_p90_deg": round(float(f["slope_p90"][r, c]), 2),
@@ -242,8 +270,9 @@ def find_sites(f, total, args):
             "ice_stability_depth_m": round(float(f["ice_depth"][r, c]), 2),
             "temp_max_K": round(float(f["temp_max"][r, c]), 1),
             "temp_avg_K": round(float(f["temp_avg"][r, c]), 1),
-            "nearest_nasa_region": near,
-            "dist_to_nasa_region_km": round(float(dmin), 1),
+            "nearest_nasa_area": near,
+            "dist_to_nasa_area_km": round(float(dmin), 1),
+            "inside_nasa_area": bool(dmin <= 0),
             "novel": bool(dmin > args.novel_km),
             "_rc": (r, c),
         })
@@ -261,6 +290,57 @@ def find_sites(f, total, args):
     return df, thr
 
 
+def nasa_comparison(f, total, ok, sites):
+    """NASA rough areas next to the own candidates, all under the same scoring.
+
+    For every NASA area: share of usable ground, its best usable cell (score, percentile among
+    all usable cells, the rank it would take in the candidate list, parameters) and its best-lit
+    usable cell. Areas whose anchor lies outside 85 S are listed but not scored.
+    """
+    x = ((np.arange(N_CELL) + 0.5) * CELL - HALF)[None, :]
+    y = (HALF - (np.arange(N_CELL) + 0.5) * CELL)[:, None]
+    tv = np.sort(total[ok])
+
+    def cell(r, c, prefix=""):
+        s = float(total[r, c])
+        d = {"lat": round(float(f["lat"][r, c]), 2), "lon_E": round(float(f["lon"][r, c]), 1), "score": round(s, 3),
+             "pct_of_usable": round(100 * np.searchsorted(tv, s) / len(tv), 1),
+             "would_rank": int((sites["score"] > s).sum()) + 1 if s >= sites["score"].min() else f">{len(sites)}",
+             "sun_avg": round(float(f["sun_mean"][r, c]), 2), "sun_best_60m": round(float(f["sun_max"][r, c]), 2),
+             "earth": round(float(f["earth_mean"][r, c]), 2), "slope_mean_deg": round(float(f["slope_mean"][r, c]), 1),
+             "dist_coldtrap_km": round(float(f["dist_coldtrap_km"][r, c]), 1)}
+        return {prefix + k: v for k, v in d.items()}
+
+    rows = []
+    for name, lst, la, lo, R, note in MOON_SOUTH_AREAS:
+        row = {"group": f"NASA {lst}", "name": name, "radius_km": R, "anchor": note}
+        x0, y0 = area_xy(la, lo)
+        m = (np.hypot(x - x0, y - y0) <= R) & (f["lat"] <= -85.0)
+        if la > -85.0:
+            row["status"] = "outside the 85 S grid - not scored"
+        elif not ok[m].any():
+            row["status"] = "no usable cell"
+        else:
+            row["status"] = "scored"
+            row["usable_pct"] = round(100 * float(ok[m].mean()), 1)
+            row["usable_km2"] = round(float(ok[m].sum()) * CELL ** 2, 1)
+            r, c = divmod(int(np.nanargmax(np.where(m, total, np.nan))), N_CELL)
+            row.update(cell(r, c))
+            r, c = divmod(int(np.argmax(np.where(m & ok, f["sun_max"], -1))), N_CELL)
+            row.update(cell(r, c, "bestlit_"))
+            row["candidates_inside"] = " ".join(
+                f"#{i}" for i, s in sites.iterrows()
+                if np.hypot((s["_rc"][1] + 0.5) * CELL - HALF - x0, HALF - (s["_rc"][0] + 0.5) * CELL - y0) <= R)
+        rows.append(row)
+    for i, s in sites.iterrows():
+        row = {"group": "candidate", "name": f"#{i}", "status": "scored"}
+        row.update(cell(*s["_rc"]))
+        row["would_rank"] = i
+        row["inside_nasa_area"] = s["nearest_nasa_area"] if s["inside_nasa_area"] else ""
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
 def plot(f, total, sites, path):
     import matplotlib
     matplotlib.use("Agg")
@@ -275,13 +355,13 @@ def plot(f, total, sites, path):
     fig.colorbar(im, ax=ax[1], fraction=0.046, label="site score (0..1)")
     ax[1].set_title("Base-site score where constraints are met")
     for a in ax:
-        for name, body, lat, lon, cat, src in SITES:
-            if body != "moon" or lat > -85:
+        for name, lst, la, lo, R, note in MOON_SOUTH_AREAS:
+            if la > -85:
                 continue
-            d = 2 * R_MOON * np.tan(np.radians(90 - abs(lat)) / 2)
-            a.plot(d * np.sin(np.radians(lon)), d * np.cos(np.radians(lon)), "r^", ms=7)
-            a.annotate(name.split(" (")[0], (d * np.sin(np.radians(lon)), d * np.cos(np.radians(lon))),
-                       color="red", fontsize=7, xytext=(3, 3), textcoords="offset points")
+            x0, y0 = area_xy(la, lo)
+            a.add_patch(plt.Circle((x0, y0), R, fill=False, ec="red", lw=1, ls="-" if lst == "2024" else "--"))
+            a.annotate(name, (x0, y0 + R), color="red", fontsize=7, ha="center", xytext=(0, 2), textcoords="offset points")
+        a.set_xlim(-HALF, HALF); a.set_ylim(-HALF, HALF)
         a.set_xlabel("km (90 E ->)"); a.set_ylabel("km (lon 0 ^)")
     for i, s in sites.iterrows():
         r, c = s["_rc"]
@@ -289,8 +369,8 @@ def plot(f, total, sites, path):
         ax[1].plot(x, y, "o", mfc="none", mec="orange" if s["novel"] else "white", ms=9, mew=1.5)
         ax[1].annotate(str(i), (x, y), color="orange" if s["novel"] else "white", fontsize=8,
                        xytext=(4, -8), textcoords="offset points")
-    fig.suptitle("Lunar south pole 85-90 S - red triangles: NASA regions (approx. coords), "
-                 "orange: candidates > novel-km from them")
+    fig.suptitle("Lunar south pole 85-90 S - red circles: NASA Artemis regions as rough areas "
+                 "(solid 2024 list, dashed 2022 only), orange: candidates outside them, white: inside")
     fig.tight_layout()
     fig.savefig(path, dpi=130)
 
@@ -299,11 +379,15 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--max-slope", type=float, default=5.0, help="max mean slope per 240 m cell [deg]")
     ap.add_argument("--min-sun", type=float, default=0.3, help="min average sun visibility [0..1]")
+    ap.add_argument("--sun-measure", choices=["best", "mean", "raw"], default="best",
+                    help="sunlight score: best-lit 60 m pixel of the cell (stretched), cell average (stretched), "
+                         "or raw cell average (old behaviour)")
     ap.add_argument("--min-coverage", type=float, default=0.3, help="min fraction of 40 m slope pixels with data per cell")
     ap.add_argument("--eva-km", type=float, default=2.0, help="EVA radius for ice access [km]")
     ap.add_argument("--top-percent", type=float, default=2.0, help="best x %% of valid cells form sites")
     ap.add_argument("--min-cells", type=int, default=4, help="min contiguous cells (4 = 0.23 km2)")
-    ap.add_argument("--novel-km", type=float, default=10.0, help="distance from NASA regions to count as new")
+    ap.add_argument("--novel-km", type=float, default=0.0,
+                    help="km outside every NASA rough area to count as new (0 = anything outside)")
     ap.add_argument("--min-sep-km", type=float, default=5.0, help="merge candidates closer than this")
     ap.add_argument("--top", type=int, default=25)
     ap.add_argument("--rebuild", action="store_true", help="recompute features from raw files")
@@ -318,10 +402,10 @@ def main():
         np.savez_compressed(cache, **f)
 
     total, ok, W, parts = score(f, args)
-    print(f"\nweights: {W}")
+    print(f"\nweights: {W}   sunlight measure: {args.sun_measure}")
     print(f"constraints: mean slope <= {args.max_slope} deg, p90 slope <= {2 * args.max_slope} deg, "
           f"not in PSR, sun visibility >= {args.min_sun}, "
-          f"slope data coverage >= {args.min_coverage}")
+          f"slope data coverage >= {args.min_coverage}, inside 85 S")
     print(f"valid cells: {ok.sum():,} of {ok.size:,} ({100 * ok.mean():.1f} %)")
 
     sites, thr = find_sites(f, total, args)
@@ -329,11 +413,17 @@ def main():
     sites[cols].to_csv(OUT / "candidates.csv", index_label="rank")
     print(f"\nTop {len(sites)} candidate sites (score >= {thr:.3f}):")
     with pd.option_context("display.width", 250, "display.max_columns", 30):
-        print(sites[["lat", "lon_E", "score", "area_km2", "sun_visibility", "earth_visibility",
-                     "slope_mean_deg", "dist_psr_km", "dist_surface_coldtrap_km", "dist_ice_within_10cm_km", "temp_max_K",
-                     "nearest_nasa_region", "dist_to_nasa_region_km", "novel"]].to_string())
+        print(sites[["lat", "lon_E", "score", "area_km2", "sun_visibility", "sun_best_60m", "earth_visibility",
+                     "slope_mean_deg", "dist_surface_coldtrap_km", "temp_max_K",
+                     "nearest_nasa_area", "dist_to_nasa_area_km", "novel"]].to_string())
+        cmp = nasa_comparison(f, total, ok, sites)
+        cmp.to_csv(OUT / "nasa_vs_candidates.csv", index=False)
+        print("\nNASA rough areas under the same scoring (best usable cell of each area):")
+        print(cmp[cmp.group != "candidate"][["name", "group", "radius_km", "status", "usable_pct", "score", "pct_of_usable",
+                                             "would_rank", "sun_avg", "sun_best_60m", "earth", "dist_coldtrap_km",
+                                             "candidates_inside"]].to_string(index=False))
     plot(f, total, sites, OUT / "map.png")
-    print(f"\nSaved {OUT / 'candidates.csv'}, {OUT / 'map.png'}, {cache}")
+    print(f"\nSaved {OUT / 'candidates.csv'}, {OUT / 'nasa_vs_candidates.csv'}, {OUT / 'map.png'}, {cache}")
 
 
 if __name__ == "__main__":

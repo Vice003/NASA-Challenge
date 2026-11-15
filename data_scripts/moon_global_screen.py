@@ -1,4 +1,17 @@
-"""Global screening of the whole Moon for landing / base sites with A/B-rated PDS data.
+"""RETIRED (2026-11-15) - not part of the current scoring system; kept for reference only.
+
+The Moon screening is now restricted to the south pole (moon_screen.py). The result of this
+script (best sites on the north polar near side, 67-86 N) is not supported:
+  * "ice access" uses the distance to any permanently shadowed LOLA pixel. Near the 10 northern
+    candidates covered by the Diviner polar resource product there is no cold trap within 2 km
+    (lowest Tmax 172-245 K; nearest cold trap 2.6-20 km away). Shadow is not ice.
+  * slope is computed on the cylindrical grid, whose east-west pixel shrinks with cos(lat):
+    the east-west P90 slope rises from 11 deg at 60 deg latitude to 29 deg at 88.5 deg while the
+    north-south P90 stays at 12-14 deg, so polar cells wrongly fail the 8 deg limit.
+  * sun visibility of the candidates (0.46-0.50) is the same as at the equator, and the rock
+    abundance layer is missing for every top candidate.
+
+Global screening of the whole Moon for landing / base sites with A/B-rated PDS data.
 
 Grid: simple cylindrical, 16 px/deg (~1.9 km at the equator), 90 S..90 N, 0..360 E.
 For the polar caps (|lat| >= 55.2) the LOLA 240 m polar-stereographic products are
