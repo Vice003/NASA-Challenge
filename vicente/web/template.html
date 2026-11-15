@@ -232,9 +232,10 @@ footer { max-width: 1500px; margin: 16px auto 0; font-size: 12px; color: var(--m
 
     <section class="panel">
       <div class="hd"><h2 id="list-title">Best Earth analogs</h2><span class="small muted">at least 200 km apart · tick up to 3 to compare</span></div>
+      <p class="note" style="padding: 0 14px; margin-top: 0">Rank on Earth = place among all ranked land cells (5 km each). Ranks jump because cells next to a better site are skipped.</p>
       <p class="note" id="list-note" style="padding: 0 14px" hidden></p>
       <div class="tw"><table>
-        <thead><tr><th><span class="sr-only">Compare</span></th><th class="n">#</th><th>Country</th><th>Environment</th><th class="n">Better than</th><th>Strongest</th><th>Weakest</th><th></th></tr></thead>
+        <thead><tr><th><span class="sr-only">Compare</span></th><th class="n">#</th><th>Country</th><th>Environment</th><th class="n" title="Place among all ranked Earth land cells (about 5 km each); 1 = best match on Earth">Rank on Earth</th><th>Strongest</th><th>Weakest</th><th></th></tr></thead>
         <tbody id="rows"></tbody>
       </table></div>
     </section>
@@ -347,6 +348,8 @@ function fmtVal(v, u) {
   return fmt(v, d) + UNIT(u);
 }
 const pctTxt = (p) => `${fmt(p * 100, 0)} %`;
+const cellsTxt = (n) => n >= 1e6 ? `${fmt(n / 1e6, 1)} million` : fmt(n);
+const rankTxt = (s) => s.rk ? `#${fmt(s.rk)}` : `${fmt(s.p, 1)} %`;
 
 /* ---------- colour ramp for the heat map (percentile 0..1 -> RGBA) */
 function rampColor(p, body) {
@@ -471,7 +474,7 @@ function renderRows(t) {
     tr.appendChild(el("td", "n mono", s.r));
     const tc = el("td"); tc.appendChild(el("div", null, s.c || "–")); tc.appendChild(el("div", "small muted mono", coordTxt(s.lat, s.lon))); tr.appendChild(tc);
     tr.appendChild(el("td", null, s.env));
-    tr.appendChild(el("td", "n", `${fmt(s.p, 1)} %`));
+    const tdr = el("td", "n"); tdr.appendChild(el("div", "mono", rankTxt(s))); if (s.nr) tdr.appendChild(el("div", "small muted", `of ${cellsTxt(s.nr)}`)); tr.appendChild(tdr);
     tr.appendChild(el("td", null, s.b)); tr.appendChild(el("td", null, s.w));
     const tk = el("td"); tk.appendChild(el("span", "chip " + (s.k ? "known" : "new"), s.k ? "known analog" : "new")); tr.appendChild(tk);
     const go = () => select(s.i, true);
@@ -574,7 +577,7 @@ function renderSite(t) {
   if (s.fl.length) bd.appendChild(el("div", "small muted", s.fl.join(" · ")));
   if (s.k) bd.appendChild(el("div", "small muted", `Within the radius of a known analog site: ${s.k}`));
   const st = el("div", "stats");
-  const a = el("div"); a.appendChild(el("span", "big", `${fmt(s.p, 1)} %`)); a.appendChild(el("span", "small muted", "of Earth's land matches worse")); st.appendChild(a);
+  const a = el("div"); a.appendChild(el("span", "big", rankTxt(s))); a.appendChild(el("span", "small muted", s.nr ? `of ${cellsTxt(s.nr)} ranked Earth cells` : "rank on Earth")); st.appendChild(a);
   const b2 = el("div"); b2.appendChild(el("span", "big", `${fmt(s.cov * 100, 0)} %`)); b2.appendChild(el("span", "small muted", "of the profile has data")); st.appendChild(b2);
   bd.appendChild(st);
   bd.appendChild(el("h3", null, "Profile"));
@@ -623,7 +626,7 @@ function renderCompare(t) {
   const argmax = (vals) => { let b = -1, bv = -Infinity; vals.forEach((v, k) => { if (v != null && v > bv) { bv = v; b = k; } }); return S.length > 1 ? b : -1; };
   sec("Overview");
   row("Environment", "", S.map((s) => s.env));
-  row("Better than", "", S.map((s) => `${fmt(s.p, 1)} %`), argmax(S.map((s) => s.p)));
+  row("Rank on Earth", "", S.map((s) => `${rankTxt(s)}${s.nr ? " of " + cellsTxt(s.nr) : ""}`), argmax(S.map((s) => s.rk ? -s.rk : null)));
   row("Profile with data", "", S.map((s) => `${fmt(s.cov * 100, 0)} %`));
   row("Known analog", "", S.map((s) => s.k || "new"));
   sec("Dimension scores (1 = as close as Earth gets)");

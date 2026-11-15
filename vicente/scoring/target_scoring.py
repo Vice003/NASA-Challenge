@@ -290,6 +290,9 @@ if __name__ == "__main__":
         dimcols = [c for c in s.columns if c.startswith("dim_")]
         tot = s["total"]
         pct = _weighted_pct(tot, w_area)  # Rang unter allen bewerteten Landzellen, fuer "besser als x %"
+        # Platz unter allen bewerteten Zellen (1 = beste Zelle der Erde), ungewichtet, Gleichstand = gleicher Platz
+        cell_rank = tot.rank(ascending=False, method="min")
+        n_ranked = int(tot.notna().sum())
 
         def site_list(total, label):
             idx = top_sites(df, total, n=N_TOP, min_km=200)
@@ -316,7 +319,8 @@ if __name__ == "__main__":
                                       weight=round(m["weight"], 2), rel_target=m["rel_target"], rel_earth=m["rel_earth"]))
                 site = dict(rank=rank, lat=round(float(r.lat), 3), lon=round(float(r.lon), 3), country=country,
                             country_iso=iso, score=round(float(r.total), 4),
-                            better_than_pct=round(float(pct[i]) * 100, 2), coverage=round(float(r.coverage_target), 3),
+                            better_than_pct=round(float(pct[i]) * 100, 4), cell_rank=int(cell_rank[i]),
+                            n_ranked=n_ranked, coverage=round(float(r.coverage_target), 3),
                             env_class=str(r.env_class), env_class_name=names[r.env_class],
                             env_reason=explain_class_full(df.loc[i], str(r.env_class)),
                             best_dim=r.best_dim, worst_dim=r.worst_dim, known_analog=kn,

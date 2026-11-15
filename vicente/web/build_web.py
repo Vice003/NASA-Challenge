@@ -210,7 +210,7 @@ def main():
             er = {"rules": er} if isinstance(er, list) else er
             rule = lambda r: dict(t=r["text"], v=r["value"], u=r["unit"], ok=r["ok"])
             sites.append(dict(lat=x["lat"], lon=x["lon"], c=name, iso=iso, s=x["score"],
-                              p=x["better_than_pct"], cov=x["coverage"], env=ENV_EN.get(x["env_class"], x["env_class"]),
+                              p=x["better_than_pct"], rk=x.get("cell_rank"), nr=x.get("n_ranked"), cov=x["coverage"], env=ENV_EN.get(x["env_class"], x["env_class"]),
                               fl=[FLAG_EN.get(f, f) for f in x["flags"]], b=DIM_EN.get(x["best_dim"], x["best_dim"]),
                               w=DIM_EN.get(x["worst_dim"], x["worst_dim"]), k=x["known_analog"],
                               d={DIM_EN.get(k, k): v for k, v in x["dims"].items()},
