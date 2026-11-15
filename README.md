@@ -10,6 +10,11 @@ analogy holds and where it breaks.
 This is the coarse first pipeline (`scripts/`). The team's fine pipeline (about 5 km cells, see
 `VERARBEITUNGSPLAN.md`) is replacing it; until that passes its checks, this one is the fallback.
 
+> **Fine pipeline (0.05°, about 5 km, all 27 targets):** code, results and web app now live in their own repository,
+> [Vice003/analog-finder](https://github.com/Vice003/analog-finder).
+> Web app: https://vice003.github.io/analog-finder/ · results (German): https://vice003.github.io/analog-finder/ergebnisse.html.
+> The copy in `vicente/` here is kept for reference.
+
 ## Target sites
 
 14 targets, following the Moon and Mars team's list (`data_scripts/FAVORITES_AND_PARAMETERS.md`, branch `Mars_and_Moon`).
