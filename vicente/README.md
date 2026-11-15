@@ -3,6 +3,8 @@
 Eigener Arbeitsordner neben der Team-Pipeline in `scripts/`. Hier liegt eine **mehrjährige, feiner aufgelöste
 Erd-Datenbasis** mit Kategorien und Scoring. Die Team-Dateien außerhalb dieses Ordners sind unverändert.
 
+Technische Gesamtbeschreibung: [`TECHNIK.md`](TECHNIK.md) (Daten, Verfahren, Code, Ausgaben, Web-App, Server, Nachbau, Grenzen).
+
 Ausführliche Beschreibung als Seite: [`docs/datenbasis.html`](docs/datenbasis.html) (im Browser öffnen).
 
 **Web-App (Englisch):** `web/` – `python web/build_web.py --targets ../planetary/targets.json` baut `web/index.html`
